@@ -1,20 +1,93 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# Tala - Compose Multiplatform App
 
-[![Android](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=Android&branch=main&color=green)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
-[![iOS](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=iOS&branch=main&color=blue)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
+A clean, idiomatic Kotlin Compose Multiplatform app targeting Android and iOS with a comprehensive architecture.
 
+## Features
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+### ✅ Implemented
+- **Authentication**: Sign in with Google and Apple (mock implementation)
+- **Chat**: Basic chat UI with mock messages
+- **Navigation**: Decompose-based navigation with screen state management
+- **Dependency Injection**: Koin for multiplatform DI
+- **Local Storage**: Room database and DataStore preferences
+- **Architecture**: Clean Architecture with proper separation of concerns
+- **Concurrency**: Kotlin Coroutines and Flow for reactive state management
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+### 🏗️ Architecture
 
+```
+com.judahben149.tala/
+├── domain/                    # Domain layer
+│   ├── model/                 # Domain models
+│   ├── repository/            # Repository interfaces
+│   └── usecase/              # Use cases
+├── data/                      # Data layer
+│   ├── local/                 # Local storage (Room, DataStore)
+│   ├── model/                 # Data models
+│   └── repository/            # Repository implementations
+├── presentation/              # Presentation layer
+│   ├── navigation/            # Decompose navigation components
+│   └── screen/               # UI screens
+└── di/                       # Dependency injection
+```
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Tech Stack
+
+- **UI**: Compose Multiplatform
+- **Navigation**: Decompose
+- **DI**: Koin
+- **Database**: Room Multiplatform
+- **Preferences**: DataStore
+- **Authentication**: Firebase Auth (Android), Apple Sign In (iOS)
+- **Chat**: GetStream Chat SDK
+- **Concurrency**: Kotlin Coroutines + Flow
+- **DateTime**: kotlinx-datetime
+
+## Project Structure
+
+### Domain Layer
+- `User`, `ChatMessage`, `TestEntity` models
+- Repository interfaces for auth, chat, and storage
+- Use cases for business logic
+
+### Data Layer
+- Room database with DAOs
+- DataStore for key-value storage
+- Repository implementations with platform-specific code
+- Firebase Auth integration (Android)
+- GetStream Chat integration (Android)
+
+### Presentation Layer
+- Decompose navigation components
+- Material 3 UI screens
+- State management with Flow
+
+### Test Screens
+- **RoomTestScreen**: Test Room database operations
+- **PrefsTestScreen**: Test DataStore operations
+
+## Getting Started
+
+1. Clone the repository
+2. Open in Android Studio
+3. Sync Gradle files
+4. Run on Android or iOS
+
+## TODO
+
+- [ ] Implement Firebase Auth for Android
+- [ ] Implement Apple Sign In for iOS
+- [ ] Integrate GetStream Chat SDK
+- [ ] Add proper error handling
+- [ ] Add unit tests
+- [ ] Add UI tests
+- [ ] Implement proper context injection for Android
+- [ ] Complete iOS database implementation
+
+## Notes
+
+- All code is clean and idiomatic Kotlin
+- Uses latest stable versions of all libraries
+- Follows Clean Architecture principles
+- Single module structure for simplicity
+- Platform-specific code uses expect/actual pattern

@@ -1,48 +1,45 @@
 package com.judahben149.tala
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import org.jetbrains.compose.resources.painterResource
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.arkivanov.decompose.DefaultComponentContext
+import com.arkivanov.decompose.ExperimentalDecomposeApi
+import com.arkivanov.decompose.componentContext
+import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
+import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stack
+import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.judahben149.tala.di.appModule
+import com.judahben149.tala.presentation.navigation.RootComponent
+import com.judahben149.tala.presentation.screen.*
+import org.koin.compose.KoinContext
+import org.koin.core.context.startKoin
 
-import tala.composeapp.generated.resources.Res
-import tala.composeapp.generated.resources.compose_multiplatform
-
+@OptIn(ExperimentalDecomposeApi::class)
 @Composable
-@Preview
 fun App() {
-    MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Button(onClick = { showContent = !showContent }) {
-                Text("Click me!")
-            }
-            AnimatedVisibility(showContent) {
-                val greeting = remember { Greeting().greet() }
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Image(painterResource(Res.drawable.compose_multiplatform), null)
-                    Text("Compose: $greeting")
-                }
+    // Initialize Koin
+    LaunchedEffect(Unit) {
+        startKoin {
+            modules(appModule)
+        }
+    }
+    
+    KoinContext {
+        val root = remember {
+            RootComponent(DefaultComponentContext(componentContext().lifecycle))
+        }
+        
+        val childStack by root.childStack.subscribeAsState()
+        
+        Children(
+            stack = childStack,
+            animation = stack(fade()),
+        ) { child ->
+            when (val instance = child.instance) {
+                is RootComponent.Child.Auth -> AuthScreen(component = instance.component)
+                is RootComponent.Child.Chat -> ChatScreen(component = instance.component)
+                is RootComponent.Child.RoomTest -> RoomTestScreen(component = instance.component)
+                is RootComponent.Child.PrefsTest -> PrefsTestScreen(component = instance.component)
             }
         }
     }

@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.googleServices)
+    id("com.google.devtools.ksp")
 }
 
 kotlin {
@@ -32,6 +34,13 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.firebase.auth)
+            implementation(libs.getstream.chat.compose)
+            implementation(libs.koin.compose)
+            implementation(libs.room.runtime)
+            implementation(libs.room.ktx)
+            implementation(libs.datastore.preferences)
+            implementation(libs.kotlinx.coroutines.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -42,6 +51,19 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+            
+            // Decompose
+            implementation(libs.decompose)
+            implementation(libs.decompose.extensions.compose)
+            
+            // Koin
+            implementation(libs.koin.core)
+            
+            // Coroutines
+            implementation(libs.kotlinx.coroutines.core)
+            
+            // DateTime
+            implementation(libs.kotlinx.datetime)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -78,5 +100,6 @@ android {
 
 dependencies {
     debugImplementation(compose.uiTooling)
+    ksp(libs.room.compiler)
 }
 
