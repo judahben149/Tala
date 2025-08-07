@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "tala_preferences")
 
-class DataStoreImpl(private val context: Context) : DataStore {
+class DataStoreImpl(private val context: Context) : TalaDataStore {
     
     override suspend fun saveString(key: String, value: String) {
         context.dataStore.edit { preferences ->

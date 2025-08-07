@@ -1,5 +1,6 @@
 package com.judahben149.tala.data.repository
 
+import com.judahben149.tala.data.local.TalaDataStore
 import com.judahben149.tala.data.local.dao.TestEntityDao
 import com.judahben149.tala.data.model.TestEntity
 import com.judahben149.tala.domain.model.TestEntity as DomainTestEntity
@@ -7,12 +8,14 @@ import com.judahben149.tala.domain.repository.StorageRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalTime::class)
 class StorageRepositoryImpl(
     private val testEntityDao: TestEntityDao,
-    private val dataStore: DataStore
+    private val dataStore: TalaDataStore
 ) : StorageRepository {
-    
+
     override suspend fun insertTestEntity(entity: DomainTestEntity) {
         val dataEntity = TestEntity(
             id = entity.id,

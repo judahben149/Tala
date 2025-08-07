@@ -49,6 +49,7 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
+            implementation(compose.materialIconsExtended)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
@@ -62,15 +63,19 @@ kotlin {
             implementation(libs.sqlite.bundled)
             
             // Koin
-            implementation(libs.koin.core)
-//            implementation(libs.koin.compose.viewmodel)
-//            implementation(libs.koin.compose.viewmodel.navigation)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.compose.viewmodel.navigation)
             
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
             
             // DateTime
             implementation(libs.kotlinx.datetime)
+
+            // Datastore
+            implementation(libs.datastore.preferences)
+            implementation(libs.datastore.preferences.core)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

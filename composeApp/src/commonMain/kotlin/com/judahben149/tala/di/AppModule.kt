@@ -1,7 +1,9 @@
 package com.judahben149.tala.di
 
 import com.judahben149.tala.data.local.AppDatabase
-import com.judahben149.tala.data.local.DataStore
+import com.judahben149.tala.data.local.TalaDataStore
+import com.judahben149.tala.data.local.createDataStore
+import com.judahben149.tala.data.local.createDatabase
 import com.judahben149.tala.data.local.dao.TestEntityDao
 import com.judahben149.tala.data.repository.AuthRepositoryImpl
 import com.judahben149.tala.data.repository.ChatRepositoryImpl
@@ -17,7 +19,7 @@ import org.koin.dsl.module
 val appModule = module {
     
     // DataStore
-    single<DataStore> { createDataStore() }
+    single<TalaDataStore> { createDataStore() }
     
     // Database
     single<AppDatabase> { createDatabase() }

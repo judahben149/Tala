@@ -3,9 +3,8 @@ package com.judahben149.tala.data.local
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import platform.Foundation.NSUserDefaults
-import platform.Foundation.standardUserDefaults
 
-class DataStoreImpl : DataStore {
+class DataStoreImpl : TalaDataStore {
     
     override suspend fun saveString(key: String, value: String) {
         NSUserDefaults.standardUserDefaults.setObject(value, key)
