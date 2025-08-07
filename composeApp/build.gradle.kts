@@ -8,7 +8,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.googleServices)
-    id("com.google.devtools.ksp")
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room)
 }
 
 kotlin {
@@ -29,6 +30,16 @@ kotlin {
             isStatic = true
         }
     }
+
+    targets.configureEach {
+        compilations.configureEach {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    freeCompilerArgs.add("-Xexpect-actual-classes")
+                }
+            }
+        }
+    }
     
     sourceSets {
         androidMain.dependencies {
@@ -36,11 +47,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.firebase.auth)
             implementation(libs.getstream.chat.compose)
-            implementation(libs.koin.compose)
-            implementation(libs.room.runtime)
-            implementation(libs.room.ktx)
-            implementation(libs.datastore.preferences)
-            implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.room.runtime.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -55,9 +62,15 @@ kotlin {
             // Decompose
             implementation(libs.decompose)
             implementation(libs.decompose.extensions.compose)
+
+            // Room
+            implementation(libs.room.runtime)
+            implementation(libs.sqlite.bundled)
             
             // Koin
-            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.compose.viewmodel.navigation)
             
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
@@ -96,6 +109,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
 
 dependencies {
