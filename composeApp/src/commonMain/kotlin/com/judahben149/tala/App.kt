@@ -3,15 +3,12 @@ package com.judahben149.tala
 import androidx.compose.runtime.*
 import com.arkivanov.decompose.DefaultComponentContext
 import com.arkivanov.decompose.ExperimentalDecomposeApi
-import com.arkivanov.decompose.componentContext
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.Children
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.fade
-import com.arkivanov.decompose.extensions.compose.jetpack.stack.animation.stack
-import com.arkivanov.decompose.extensions.compose.jetpack.subscribeAsState
+import com.arkivanov.decompose.extensions.compose.stack.Children
+import com.arkivanov.decompose.extensions.compose.stack.animation.fade
+import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.judahben149.tala.di.appModule
 import com.judahben149.tala.presentation.navigation.RootComponent
 import com.judahben149.tala.presentation.screen.*
-import org.koin.compose.KoinContext
 import org.koin.core.context.startKoin
 
 @OptIn(ExperimentalDecomposeApi::class)
@@ -23,14 +20,14 @@ fun App() {
             modules(appModule)
         }
     }
-    
+
     KoinContext {
         val root = remember {
             RootComponent(DefaultComponentContext(componentContext().lifecycle))
         }
-        
+
         val childStack by root.childStack.subscribeAsState()
-        
+
         Children(
             stack = childStack,
             animation = stack(fade()),

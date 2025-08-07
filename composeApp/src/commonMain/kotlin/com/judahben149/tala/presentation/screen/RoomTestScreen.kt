@@ -16,7 +16,9 @@ import com.judahben149.tala.presentation.navigation.RoomTestComponent
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.ExperimentalTime
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomTestScreen(
     component: RoomTestComponent,
@@ -142,6 +144,7 @@ fun TestEntityItem(
     }
 }
 
+@OptIn(ExperimentalTime::class)
 private fun formatTimestamp(timestamp: kotlinx.datetime.Instant): String {
     val localDateTime = timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
     return "${localDateTime.date} ${localDateTime.hour.toString().padStart(2, '0')}:${localDateTime.minute.toString().padStart(2, '0')}"
