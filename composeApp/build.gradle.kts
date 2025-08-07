@@ -10,6 +10,7 @@ plugins {
     alias(libs.plugins.googleServices)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.kotlin.cocoapods)
 }
 
 kotlin {
@@ -19,17 +20,10 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
+
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     targets.configureEach {
         compilations.configureEach {
@@ -60,17 +54,17 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             
             // Decompose
-            implementation(libs.decompose)
-            implementation(libs.decompose.extensions.compose)
+            implementation(libs.decompose.core)
+            implementation(libs.decompose.compose)
 
             // Room
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
             
             // Koin
-            implementation(libs.koin.compose)
-            implementation(libs.koin.compose.viewmodel)
-            implementation(libs.koin.compose.viewmodel.navigation)
+            implementation(libs.koin.core)
+//            implementation(libs.koin.compose.viewmodel)
+//            implementation(libs.koin.compose.viewmodel.navigation)
             
             // Coroutines
             implementation(libs.kotlinx.coroutines.core)
@@ -80,6 +74,21 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+    }
+
+    cocoapods {
+        version = "1.0"
+        summary = "Some description for a Kotlin/Native module"
+        homepage = "Link to a Kotlin/Native module homepage"
+
+        name = "ComposeApp"
+
+        framework {
+            baseName = "ComposeApp"
+            isStatic = true
+            export(libs.decompose.core)
+            export(libs.essenty.lifecycle)
         }
     }
 }
