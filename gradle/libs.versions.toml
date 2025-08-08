@@ -18,6 +18,7 @@ serialization = "1.9.0"
 sqlite = "2.5.2"
 room = "2.7.2"
 ksp = "2.2.0-2.0.2"
+firebaseKMP = "2.1.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -43,6 +44,8 @@ room-compiler = { group = "androidx.room", name = "room-compiler", version.ref =
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "room" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+
+firebase-kmp-auth = { group = "dev.gitlive", name = "firebase-auth", version.ref = "firebaseKMP" }
 
 
 [plugins]

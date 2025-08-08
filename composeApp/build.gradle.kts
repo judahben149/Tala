@@ -87,6 +87,9 @@ kotlin {
             // Room
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
+
+            // Firebase KMP Auth
+            implementation(libs.firebase.kmp.auth)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
