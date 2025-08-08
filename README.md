@@ -1,7 +1,8 @@
 This is a Kotlin Multiplatform project targeting Android, iOS.
 
-[![Android](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=Android&branch=main&color=green)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
-[![iOS](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=iOS&branch=main&color=blue)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
+[![Android](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=Android&branch=master&color=green)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
+[![iOS](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=iOS&branch=master&color=blue)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
+
 
 
 * [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
