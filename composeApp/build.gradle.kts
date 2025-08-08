@@ -32,6 +32,16 @@ kotlin {
         }
     }
 
+    targets.configureEach {
+        compilations.configureEach {
+            compileTaskProvider.configure {
+                compilerOptions {
+                    freeCompilerArgs.add("-Xexpect-actual-classes")
+                }
+            }
+        }
+    }
+
     cocoapods {
         summary = "Tala"
         homepage = "https://github.com/judahben149/Tala"
