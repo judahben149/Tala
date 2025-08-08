@@ -7,6 +7,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinCocoapods)
+    alias(libs.plugins.kotlinSerialization)
 }
 
 kotlin {
@@ -27,11 +29,27 @@ kotlin {
             isStatic = true
         }
     }
+
+    cocoapods {
+        summary = "Tala"
+        homepage = "https://github.com/judahben149/Tala"
+        version = "1.0"
+
+        podfile = project.file("../iosApp/Podfile")
+
+        ios.deploymentTarget = "16.6"
+
+        framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+    }
     
     sourceSets {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+            implementation(libs.decompose)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -42,6 +60,16 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            // Koin
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.compose.viewmodel.navigation)
+
+            // Decompose
+            implementation(libs.decompose)
+            implementation(libs.decompose.compose)
+            implementation(libs.serialization.json)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
