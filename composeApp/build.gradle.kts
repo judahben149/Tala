@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(libs.plugins.kotlinCocoapods)
 }
 
 kotlin {
@@ -23,6 +24,21 @@ kotlin {
         iosSimulatorArm64()
     ).forEach { iosTarget ->
         iosTarget.binaries.framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+    }
+
+    cocoapods {
+        summary = "Tala"
+        homepage = "https://github.com/judahben149/Tala"
+        version = "1.0"
+
+        podfile = project.file("../iosApp/Podfile")
+
+        ios.deploymentTarget = "16.6"
+
+        framework {
             baseName = "ComposeApp"
             isStatic = true
         }
