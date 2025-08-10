@@ -1,4 +1,4 @@
-package com.judahben149.tala
+package com.judahben149.tala.util
 
 import platform.UIKit.UIDevice
 
@@ -7,3 +7,5 @@ class IOSPlatform: Platform {
 }
 
 actual fun getPlatform(): Platform = IOSPlatform()
+
+actual fun getPlatformType(): PlatformType = PlatformType.IOS
