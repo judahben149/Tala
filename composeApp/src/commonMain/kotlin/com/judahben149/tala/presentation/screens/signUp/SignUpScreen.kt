@@ -18,6 +18,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import com.judahben149.tala.data.service.firebase.AppUser
 import com.judahben149.tala.domain.models.authentication.errors.EmailAlreadyInUseError
@@ -38,8 +40,9 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun SignUpScreen(
     component: SignUpScreenComponent,
-    viewModel: SignUpViewModel = koinViewModel()
 ) {
+
+    val viewModel: SignUpViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
 
@@ -79,6 +82,9 @@ fun SignUpScreenContent(
     onNavigateToSignIn: () -> Unit,
     onSignUpSuccess: () -> Unit
 ) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     // Handle sign up success
     LaunchedEffect(uiState) {
         if (uiState is UiState.Loaded && uiState.result is Result.Success) {
@@ -117,7 +123,11 @@ fun SignUpScreenContent(
         // Sign up button
         Button(
             colors = ButtonDefaults.buttonColors(containerColor = Red400 or Yellow400),
-            onClick = onSignUpClick,
+            onClick = {
+//                focusManager.clearFocus()
+//                keyboardController?.hide()
+                onSignUpClick
+            },
             enabled = uiState !is UiState.Loading
         ) {
             if (uiState is UiState.Loading) {

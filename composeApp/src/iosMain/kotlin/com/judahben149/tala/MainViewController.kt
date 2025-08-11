@@ -11,9 +11,9 @@ import org.koin.core.context.startKoin
 
 fun MainViewController() = ComposeUIViewController {
 
-    startKoin {
-        modules(appModule + iosAppModule)
-    }
+//    startKoin {
+//        modules(appModule + iosAppModule)
+//    }
 
     val rootComponent = remember {
         RootComponent(

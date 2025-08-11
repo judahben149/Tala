@@ -40,8 +40,8 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun LoginScreen(
     component: LoginScreenComponent,
-    viewModel: AuthViewModel = koinViewModel()
 ) {
+    val viewModel: AuthViewModel = koinViewModel()
     val signInState by viewModel.signInState.collectAsState()
 
     LogInScreenContent(
