@@ -4,13 +4,20 @@ import com.arkivanov.decompose.ComponentContext
 
 class LoginScreenComponent(
     componentContext: ComponentContext,
-    private val text: String,
-    private val onBackButtonClick: () -> Unit
+    private val onBackButtonClick: () -> Unit,
+    private val onNavigateToHome: () -> Unit,
+    private val onNavigateToSignUp: () -> Unit
 ) : ComponentContext by componentContext {
-
-    fun getGreeting(): String = text
 
     fun goBack() {
         onBackButtonClick()
+    }
+
+    fun navigateToHome() {
+        onNavigateToHome()
+    }
+
+    fun navigateToSignUp() {
+        onNavigateToSignUp()
     }
 }

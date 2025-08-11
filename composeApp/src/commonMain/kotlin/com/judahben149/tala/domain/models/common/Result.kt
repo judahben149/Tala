@@ -6,6 +6,4 @@ sealed class Result<out D, out E> {
 
     data class Failure<E>(val error: E) :
         Result<Nothing, E>()
-
-    data object Loading : Result<Nothing, Nothing>()
 }

@@ -11,6 +11,7 @@ plugins {
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.googleServices)
 //    alias(libs.plugins.spmForKmp)
 }
 
@@ -22,16 +23,21 @@ kotlin {
         }
     }
     
-    listOf(
-        iosX64(),
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach { iosTarget ->
-        iosTarget.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
+//    listOf(
+//        iosX64(),
+//        iosArm64(),
+//        iosSimulatorArm64()
+//    ).forEach { iosTarget ->
+//        iosTarget.binaries.framework {
+//            baseName = "ComposeApp"
+//            isStatic = true
+//        }
+//    }
+
+
+    iosX64()
+    iosArm64()
+    iosSimulatorArm64()
 
     targets.configureEach {
         compilations.configureEach {
@@ -50,11 +56,21 @@ kotlin {
 
         podfile = project.file("../iosApp/Podfile")
 
-        ios.deploymentTarget = "16.6"
+        ios.deploymentTarget = "16.0"
 
         framework {
             baseName = "ComposeApp"
             isStatic = true
+        }
+
+        pod("FirebaseCore") {
+            version = "~> 11.13"
+            extraOpts += listOf("-compiler-option", "-fmodules")
+        }
+
+        pod("FirebaseAuth") {
+            version = "~> 11.13"
+            extraOpts += listOf("-compiler-option", "-fmodules")
         }
     }
     
@@ -64,6 +80,11 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.decompose)
             implementation(libs.room.runtime.android)
+            implementation(project.dependencies.platform(libs.android.firebase.bom))
+            implementation(libs.android.firebase.auth)
+            implementation(libs.android.firebase.analytics)
+            implementation(libs.android.firebase.auth)
+            implementation(libs.play.services.auth)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -88,9 +109,6 @@ kotlin {
             // Room
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
-
-            // Firebase KMP Auth
-            implementation(libs.firebase.kmp.auth)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -115,6 +133,12 @@ android {
         }
     }
     buildTypes {
+        getByName("debug") {
+            isMinifyEnabled = false
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-DEBUG"
+        }
+
         getByName("release") {
             isMinifyEnabled = false
         }

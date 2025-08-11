@@ -29,9 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -49,22 +47,22 @@ import com.judahben149.tala.ui.theme.Sky600
 fun TextFieldHint(
     modifier: Modifier = Modifier,
     hint: String = "hint",
+    value: String = "",
+    onValueChange: (String) -> Unit = {},
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
-
-    var text by remember { mutableStateOf("") }
     val interactionSource = remember { MutableInteractionSource() }
 
     val isFocused by interactionSource.collectIsFocusedAsState()
     val showHintAbove by remember {
         derivedStateOf {
-            isFocused || text.isNotEmpty()
+            isFocused || value.isNotEmpty()
         }
     }
 
     BasicTextField(
-        value = text,
-        onValueChange = { text = it },
+        value = value,
+        onValueChange = onValueChange,
         modifier = modifier,
         interactionSource = interactionSource,
         visualTransformation = visualTransformation,
