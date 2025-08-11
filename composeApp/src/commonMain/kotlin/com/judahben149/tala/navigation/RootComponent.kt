@@ -3,8 +3,10 @@ package com.judahben149.tala.navigation
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
+import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.judahben149.tala.navigation.components.HomeScreenComponent
 import com.judahben149.tala.navigation.components.LoginScreenComponent
 import com.judahben149.tala.navigation.components.SignUpScreenComponent
 
@@ -29,23 +31,45 @@ class RootComponent(
                 SignUpScreenComponent(
                     componentContext = componentContext,
                     onButtonClick = { textFromFirstScreen ->
-                        navigation.pushNew(Configuration.LoginScreen(text = textFromFirstScreen))
-                    }
+                        navigation.pushNew(Configuration.LoginScreen)
+                    },
+                    onNavigateToLogin = { navigation navigateTo Configuration.LoginScreen },
+                    onNavigateToHome = { navigation navigateTo Configuration.HomeScreen }
                 )
             )
 
             is Configuration.LoginScreen -> Child.LoginScreen(
                 LoginScreenComponent(
                     componentContext = componentContext,
-                    text = configuration.text,
+                    onBackButtonClick = { navigation.pop() },
+                    onNavigateToHome = { navigation navigateTo Configuration.HomeScreen },
+                    onNavigateToSignUp = { navigation navigateTo Configuration.SignUpScreen }
+                )
+            )
+
+            is Configuration.HomeScreen -> Child.HomeScreen(
+                HomeScreenComponent(
+                    componentContext = componentContext,
                     onBackButtonClick = { navigation.pop() }
                 )
             )
         }
 
 
+    private infix fun StackNavigation<Configuration>.navigateTo(configuration: Configuration) {
+        this.navigate { stack ->
+            if (stack.lastOrNull()?.let { it::class } != configuration::class) {
+                stack + configuration
+            } else {
+                stack
+            }
+        }
+    }
+
     sealed class Child {
         data class SignUpScreen(val component: SignUpScreenComponent) : Child()
         data class LoginScreen(val component: LoginScreenComponent) : Child()
+
+        data class HomeScreen(val component: HomeScreenComponent) : Child()
     }
 }

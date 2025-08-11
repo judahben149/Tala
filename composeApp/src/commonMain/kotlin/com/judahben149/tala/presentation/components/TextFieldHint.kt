@@ -49,10 +49,12 @@ import com.judahben149.tala.ui.theme.Sky600
 fun TextFieldHint(
     modifier: Modifier = Modifier,
     hint: String = "hint",
+    value: String = "",
+    onValueChange: (String) -> Unit = {},
     visualTransformation: VisualTransformation = VisualTransformation.None,
 ) {
 
-    var text by remember { mutableStateOf("") }
+    var text by remember { mutableStateOf(value) }
     val interactionSource = remember { MutableInteractionSource() }
 
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -64,7 +66,7 @@ fun TextFieldHint(
 
     BasicTextField(
         value = text,
-        onValueChange = { text = it },
+        onValueChange = { onValueChange(it) },
         modifier = modifier,
         interactionSource = interactionSource,
         visualTransformation = visualTransformation,

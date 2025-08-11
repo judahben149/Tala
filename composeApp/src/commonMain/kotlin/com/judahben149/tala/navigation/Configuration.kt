@@ -8,5 +8,9 @@ sealed class Configuration {
     data object SignUpScreen : Configuration()
 
     @Serializable
-    data class LoginScreen(val text: String) : Configuration()
+    data object LoginScreen : Configuration()
+
+    @Serializable
+    data object HomeScreen : Configuration()
+
 }
