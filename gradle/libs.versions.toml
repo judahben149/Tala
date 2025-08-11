@@ -22,6 +22,8 @@ firebaseKMP = "2.1.0"
 firebase-bom = "33.14.0"
 google-services-plugin = "4.4.2"
 playServicesAuth = "21.3.0"
+build-config = "4.1.2"
+stream-chat = "6.20.0"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -48,6 +50,9 @@ room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "
 room-runtime-android = { group = "androidx.room", name = "room-runtime-android", version.ref = "room" }
 sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 
+stream-chat-compose = { group = "io.getstream", name = "stream-chat-android-compose", version.ref = "stream-chat" }
+stream-chat-offline = { group = "io.getstream", name = "stream-chat-android-offline", version.ref = "stream-chat" }
+
 android-firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 android-firebase-auth = { module = "com.google.firebase:firebase-auth" }
 android-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
@@ -66,3 +71,4 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "google-services-plugin" }
+buildKonfig = { id = "com.github.gmazzo.buildconfig", version.ref = "build-config" }

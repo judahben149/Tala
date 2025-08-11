@@ -1,3 +1,4 @@
+import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -12,6 +13,7 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     alias(libs.plugins.googleServices)
+//    alias(libs.plugins.buildKonfig)
 //    alias(libs.plugins.spmForKmp)
 }
 
@@ -109,6 +111,10 @@ kotlin {
             // Room
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
+
+            // Stream-Chat
+            implementation(libs.stream.chat.compose)
+            implementation(libs.stream.chat.offline)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
