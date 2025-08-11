@@ -2,6 +2,7 @@ package com.judahben149.tala.navigation
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.StackNavigation
+import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.navigate
 import com.arkivanov.decompose.router.stack.pop
@@ -33,7 +34,7 @@ class RootComponent(
                     onButtonClick = { textFromFirstScreen ->
                         navigation.pushNew(Configuration.LoginScreen)
                     },
-                    onNavigateToLogin = { navigation navigateTo Configuration.LoginScreen },
+                    onNavigateToLogin = { navigation.bringToFront(Configuration.LoginScreen) },
                     onNavigateToHome = { navigation navigateTo Configuration.HomeScreen }
                 )
             )
@@ -43,7 +44,7 @@ class RootComponent(
                     componentContext = componentContext,
                     onBackButtonClick = { navigation.pop() },
                     onNavigateToHome = { navigation navigateTo Configuration.HomeScreen },
-                    onNavigateToSignUp = { navigation navigateTo Configuration.SignUpScreen }
+                    onNavigateToSignUp = { navigation.bringToFront(Configuration.SignUpScreen) }
                 )
             )
 
