@@ -94,12 +94,17 @@ kotlin {
             implementation(libs.android.firebase.analytics)
             implementation(libs.android.firebase.auth)
             implementation(libs.play.services.auth)
+
+            // Stream-Chat
+            implementation(libs.stream.chat.compose)
+            implementation(libs.stream.chat.offline)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
@@ -118,10 +123,6 @@ kotlin {
             // Room
             implementation(libs.room.runtime)
             implementation(libs.sqlite.bundled)
-
-            // Stream-Chat
-//            implementation(libs.stream.chat.compose)
-//            implementation(libs.stream.chat.offline)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
