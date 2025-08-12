@@ -1,7 +1,7 @@
-import org.gradle.declarative.dsl.schema.FqName.Empty.packageName
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -13,8 +13,15 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
     alias(libs.plugins.googleServices)
-//    alias(libs.plugins.buildKonfig)
+    alias(libs.plugins.buildkonfig.plugin)
 //    alias(libs.plugins.spmForKmp)
+}
+
+// Load secrets.properties
+val secretsProperties = Properties()
+val secretsPropertiesFile = rootProject.file("secrets.properties")
+if (secretsPropertiesFile.exists()) {
+    secretsProperties.load(secretsPropertiesFile.inputStream())
 }
 
 kotlin {
@@ -113,8 +120,8 @@ kotlin {
             implementation(libs.sqlite.bundled)
 
             // Stream-Chat
-            implementation(libs.stream.chat.compose)
-            implementation(libs.stream.chat.offline)
+//            implementation(libs.stream.chat.compose)
+//            implementation(libs.stream.chat.offline)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -164,3 +171,11 @@ dependencies {
     ksp(libs.room.compiler)
 }
 
+buildkonfig {
+    packageName = "com.judahben149.tala"
+
+    defaultConfigs {
+        buildConfigField(STRING, "STREAM_API_KEY", secretsProperties["STREAM_API_KEY"]?.toString() ?: "")
+        buildConfigField(STRING, "STREAM_CLIENT_SECRET", secretsProperties["STREAM_CLIENT_SECRET"]?.toString() ?: "")
+    }
+}

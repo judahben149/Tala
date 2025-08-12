@@ -22,7 +22,7 @@ firebaseKMP = "2.1.0"
 firebase-bom = "33.14.0"
 google-services-plugin = "4.4.2"
 playServicesAuth = "21.3.0"
-build-config = "4.1.2"
+buildKonfig = "0.17.1"
 stream-chat = "6.20.0"
 
 [libraries]
@@ -71,4 +71,4 @@ kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", versio
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 room = { id = "androidx.room", version.ref = "room" }
 googleServices = { id = "com.google.gms.google-services", version.ref = "google-services-plugin" }
-buildKonfig = { id = "com.github.gmazzo.buildconfig", version.ref = "build-config" }
+buildkonfig_plugin = { id = "com.codingfeline.buildkonfig", version.ref = "buildKonfig" }
