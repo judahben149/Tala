@@ -6,6 +6,8 @@ interface FirebaseService {
     suspend fun signIn(email: String, password: String): AppUser
     suspend fun setDisplayName(displayName: String)
     suspend fun createUser(email: String, password: String, displayName: String): AppUser
+    suspend fun doSendPasswordResetEmail(email: String)
+    suspend fun doDeleteUser()
     suspend fun signOut()
 }
 
@@ -48,6 +50,14 @@ class FirebaseServiceImpl : FirebaseService {
             displayName = displayName
         )
 
+    override suspend fun doSendPasswordResetEmail(email: String) {
+        sendPasswordResetEmail(email)
+    }
+
+    override suspend fun doDeleteUser() {
+        deleteUser()
+    }
+
     override fun getCurrentUser(): AppUser? =
         getCurrentFirebaseUser()
 
@@ -61,3 +71,6 @@ expect suspend fun signOutFirebaseUser()
 expect suspend fun signInWithFirebase(email: String, password: String): AppUser
 expect suspend fun setFirebaseUserDisplayName(displayName: String)
 expect suspend fun createFirebaseUser(email: String, password: String, displayName: String): AppUser
+expect suspend fun sendPasswordResetEmail(email: String)
+
+expect suspend fun deleteUser()

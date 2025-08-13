@@ -50,7 +50,7 @@ fun LoginScreen(
 
     // Handle sign in success
     LaunchedEffect(signInState) {
-        if (signInState is UiState.Loaded && (signInState as UiState.Loaded<AppUser, FirebaseError>).result is Result.Success) {
+        if (signInState is UiState.Loaded && (signInState as UiState.Loaded<AppUser, FirebaseAuthException>).result is Result.Success) {
             viewModel.clearAllStates()
             component.navigateToHome()
         }
@@ -72,7 +72,7 @@ fun LoginScreen(
 @Composable
 private fun LoginScreenContent(
     formState: LoginFormState,
-    signInState: UiState<AppUser, FirebaseError>?,
+    signInState: UiState<AppUser, FirebaseAuthException>?,
     colors: TalaColors,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,

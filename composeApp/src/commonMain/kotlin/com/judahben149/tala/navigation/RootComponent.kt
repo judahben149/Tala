@@ -56,6 +56,18 @@ class RootComponent(
             )
         }
 
+    fun navigateToHome() {
+        navigation navigateTo Configuration.HomeScreen
+    }
+
+    fun navigateToLogin() {
+        navigation.bringToFront(Configuration.LoginScreen)
+    }
+
+    fun navigateToSignUp() {
+        navigation.bringToFront(Configuration.SignUpScreen)
+    }
+
 
     private infix fun StackNavigation<Configuration>.navigateTo(configuration: Configuration) {
         this.navigate { stack ->

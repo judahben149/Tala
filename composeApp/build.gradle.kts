@@ -102,6 +102,9 @@ kotlin {
             // Stream-Chat
             implementation(libs.stream.chat.compose)
             implementation(libs.stream.chat.offline)
+
+            // Splash Screen
+            implementation(libs.splash.screen)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -140,6 +143,10 @@ kotlin {
 
             //Kermit  for logging
             implementation(libs.kermit)
+
+            // Multiplatform Settings
+            implementation(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.noargs)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native)

@@ -4,6 +4,8 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.UserProfileChangeRequest
+import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
+import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthInvalidUserException
 import kotlinx.coroutines.tasks.await
 
 actual fun getCurrentFirebaseApp(): FirebaseAppInfo {
@@ -22,7 +24,7 @@ actual suspend fun signInWithFirebase(
     if (user != null) {
         return user.toAppUser()
     } else {
-        throw Exception("User not found")
+        throw FirebaseAuthInvalidUserException("User not found, please sign up")
     }
 }
 
@@ -34,7 +36,7 @@ actual suspend fun setFirebaseUserDisplayName(displayName: String) {
             .build()
         user.updateProfile(profileUpdates).await()
     } else {
-        throw Exception("User not found")
+        throw FirebaseAuthInvalidUserException("User not found, please sign up")
     }
 }
 
@@ -53,7 +55,7 @@ actual suspend fun createFirebaseUser(
         user.updateProfile(profileUpdates).await()
         return user.toAppUser()
     } else {
-        throw Exception("User creation failed")
+        throw FirebaseAuthException("User creation failed, please try again")
     }
 }
 
@@ -66,6 +68,21 @@ private fun FirebaseUser.toAppUser(): AppUser =
         displayName = displayName ?: "Unknown",
         email = email ?: "Unknown"
     )
+
+actual suspend fun sendPasswordResetEmail(email: String) {
+    FirebaseAuth.getInstance().sendPasswordResetEmail(email).await()
+}
+
+actual suspend fun deleteUser() {
+    val user = FirebaseAuth.getInstance().currentUser
+    if (user != null) {
+        user.delete().await()
+    } else {
+        throw FirebaseAuthInvalidUserException("User not found, please sign up")
+    }
+}
+
+
 
 actual suspend fun signOutFirebaseUser() {
     // TODO: Listen to auth state changes, we are assuming the user is signed out here

@@ -53,18 +53,16 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.data.service.firebase.AppUser
-import com.judahben149.tala.domain.models.authentication.errors.EmailAlreadyInUseError
-import com.judahben149.tala.domain.models.authentication.errors.FirebaseError
-import com.judahben149.tala.domain.models.authentication.errors.InvalidEmailError
-import com.judahben149.tala.domain.models.authentication.errors.NetworkError
-import com.judahben149.tala.domain.models.authentication.errors.WeakPasswordError
+import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.navigation.components.SignUpScreenComponent
 import com.judahben149.tala.presentation.UiState
 import com.judahben149.tala.ui.theme.TalaColors
 import com.judahben149.tala.ui.theme.getTalaColors
 import com.judahben149.tala.util.isIos
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,12 +74,14 @@ fun SignUpScreen(
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
     val colors = getTalaColors()
+    val signInStateTracker: SignInStateTracker = koinInject()
 
     // Handle sign up success
     LaunchedEffect(uiState) {
-        if (uiState is UiState.Loaded && (uiState as UiState.Loaded<AppUser, FirebaseError>).result is Result.Success) {
+        if (uiState is UiState.Loaded && (uiState as UiState.Loaded<AppUser, FirebaseAuthException>).result is Result.Success) {
             viewModel.clearState()
             component.navigateToHome()
+            signInStateTracker.markSignedIn()
         }
     }
 
@@ -450,17 +450,11 @@ fun SocialSignUpButtons(
 
 @Composable
 fun ErrorCard(
-    error: FirebaseError,
+    error: FirebaseAuthException,
     colors: TalaColors,
     modifier: Modifier = Modifier
 ) {
-    val errorMessage = when (error) {
-        is WeakPasswordError -> "Password must be at least 6 characters"
-        is EmailAlreadyInUseError -> "This email is already registered"
-        is InvalidEmailError -> "Please enter a valid email address"
-        is NetworkError -> "Check your internet connection"
-        else -> "Sign up failed. Please try again"
-    }
+    val errorMessage = error.message
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -470,7 +464,7 @@ fun ErrorCard(
         shape = RoundedCornerShape(8.dp)
     ) {
         Text(
-            text = errorMessage,
+            text = errorMessage ?: "An error occurred",
             modifier = Modifier.padding(16.dp),
             color = colors.errorText,
             fontSize = 14.sp

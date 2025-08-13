@@ -3,6 +3,9 @@ package com.judahben149.tala.data.service.firebase
 import cocoapods.FirebaseAuth.FIRAuth
 import cocoapods.FirebaseAuth.FIRUser
 import cocoapods.FirebaseCore.FIRApp
+import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
+import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthInvalidUserException
+import com.judahben149.tala.domain.models.authentication.errors.mapIOSFirebaseError
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -33,13 +36,13 @@ actual suspend fun signInWithFirebase(
     FIRAuth.auth()
         .signInWithEmail(email = email, password = password, completion = { authResult, error ->
             if (error != null) {
-                continuation.resumeWithException(Exception(error.localizedDescription))
+                continuation.resumeWithException(mapIOSFirebaseError(error))
             } else {
                 val user = authResult?.user()
                 if (user != null) {
                     continuation.resume(user.toAppUser())
                 } else {
-                    continuation.resumeWithException(Exception("User not found"))
+                    continuation.resumeWithException(FirebaseAuthInvalidUserException("User not found, please sign up"))
                 }
             }
         })
@@ -60,7 +63,7 @@ actual suspend fun setFirebaseUserDisplayName(displayName: String) =
                 }
             }
         } else {
-            continuation.resumeWithException(Exception("User not found"))
+            continuation.resumeWithException(FirebaseAuthInvalidUserException("User not found, please sign up"))
         }
     }
 
@@ -81,13 +84,13 @@ actual suspend fun createFirebaseUser(
                     changeRequest.setDisplayName(displayName)
                     changeRequest.commitChangesWithCompletion { error ->
                         if (error != null) {
-                            continuation.resumeWithException(Exception(error.localizedDescription))
+                            continuation.resumeWithException(mapIOSFirebaseError(error))
                         } else {
                             continuation.resume(user.toAppUser())
                         }
                     }
                 } else {
-                    continuation.resumeWithException(Exception("User not found"))
+                    continuation.resumeWithException(FirebaseAuthInvalidUserException("User not found, please sign up"))
                 }
             }
         })
@@ -101,15 +104,48 @@ actual suspend fun signOutFirebaseUser() = suspendCancellableCoroutine { continu
         if (!wasSuccessful) {
             val error = errorPointer.pointed.value
             if (error != null) {
-                continuation.resumeWithException(Exception(error.localizedDescription))
+                continuation.resumeWithException(mapIOSFirebaseError(error))
             } else {
-                continuation.resumeWithException(Exception("Unknown error occurred during sign out"))
+                continuation.resumeWithException(FirebaseAuthException("Unknown error occurred during sign out"))
             }
         } else {
             continuation.resume(Unit)
         }
     }
 }
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun sendPasswordResetEmail(email: String) =
+    suspendCancellableCoroutine { continuation ->
+        FIRAuth.auth().sendPasswordResetWithEmail(email = email, completion = { error ->
+            if (error != null) {
+                continuation.resumeWithException(mapIOSFirebaseError(error))
+            } else {
+                continuation.resume(Unit)
+            }
+        })
+    }
+
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun deleteUser() =
+    suspendCancellableCoroutine { continuation ->
+        val user = FIRAuth.auth().currentUser()
+        if (user != null) {
+            user.deleteWithCompletion { error ->
+                if (error != null) {
+                    continuation.resumeWithException(mapIOSFirebaseError(error))
+                } else {
+                    continuation.resume(Unit)
+                }
+            }
+        } else {
+            continuation.resumeWithException(
+                FirebaseAuthInvalidUserException("No user is currently signed in")
+            )
+        }
+    }
+
 
 @OptIn(ExperimentalForeignApi::class)
 actual fun getCurrentFirebaseUser(): AppUser? =
