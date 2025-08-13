@@ -11,9 +11,10 @@ plugins {
     alias(libs.plugins.kotlinCocoapods)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.room)
     alias(libs.plugins.googleServices)
     alias(libs.plugins.buildkonfig.plugin)
+    alias(libs.plugins.ktorfit)
+    alias(libs.plugins.sqlDelight)
 //    alias(libs.plugins.spmForKmp)
 }
 
@@ -72,6 +73,8 @@ kotlin {
             isStatic = true
         }
 
+        pod("sqlite3")
+
         pod("FirebaseCore") {
             version = "~> 11.13"
             extraOpts += listOf("-compiler-option", "-fmodules")
@@ -94,6 +97,7 @@ kotlin {
             implementation(libs.android.firebase.analytics)
             implementation(libs.android.firebase.auth)
             implementation(libs.play.services.auth)
+            implementation(libs.sqldelight.android)
 
             // Stream-Chat
             implementation(libs.stream.chat.compose)
@@ -120,9 +124,25 @@ kotlin {
             implementation(libs.decompose.compose)
             implementation(libs.serialization.json)
 
-            // Room
-            implementation(libs.room.runtime)
-            implementation(libs.sqlite.bundled)
+            // Sql Delight
+            implementation(libs.sqldelight.runtime)
+            implementation(libs.sqldelight.coroutines)
+
+            // kstore
+//            implementation(libs.kstore)
+//            implementation(libs.kstore.file)
+//            implementation(libs.kstore.storage)
+
+            // Ktorfit
+            implementation(libs.ktorfit)
+            implementation(libs.content.negotiation)
+            implementation(libs.kotlinx.json)
+
+            //Kermit  for logging
+            implementation(libs.kermit)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -163,13 +183,27 @@ android {
     }
 }
 
-room {
-    schemaDirectory("$projectDir/schemas")
-}
-
 dependencies {
     debugImplementation(compose.uiTooling)
-    ksp(libs.room.compiler)
+
+    add("kspCommonMainMetadata", libs.ktorfit.compiler)
+    add("kspAndroid", libs.ktorfit.compiler)
+    add("kspIosSimulatorArm64", libs.ktorfit.compiler)
+    add("kspIosX64", libs.ktorfit.compiler)
+    add("kspIosArm64", libs.ktorfit.compiler)
+}
+
+sqldelight {
+    databases {
+        create("TalaDatabase") {
+            packageName.set("com.judahben149.tala")
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/com/judahben149/tala/schemas"))
+            migrationOutputDirectory.set(file("src/commonMain/sqldelight/com/judahben149/tala/migrations"))
+            verifyMigrations.set(true)
+        }
+    }
+
+    linkSqlite.set(true)
 }
 
 buildkonfig {
