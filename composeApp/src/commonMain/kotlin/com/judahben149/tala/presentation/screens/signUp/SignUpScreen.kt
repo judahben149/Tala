@@ -54,7 +54,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.judahben149.tala.data.service.SignInStateTracker
-import com.judahben149.tala.data.service.firebase.AppUser
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.navigation.components.SignUpScreenComponent
@@ -485,9 +484,4 @@ fun ErrorCard(
             fontSize = 14.sp
         )
     }
-}
-
-// Extension function for form validation
-private fun SignUpFormState.isValid(): Boolean {
-    return email.isNotBlank() && password.isNotBlank() && firstName.isNotBlank() && lastName.isNotBlank()
 }

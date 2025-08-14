@@ -10,10 +10,6 @@ import org.koin.compose.koinInject
 
 fun MainViewController() = ComposeUIViewController {
 
-//    startKoin {
-//        modules(appModule)
-//    }
-
     val signInStateTracker: SignInStateTracker = koinInject()
 
     val rootComponent = remember {
