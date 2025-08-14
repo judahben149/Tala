@@ -1,4 +1,4 @@
-package com.judahben149.tala.navigation
+package com.judahben149.tala.navigation.components
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
@@ -7,6 +7,8 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.navigation.MainFlowComponent
+import com.judahben149.tala.navigation.OnboardingFlowComponent
 import kotlinx.serialization.Serializable
 
 class RootComponent(
@@ -25,18 +27,18 @@ class RootComponent(
     )
 
     private fun createChild(
-        configuration: RootConfiguration,
+        configuration: RootConfiguration, 
         componentContext: ComponentContext
     ): RootChild = when (configuration) {
         is RootConfiguration.Loading -> RootChild.Loading
-
+        
         is RootConfiguration.Onboarding -> RootChild.Onboarding(
             OnboardingFlowComponent(
                 componentContext = componentContext,
                 onOnboardingCompleted = ::navigateToMain
             )
         )
-
+        
         is RootConfiguration.Main -> RootChild.Main(
             MainFlowComponent(
                 componentContext = componentContext,
@@ -49,7 +51,11 @@ class RootComponent(
         val isSignedIn = signInStateTracker.isSignedIn.value
         when (isSignedIn) {
             true -> navigateToMain()
-            else -> navigateToOnboarding()
+            false -> navigateToOnboarding()
+            null -> {
+                // Still loading, stay on loading screen
+                // The StateFlow will trigger this function again when ready
+            }
         }
     }
 
@@ -65,10 +71,10 @@ class RootComponent(
     sealed class RootConfiguration {
         @Serializable
         data object Loading : RootConfiguration()
-
+        
         @Serializable
         data object Onboarding : RootConfiguration()
-
+        
         @Serializable
         data object Main : RootConfiguration()
     }

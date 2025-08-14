@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.data.service.firebase.AppUser
 import com.judahben149.tala.domain.models.authentication.errors.*
 import com.judahben149.tala.domain.models.common.Result
@@ -36,6 +37,7 @@ import com.judahben149.tala.presentation.screens.signUp.ErrorCard
 import com.judahben149.tala.ui.theme.TalaColors
 import com.judahben149.tala.ui.theme.getTalaColors
 import com.judahben149.tala.util.isIos
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,12 +49,30 @@ fun LoginScreen(
     val signInState by viewModel.signInState.collectAsState()
     val formState by viewModel.formState.collectAsState()
     val colors = getTalaColors()
+    val signInStateTracker: SignInStateTracker = koinInject()
 
     // Handle sign in success
     LaunchedEffect(signInState) {
-        if (signInState is UiState.Loaded && (signInState as UiState.Loaded<AppUser, FirebaseAuthException>).result is Result.Success) {
-            viewModel.clearAllStates()
-            component.navigateToHome()
+        when (val currentState = signInState) {
+            is UiState.Loaded -> {
+                when (val result = currentState.result) {
+                    is Result.Success -> {
+                        val user = result.data
+                        viewModel.clearFormState()
+                        component.handleLoginSuccess()
+
+                        signInStateTracker.markSignedIn(
+                            userId = user.userId,
+                            isNewUser = false
+                        )
+                    }
+                    is Result.Failure -> {
+                        // Handle error if needed
+                    }
+                }
+            }
+            is UiState.Loading -> { /* Handle loading */ }
+            null -> {  }
         }
     }
 

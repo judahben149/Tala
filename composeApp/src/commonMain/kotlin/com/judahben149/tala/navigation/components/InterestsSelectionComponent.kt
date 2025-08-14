@@ -2,19 +2,14 @@ package com.judahben149.tala.navigation.components
 
 import com.arkivanov.decompose.ComponentContext
 
-class LoginScreenComponent(
+class InterestsSelectionComponent(
     componentContext: ComponentContext,
-    private val onNavigateToSignUp: () -> Unit,
-    private val onLoginSuccess: () -> Unit,
+    private val onInterestsSelected: (List<String>) -> Unit,
     private val onBackPressed: () -> Unit
 ) : ComponentContext by componentContext {
 
-    fun navigateToSignUp() {
-        onNavigateToSignUp()
-    }
-
-    fun handleLoginSuccess() {
-        onLoginSuccess()
+    fun selectInterests(interests: List<String>) {
+        onInterestsSelected(interests)
     }
 
     fun goBack() {

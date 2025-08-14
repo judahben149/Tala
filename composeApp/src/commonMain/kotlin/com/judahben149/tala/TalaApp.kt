@@ -8,7 +8,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.extensions.compose.stack.Children
@@ -17,67 +16,44 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.navigation.RootComponent
-import com.judahben149.tala.presentation.screens.HomeScreen
-import com.judahben149.tala.presentation.screens.login.LoginScreen
-import com.judahben149.tala.presentation.screens.signUp.SignUpScreen
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.judahben149.tala.navigation.flow.MainFlow
+import com.judahben149.tala.navigation.flow.OnboardingFlow
 import org.koin.compose.koinInject
 
 @Composable
-@Preview
-fun TalaApp(
-    rootComponent: RootComponent
-) {
+fun TalaApp(rootComponent: RootComponent) {
     val signInStateTracker: SignInStateTracker = koinInject()
 
     LaunchedEffect(Unit) {
         signInStateTracker.checkSignInState()
     }
 
+    // Listen to auth state changes and trigger navigation
     val isSignedIn by signInStateTracker.isSignedIn.collectAsState()
-    val hasSignedInBefore = remember { signInStateTracker.hasSignedInBefore() }
-
-    // Navigate to appropriate screen based on auth state
-    LaunchedEffect(isSignedIn, hasSignedInBefore) {
-        when (isSignedIn) {
-            true -> {
-                rootComponent.navigateToHome()
-            }
-            false -> {
-                if (hasSignedInBefore) {
-                    rootComponent.navigateToLogin()
-                } else {
-                    rootComponent.navigateToSignUp()
-                }
-            }
-            null -> { /* Still loading, do nothing */ }
+    LaunchedEffect(isSignedIn) {
+        if (isSignedIn != null) {
+            rootComponent.checkAuthenticationState()
         }
     }
 
     MaterialTheme {
-        when (isSignedIn) {
-            null -> LoadingScreen()
-            else -> {
-                // Always show the navigation stack once state is determined
-                val childStack = rootComponent.childStack.subscribeAsState()
-                Children(
-                    stack = childStack.value,
-                    animation = stackAnimation(slide())
-                ) { child ->
-                    when (val instance = child.instance) {
-                        is RootComponent.Child.SignUpScreen -> SignUpScreen(instance.component)
-                        is RootComponent.Child.LoginScreen -> LoginScreen(instance.component)
-                        is RootComponent.Child.HomeScreen -> HomeScreen(instance.component)
-                    }
-                }
+        val childStack by rootComponent.childStack.subscribeAsState()
+
+        Children(
+            stack = childStack,
+            animation = stackAnimation(slide())
+        ) { child ->
+            when (val instance = child.instance) {
+                is RootComponent.RootChild.Loading -> LoadingScreen()
+                is RootComponent.RootChild.Onboarding -> OnboardingFlow(instance.component)
+                is RootComponent.RootChild.Main -> MainFlow(instance.component)
             }
         }
     }
 }
 
-
 @Composable
-fun LoadingScreen() {
+private fun LoadingScreen() {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center

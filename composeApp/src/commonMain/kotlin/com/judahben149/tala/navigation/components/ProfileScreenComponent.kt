@@ -2,19 +2,14 @@ package com.judahben149.tala.navigation.components
 
 import com.arkivanov.decompose.ComponentContext
 
-class LoginScreenComponent(
+class ProfileScreenComponent(
     componentContext: ComponentContext,
-    private val onNavigateToSignUp: () -> Unit,
-    private val onLoginSuccess: () -> Unit,
+    private val onSignOut: () -> Unit,
     private val onBackPressed: () -> Unit
 ) : ComponentContext by componentContext {
 
-    fun navigateToSignUp() {
-        onNavigateToSignUp()
-    }
-
-    fun handleLoginSuccess() {
-        onLoginSuccess()
+    fun signOut() {
+        onSignOut()
     }
 
     fun goBack() {

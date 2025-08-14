@@ -1,5 +1,6 @@
 package com.judahben149.tala.di
 
+import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.local.UserDatabaseHelper
 import com.judahben149.tala.data.service.firebase.FirebaseService
 import com.judahben149.tala.data.service.firebase.FirebaseServiceImpl
@@ -29,8 +30,9 @@ expect val platformModule: Module
 val appModule = module {
     // Services
     singleOf(::FirebaseServiceImpl).bind<FirebaseService>()
-    single<Settings> { Settings() }
+    singleOf<Settings>(::Settings)
     singleOf(::SignInStateTracker)
+    single { Logger.withTag("Talaxx") }
 
     // Repositories
     singleOf(::AuthenticationRepositoryImpl).bind<AuthenticationRepository>()

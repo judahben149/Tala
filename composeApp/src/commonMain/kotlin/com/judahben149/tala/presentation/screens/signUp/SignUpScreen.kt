@@ -78,10 +78,25 @@ fun SignUpScreen(
 
     // Handle sign up success
     LaunchedEffect(uiState) {
-        if (uiState is UiState.Loaded && (uiState as UiState.Loaded<AppUser, FirebaseAuthException>).result is Result.Success) {
-            viewModel.clearState()
-            component.navigateToHome()
-            signInStateTracker.markSignedIn()
+        when (val currentState = uiState) {
+            is UiState.Loaded -> {
+                when (val result = currentState.result) {
+                    is Result.Success -> {
+                        val user = result.data
+                        viewModel.clearState()
+                        component.handleSignUpSuccess()
+                        signInStateTracker.markSignedIn(
+                            userId = user.userId,
+                            isNewUser = true
+                        )
+                    }
+                    is Result.Failure -> {
+                        // Handle error if needed
+                    }
+                }
+            }
+            is UiState.Loading -> { /* Handle loading */ }
+            null -> { }
         }
     }
 

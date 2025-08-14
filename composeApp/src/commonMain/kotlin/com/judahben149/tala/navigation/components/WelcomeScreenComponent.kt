@@ -2,12 +2,12 @@ package com.judahben149.tala.navigation.components
 
 import com.arkivanov.decompose.ComponentContext
 
-class HomeScreenComponent(
+class WelcomeScreenComponent(
     componentContext: ComponentContext,
-    private val onNavigateToProfile: () -> Unit
+    private val onContinue: () -> Unit
 ) : ComponentContext by componentContext {
 
-    fun navigateToProfile() {
-        onNavigateToProfile()
+    fun continueToNext() {
+        onContinue()
     }
 }
