@@ -219,5 +219,7 @@ buildkonfig {
     defaultConfigs {
         buildConfigField(STRING, "STREAM_API_KEY", secretsProperties["STREAM_API_KEY"]?.toString() ?: "")
         buildConfigField(STRING, "STREAM_CLIENT_SECRET", secretsProperties["STREAM_CLIENT_SECRET"]?.toString() ?: "")
+        buildConfigField(STRING, "GEMINI_API_KEY", secretsProperties["GEMINI_API_KEY"]?.toString() ?: "")
+        buildConfigField(STRING, "ELEVEN_LABS_API_KEY", secretsProperties["ELEVEN_LABS_API_KEY"]?.toString() ?: "")
     }
 }

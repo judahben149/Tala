@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.sp
 import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
-import com.judahben149.tala.navigation.components.SignUpScreenComponent
+import com.judahben149.tala.navigation.components.others.SignUpScreenComponent
 import com.judahben149.tala.presentation.UiState
 import com.judahben149.tala.ui.theme.TalaColors
 import com.judahben149.tala.ui.theme.getTalaColors

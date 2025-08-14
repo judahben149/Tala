@@ -1,4 +1,4 @@
-package com.judahben149.tala.navigation.components
+package com.judahben149.tala.navigation.components.others
 
 import com.arkivanov.decompose.ComponentContext
 

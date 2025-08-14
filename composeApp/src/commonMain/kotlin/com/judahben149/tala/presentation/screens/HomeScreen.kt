@@ -3,7 +3,7 @@ package com.judahben149.tala.presentation.screens
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import com.judahben149.tala.data.service.SignInStateTracker
-import com.judahben149.tala.navigation.components.HomeScreenComponent
+import com.judahben149.tala.navigation.components.top.HomeScreenComponent
 import org.koin.compose.koinInject
 
 @Composable
@@ -12,10 +12,11 @@ fun HomeScreen(
 //    viewModel: HomeScreenViewModel = koinViewModel()
 ) {
 
-    val signInTracker: SignInStateTracker = koinInject()
-
+//    val signInTracker: SignInStateTracker = koinInject()
+//
     LaunchedEffect("null") {
-        signInTracker.markSignedOut()
+//        signInTracker.markSignedOut()
+        component.navigateToSpeak()
     }
 
 

@@ -7,8 +7,9 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
-import com.judahben149.tala.navigation.components.HomeScreenComponent
-import com.judahben149.tala.navigation.components.ProfileScreenComponent
+import com.judahben149.tala.navigation.components.top.HomeScreenComponent
+import com.judahben149.tala.navigation.components.others.ProfileScreenComponent
+import com.judahben149.tala.navigation.components.others.SpeakScreenComponent
 import kotlinx.serialization.Serializable
 
 class MainFlowComponent(
@@ -36,6 +37,9 @@ class MainFlowComponent(
                 componentContext = componentContext,
                 onNavigateToProfile = { 
                     navigation.pushNew(MainConfiguration.Profile) 
+                },
+                onNavigateToSpeak = {
+                    navigation.pushNew(MainConfiguration.Speak)
                 }
             )
         )
@@ -44,6 +48,16 @@ class MainFlowComponent(
             ProfileScreenComponent(
                 componentContext = componentContext,
                 onSignOut = onSignOut,
+                onBackPressed = { navigation.pop() }
+            )
+        )
+
+        is MainConfiguration.Speak -> MainChild.Speak(
+            SpeakScreenComponent(
+                componentContext = componentContext,
+                onViewConversationList = {
+
+                },
                 onBackPressed = { navigation.pop() }
             )
         )
@@ -56,10 +70,14 @@ class MainFlowComponent(
         
         @Serializable
         data object Profile : MainConfiguration()
+
+        @Serializable
+        data object Speak : MainConfiguration()
     }
 
     sealed class MainChild {
         data class Home(val component: HomeScreenComponent) : MainChild()
         data class Profile(val component: ProfileScreenComponent) : MainChild()
+        data class Speak(val component: SpeakScreenComponent) : MainChild()
     }
 }

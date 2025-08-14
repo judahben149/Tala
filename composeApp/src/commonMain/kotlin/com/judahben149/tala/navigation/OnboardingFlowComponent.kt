@@ -9,11 +9,11 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.judahben149.tala.data.service.SignInStateTracker
-import com.judahben149.tala.navigation.components.LoginScreenComponent
-import com.judahben149.tala.navigation.components.SignUpScreenComponent
-import com.judahben149.tala.navigation.components.LanguageSelectionComponent
-import com.judahben149.tala.navigation.components.InterestsSelectionComponent
-import com.judahben149.tala.navigation.components.WelcomeScreenComponent
+import com.judahben149.tala.navigation.components.others.LoginScreenComponent
+import com.judahben149.tala.navigation.components.others.SignUpScreenComponent
+import com.judahben149.tala.navigation.components.others.LanguageSelectionComponent
+import com.judahben149.tala.navigation.components.others.InterestsSelectionComponent
+import com.judahben149.tala.navigation.components.others.WelcomeScreenComponent
 import kotlinx.serialization.Serializable
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

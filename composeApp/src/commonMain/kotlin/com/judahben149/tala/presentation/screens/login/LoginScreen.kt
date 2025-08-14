@@ -31,7 +31,7 @@ import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.data.service.firebase.AppUser
 import com.judahben149.tala.domain.models.authentication.errors.*
 import com.judahben149.tala.domain.models.common.Result
-import com.judahben149.tala.navigation.components.LoginScreenComponent
+import com.judahben149.tala.navigation.components.others.LoginScreenComponent
 import com.judahben149.tala.presentation.UiState
 import com.judahben149.tala.presentation.screens.signUp.ErrorCard
 import com.judahben149.tala.ui.theme.TalaColors
