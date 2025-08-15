@@ -7,10 +7,14 @@ import com.judahben149.tala.data.service.firebase.FirebaseServiceImpl
 import com.judahben149.tala.domain.repository.AuthenticationRepository
 import com.judahben149.tala.data.repository.AuthenticationRepositoryImpl
 import com.judahben149.tala.data.repository.GeminiRepositoryImpl
+import com.judahben149.tala.data.repository.TtsRepositoryImpl
+import com.judahben149.tala.data.repository.VoicesRepositoryImpl
 import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.data.service.gemini.GeminiService
 import com.judahben149.tala.data.service.gemini.createGeminiService
+import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
 import com.judahben149.tala.domain.repository.GeminiRepository
+import com.judahben149.tala.domain.repository.VoicesRepository
 import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
 import com.judahben149.tala.domain.usecases.authentication.DeleteUserUseCase
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentAppUseCase
@@ -76,6 +80,8 @@ val appModule = module {
     // Repositories
     singleOf(::AuthenticationRepositoryImpl).bind<AuthenticationRepository>()
     singleOf(::GeminiRepositoryImpl).bind<GeminiRepository>()
+    singleOf(::VoicesRepositoryImpl).bind<VoicesRepository>()
+    singleOf(::TtsRepositoryImpl).bind<ElevenLabsTtsRepository>()
 
 
     // Use Cases

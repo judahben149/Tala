@@ -1,9 +1,9 @@
 package com.judahben149.tala.domain.mappers
 
-import com.judahben149.tala.data.model.network.CandidateDto
-import com.judahben149.tala.data.model.network.ContentDto
-import com.judahben149.tala.data.model.network.GeminiResponseDto
-import com.judahben149.tala.data.model.network.PartDto
+import com.judahben149.tala.data.model.network.gemini.CandidateDto
+import com.judahben149.tala.data.model.network.gemini.ContentDto
+import com.judahben149.tala.data.model.network.gemini.GeminiResponseDto
+import com.judahben149.tala.data.model.network.gemini.PartDto
 import com.judahben149.tala.domain.models.gemini.Gemini
 
 fun GeminiResponseDto.toGemini(): Gemini {

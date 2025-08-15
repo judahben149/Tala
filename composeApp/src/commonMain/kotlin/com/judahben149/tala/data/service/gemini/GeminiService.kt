@@ -1,7 +1,7 @@
 package com.judahben149.tala.data.service.gemini
 
-import com.judahben149.tala.data.model.network.GeminiResponseDto
-import com.judahben149.tala.data.model.network.RequestBody
+import com.judahben149.tala.data.model.network.gemini.GeminiResponseDto
+import com.judahben149.tala.data.model.network.gemini.RequestBody
 import com.judahben149.tala.util.GEMINI_PRO
 import com.judahben149.tala.util.GEMINI_PRO_VISION
 import de.jensklingenberg.ktorfit.http.Body

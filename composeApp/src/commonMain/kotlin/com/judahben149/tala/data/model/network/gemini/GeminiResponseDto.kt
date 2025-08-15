@@ -1,4 +1,4 @@
-package com.judahben149.tala.data.model.network
+package com.judahben149.tala.data.model.network.gemini
 
 import kotlinx.serialization.Serializable
 

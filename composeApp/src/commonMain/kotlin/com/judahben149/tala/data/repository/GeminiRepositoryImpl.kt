@@ -1,10 +1,10 @@
 package com.judahben149.tala.data.repository
 
 import co.touchlab.kermit.Logger
-import com.judahben149.tala.data.model.network.ContentItem
-import com.judahben149.tala.data.model.network.RequestBody
-import com.judahben149.tala.data.model.network.RequestInlineData
-import com.judahben149.tala.data.model.network.RequestPart
+import com.judahben149.tala.data.model.network.gemini.ContentItem
+import com.judahben149.tala.data.model.network.gemini.RequestBody
+import com.judahben149.tala.data.model.network.gemini.RequestInlineData
+import com.judahben149.tala.data.model.network.gemini.RequestPart
 import com.judahben149.tala.data.service.gemini.GeminiService
 import com.judahben149.tala.domain.mappers.toGemini // Assuming this maps DTO -> Domain model
 import com.judahben149.tala.domain.mappers.toNetworkFailure

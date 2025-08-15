@@ -5,13 +5,16 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.speech.CharacterTimestamp
 import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
+import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class SpeakScreenViewModel(
     private val generateContentUseCase: GenerateContentUseCase,
+    private val streamTtsUseCase: StreamTextToSpeechUseCase,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -54,5 +57,44 @@ class SpeakScreenViewModel(
                 _isLoading.value = false
             }
         }
+    }
+
+    suspend fun startTextToSpeech(
+        text: String,
+        voiceId: String,
+        apiKey: String
+    ) {
+        val result = streamTtsUseCase(
+            text = text,
+            voiceId = voiceId,
+            apiKey = apiKey,
+            stability = 0.75f,
+            similarityBoost = 0.75f,
+            useSpeakerBoost = true
+        )
+
+        when (result) {
+            is Result.Success -> {
+                result.data.collect { audioChunk ->
+                    // Play audio chunk
+                    playAudioChunk(audioChunk.audioData)
+
+                    // Update UI with character timing
+                    updateTimestamps(audioChunk.timestamps)
+                }
+            }
+            is Result.Failure -> {
+                // Handle error
+//                handleTtsError(result.error)
+            }
+        }
+    }
+
+    private fun playAudioChunk(audioData: ByteArray) {
+        // Implement audio playback logic
+    }
+
+    private fun updateTimestamps(timestamps: List<CharacterTimestamp>) {
+        // Update UI with character-level timing for text highlighting
     }
 }
