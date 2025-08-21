@@ -1,6 +1,7 @@
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -10,9 +11,18 @@ plugins {
     alias(libs.plugins.kotlinCocoapods)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.room)
     alias(libs.plugins.googleServices)
+    alias(libs.plugins.buildkonfig.plugin)
+    alias(libs.plugins.ktorfit)
+    alias(libs.plugins.sqlDelight)
 //    alias(libs.plugins.spmForKmp)
+}
+
+// Load secrets.properties
+val secretsProperties = Properties()
+val secretsPropertiesFile = rootProject.file("secrets.properties")
+if (secretsPropertiesFile.exists()) {
+    secretsProperties.load(secretsPropertiesFile.inputStream())
 }
 
 kotlin {
@@ -61,7 +71,16 @@ kotlin {
         framework {
             baseName = "ComposeApp"
             isStatic = true
+
+            linkerOpts += listOf("-framework", "AVFoundation")
+            linkerOpts += listOf("-framework", "AudioToolbox")
+            linkerOpts += listOf("-framework", "CoreAudio")
+
+            linkerOpts += listOf("-framework", "MediaPlayer")
+            linkerOpts += listOf("-framework", "CoreMedia")
         }
+
+        pod("sqlite3")
 
         pod("FirebaseCore") {
             version = "~> 11.13"
@@ -85,12 +104,27 @@ kotlin {
             implementation(libs.android.firebase.analytics)
             implementation(libs.android.firebase.auth)
             implementation(libs.play.services.auth)
+            implementation(libs.sqldelight.android)
+
+            // Stream-Chat
+            implementation(libs.stream.chat.compose)
+            implementation(libs.stream.chat.offline)
+
+            // Splash Screen
+            implementation(libs.splash.screen)
+//            implementation(libs.ktor.logging.jvm)
+
+            // Exoplayer
+            implementation(libs.media3.exoplayer)
+            implementation(libs.media3.ui)
+            implementation(libs.media3.common)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
             implementation(compose.ui)
+            implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
@@ -106,9 +140,34 @@ kotlin {
             implementation(libs.decompose.compose)
             implementation(libs.serialization.json)
 
-            // Room
-            implementation(libs.room.runtime)
-            implementation(libs.sqlite.bundled)
+            // Sql Delight
+            implementation(libs.sqldelight.runtime)
+            implementation(libs.sqldelight.coroutines)
+
+            // kstore
+//            implementation(libs.kstore)
+//            implementation(libs.kstore.file)
+//            implementation(libs.kstore.storage)
+
+            // Ktorfit
+            implementation(libs.ktorfit)
+            implementation(libs.ktor.logging)
+            implementation(libs.content.negotiation)
+            implementation(libs.kotlinx.json)
+
+            //Kermit  for logging
+            implementation(libs.kermit)
+
+            // Multiplatform Settings
+            implementation(libs.multiplatform.settings)
+            implementation(libs.multiplatform.settings.noargs)
+
+            // Korge
+//            implementation(libs.korge.core)
+        }
+        iosMain.dependencies {
+            implementation(libs.sqldelight.native)
+//            implementation(libs.ktor.logging.ios)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -149,12 +208,36 @@ android {
     }
 }
 
-room {
-    schemaDirectory("$projectDir/schemas")
-}
-
 dependencies {
     debugImplementation(compose.uiTooling)
-    ksp(libs.room.compiler)
+
+    add("kspCommonMainMetadata", libs.ktorfit.compiler)
+    add("kspAndroid", libs.ktorfit.compiler)
+    add("kspIosSimulatorArm64", libs.ktorfit.compiler)
+    add("kspIosX64", libs.ktorfit.compiler)
+    add("kspIosArm64", libs.ktorfit.compiler)
 }
 
+sqldelight {
+    databases {
+        create("TalaDatabase") {
+            packageName.set("com.judahben149.tala")
+            schemaOutputDirectory.set(file("src/commonMain/sqldelight/com/judahben149/tala/schemas"))
+            migrationOutputDirectory.set(file("src/commonMain/sqldelight/com/judahben149/tala/migrations"))
+            verifyMigrations.set(true)
+        }
+    }
+
+    linkSqlite.set(true)
+}
+
+buildkonfig {
+    packageName = "com.judahben149.tala"
+
+    defaultConfigs {
+        buildConfigField(STRING, "STREAM_API_KEY", secretsProperties["STREAM_API_KEY"]?.toString() ?: "")
+        buildConfigField(STRING, "STREAM_CLIENT_SECRET", secretsProperties["STREAM_CLIENT_SECRET"]?.toString() ?: "")
+        buildConfigField(STRING, "GEMINI_API_KEY", secretsProperties["GEMINI_API_KEY"]?.toString() ?: "")
+        buildConfigField(STRING, "ELEVEN_LABS_API_KEY", secretsProperties["ELEVEN_LABS_API_KEY"]?.toString() ?: "")
+    }
+}

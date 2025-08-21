@@ -1,187 +1,487 @@
 package com.judahben149.tala.presentation.screens.signUp
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.judahben149.tala.data.service.firebase.AppUser
-import com.judahben149.tala.domain.models.authentication.errors.EmailAlreadyInUseError
-import com.judahben149.tala.domain.models.authentication.errors.FirebaseError
-import com.judahben149.tala.domain.models.authentication.errors.InvalidEmailError
-import com.judahben149.tala.domain.models.authentication.errors.NetworkError
-import com.judahben149.tala.domain.models.authentication.errors.WeakPasswordError
+import androidx.compose.ui.unit.sp
+import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
-import com.judahben149.tala.navigation.components.SignUpScreenComponent
+import com.judahben149.tala.navigation.components.others.SignUpScreenComponent
 import com.judahben149.tala.presentation.UiState
-import com.judahben149.tala.presentation.components.TextFieldHint
-import com.judahben149.tala.ui.theme.Red400
-import com.judahben149.tala.ui.theme.Yellow400
-import com.judahben149.tala.ui.theme.or
+import com.judahben149.tala.ui.theme.TalaColors
+import com.judahben149.tala.ui.theme.getTalaColors
 import com.judahben149.tala.util.isIos
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
     component: SignUpScreenComponent,
 ) {
-
     val viewModel: SignUpViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
-
-    SignUpScreenContent(
-        formState = formState,
-        uiState = uiState,
-        onEmailChange = viewModel::updateEmail,
-        onPasswordChange = viewModel::updatePassword,
-        onDisplayNameChange = viewModel::updateDisplayName,
-        onSignUpClick = viewModel::signUp,
-        onSignUpWithGoogleClick = {
-//            component.navigateToGoogleSignUp()
-        },
-        onSignUpWithAppleClick = {
-//            component.navigateToAppleSignUp()
-        },
-        onNavigateToSignIn = {
-            component.navigateToLogin()
-        },
-        onSignUpSuccess = {
-            viewModel.clearState()
-            component.navigateToHome()
-        }
-    )
-}
-
-@Composable
-fun SignUpScreenContent(
-    formState: SignUpFormState,
-    uiState: UiState<AppUser, FirebaseError>?,
-    onEmailChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onDisplayNameChange: (String) -> Unit,
-    onSignUpClick: () -> Unit,
-    onSignUpWithGoogleClick: () -> Unit,
-    onSignUpWithAppleClick: () -> Unit,
-    onNavigateToSignIn: () -> Unit,
-    onSignUpSuccess: () -> Unit
-) {
-    val focusManager = LocalFocusManager.current
-    val keyboardController = LocalSoftwareKeyboardController.current
+    val colors = getTalaColors()
+    val signInStateTracker: SignInStateTracker = koinInject()
 
     // Handle sign up success
     LaunchedEffect(uiState) {
-        if (uiState is UiState.Loaded && uiState.result is Result.Success) {
-            onSignUpSuccess()
+        when (val currentState = uiState) {
+            is UiState.Loaded -> {
+                when (val result = currentState.result) {
+                    is Result.Success -> {
+                        val user = result.data
+                        viewModel.clearState()
+                        component.handleSignUpSuccess()
+                        signInStateTracker.markSignedIn(
+                            userId = user.userId,
+                            isNewUser = true
+                        )
+                    }
+                    is Result.Failure -> {
+                        // Handle error if needed
+                    }
+                }
+            }
+            is UiState.Loading -> { /* Handle loading */ }
+            null -> { }
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(colors.appBackground)
     ) {
-        Text("Sign Up")
-
-        // Display Name text field
-        TextFieldHint(
-            hint = "Display Name",
-            value = formState.displayName,
-            onValueChange = onDisplayNameChange
-        )
-
-        // Email text field
-        TextFieldHint(
-            hint = "Email",
-            value = formState.email,
-            onValueChange = onEmailChange
-        )
-
-        // Password text field
-        TextFieldHint(
-            hint = "Password",
-            value = formState.password,
-            onValueChange = onPasswordChange
-        )
-
-        // Sign up button
-        Button(
-            colors = ButtonDefaults.buttonColors(containerColor = Red400 or Yellow400),
-            onClick = {
-//                focusManager.clearFocus()
-//                keyboardController?.hide()
-                onSignUpClick
-            },
-            enabled = uiState !is UiState.Loading
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp)
         ) {
-            if (uiState is UiState.Loading) {
-                CircularProgressIndicator(modifier = Modifier.size(16.dp))
-            } else {
-                Text("Sign Up")
-            }
-        }
-
-        // Sign up with Google button
-        Button(
-            colors = ButtonDefaults.buttonColors(containerColor = Red400 or Yellow400),
-            onClick = onSignUpWithGoogleClick
-        ) {
-            Text("Sign up with Google")
-        }
-
-        if (isIos()) {
-            // Sign up with Apple button
-            Button(
-                colors = ButtonDefaults.buttonColors(containerColor = Red400 or Yellow400),
-                onClick = onSignUpWithAppleClick
+            // Top Bar
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 48.dp, bottom = 32.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Sign up with Apple")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = colors.iconTint,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { component.navigateToLogin() }
+                )
+
+                Icon(
+                    imageVector = Icons.Default.Close,
+                    contentDescription = "Close",
+                    tint = colors.iconTint,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clickable { /* Handle close */ }
+                )
             }
-        }
 
-        // Navigate to Sign In
-        TextButton(onClick = onNavigateToSignIn) {
-            Text("Already have an account? Sign In")
-        }
+            // Title
+            Text(
+                text = "Create an account",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = colors.primaryText,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
 
-        // Error handling
-        uiState?.let { state ->
-            if (state is UiState.Loaded && state.result is Result.Failure) {
-                val errorMessage = when (state.result.error) {
-                    is WeakPasswordError -> "Password must be at least 6 characters"
-                    is EmailAlreadyInUseError -> "This email is already registered"
-                    is InvalidEmailError -> "Please enter a valid email address"
-                    is NetworkError -> "Check your internet connection"
-                    else -> "Sign up failed. Please try again"
-                }
+            // Form Fields
+            SignUpForm(
+                formState = formState,
+                colors = colors,
+                onEmailChange = viewModel::updateEmail,
+                onConfirmEmailChange = viewModel::updateConfirmEmail,
+                onPasswordChange = viewModel::updatePassword,
+                onFirstNameChange = viewModel::updateFirstName,
+                onLastNameChange = viewModel::updateLastName
+            )
 
-                Card(
-                    modifier = Modifier.padding(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Red400.copy(alpha = 0.1f))
-                ) {
+            // Terms and Privacy
+            Text(
+                text = "By signing up or signing in, I accept the Tala Terms of Service and have read the Privacy Policy.",
+                fontSize = 12.sp,
+                color = colors.secondaryText,
+                lineHeight = 16.sp,
+                modifier = Modifier.padding(vertical = 16.dp)
+            )
+
+            // Sign Up Button
+            Button(
+                onClick = { viewModel.signUp() },
+                enabled = uiState !is UiState.Loading && formState.isValid(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = colors.primaryButtonBackground,
+                    contentColor = colors.primaryButtonText,
+                    disabledContainerColor = colors.disabledButtonBackground,
+                    disabledContentColor = colors.disabledButtonText
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                if (uiState is UiState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = colors.primaryButtonText,
+                        strokeWidth = 2.dp
+                    )
+                } else {
                     Text(
-                        text = errorMessage,
-                        modifier = Modifier.padding(16.dp),
-                        color = Red400
+                        text = "Sign Up",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Social Sign Up Buttons
+            SocialSignUpButtons(
+                colors = colors,
+                onGoogleClick = { /* Handle Google sign up */ },
+                onAppleClick = { /* Handle Apple sign up */ }
+            )
+
+            // Navigate to Sign In
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Already have an account? ",
+                    color = colors.secondaryText,
+                    fontSize = 14.sp
+                )
+                Text(
+                    text = "Sign In",
+                    color = colors.primary,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.clickable { component.navigateToLogin() }
+                )
+            }
+
+            // Error handling
+            uiState?.let { state ->
+                if (state is UiState.Loaded && state.result is Result.Failure) {
+                    ErrorCard(
+                        error = state.result.error,
+                        colors = colors,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+@Composable
+private fun SignUpForm(
+    formState: SignUpFormState,
+    colors: TalaColors,
+    onEmailChange: (String) -> Unit,
+    onConfirmEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onFirstNameChange: (String) -> Unit,
+    onLastNameChange: (String) -> Unit
+) {
+    val focusManager = LocalFocusManager.current
+    var isPasswordVisible by remember { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // Email Field
+        OutlinedTextField(
+            value = formState.email,
+            onValueChange = onEmailChange,
+            label = { Text("Email address", color = colors.secondaryText) },
+            placeholder = { Text("alexandrh.mobbin@gmail.com", color = colors.textFieldPlaceholderText) },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.textFieldFocusedIndicator,
+                unfocusedBorderColor = colors.textFieldBorder,
+                focusedTextColor = colors.primaryText,
+                unfocusedTextColor = colors.primaryText,
+                unfocusedContainerColor = colors.textFieldBackground,
+                focusedContainerColor = colors.textFieldBackground,
+                unfocusedLabelColor = colors.secondaryText,
+                focusedLabelColor = colors.textFieldFocusedIndicator,
+                unfocusedPlaceholderColor = colors.textFieldPlaceholderText,
+                focusedPlaceholderColor = colors.textFieldPlaceholderText
+            ),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        // Confirm Email Field
+        OutlinedTextField(
+            value = formState.confirmEmail,
+            onValueChange = onConfirmEmailChange,
+            label = { Text("Confirm email address", color = colors.secondaryText) },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Email,
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.textFieldFocusedIndicator,
+                unfocusedBorderColor = colors.textFieldBorder,
+                focusedTextColor = colors.primaryText,
+                unfocusedTextColor = colors.primaryText,
+                unfocusedContainerColor = colors.textFieldBackground,
+                focusedContainerColor = colors.textFieldBackground,
+                unfocusedLabelColor = colors.secondaryText,
+                focusedLabelColor = colors.textFieldFocusedIndicator,
+                unfocusedPlaceholderColor = colors.textFieldPlaceholderText,
+                focusedPlaceholderColor = colors.textFieldPlaceholderText
+            ),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        // First Name Field
+        OutlinedTextField(
+            value = formState.firstName,
+            onValueChange = onFirstNameChange,
+            label = { Text("First name", color = colors.secondaryText) },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.textFieldFocusedIndicator,
+                unfocusedBorderColor = colors.textFieldBorder,
+                focusedTextColor = colors.primaryText,
+                unfocusedTextColor = colors.primaryText,
+                unfocusedContainerColor = colors.textFieldBackground,
+                focusedContainerColor = colors.textFieldBackground,
+                unfocusedLabelColor = colors.secondaryText,
+                focusedLabelColor = colors.textFieldFocusedIndicator,
+                unfocusedPlaceholderColor = colors.textFieldPlaceholderText,
+                focusedPlaceholderColor = colors.textFieldPlaceholderText
+            ),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        // Last Name Field
+        OutlinedTextField(
+            value = formState.lastName,
+            onValueChange = onLastNameChange,
+            label = { Text("Last name", color = colors.secondaryText) },
+            modifier = Modifier.fillMaxWidth(),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Next
+            ),
+            keyboardActions = KeyboardActions(
+                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+            ),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.textFieldFocusedIndicator,
+                unfocusedBorderColor = colors.textFieldBorder,
+                focusedTextColor = colors.primaryText,
+                unfocusedTextColor = colors.primaryText,
+                unfocusedContainerColor = colors.textFieldBackground,
+                focusedContainerColor = colors.textFieldBackground,
+                unfocusedLabelColor = colors.secondaryText,
+                focusedLabelColor = colors.textFieldFocusedIndicator,
+                unfocusedPlaceholderColor = colors.textFieldPlaceholderText,
+                focusedPlaceholderColor = colors.textFieldPlaceholderText
+            ),
+            shape = RoundedCornerShape(8.dp)
+        )
+
+        // Password Field
+        OutlinedTextField(
+            value = formState.password,
+            onValueChange = onPasswordChange,
+            label = { Text("Password", color = colors.secondaryText) },
+            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Password,
+                imeAction = ImeAction.Done
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = { focusManager.clearFocus() }
+            ),
+            trailingIcon = {
+                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
+                    Icon(
+                        imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (isPasswordVisible) "Hide password" else "Show password",
+                        tint = colors.iconTint
+                    )
+                }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = colors.textFieldFocusedIndicator,
+                unfocusedBorderColor = colors.textFieldBorder,
+                focusedTextColor = colors.primaryText,
+                unfocusedTextColor = colors.primaryText,
+                unfocusedContainerColor = colors.textFieldBackground,
+                focusedContainerColor = colors.textFieldBackground,
+                unfocusedLabelColor = colors.secondaryText,
+                focusedLabelColor = colors.textFieldFocusedIndicator,
+                unfocusedPlaceholderColor = colors.textFieldPlaceholderText,
+                focusedPlaceholderColor = colors.textFieldPlaceholderText
+            ),
+            shape = RoundedCornerShape(8.dp)
+        )
+    }
+}
+
+@Composable
+fun SocialSignUpButtons(
+    colors: TalaColors,
+    onGoogleClick: () -> Unit,
+    onAppleClick: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        // Google Sign Up Button
+        OutlinedButton(
+            onClick = onGoogleClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = colors.primaryText
+            ),
+            border = BorderStroke(
+                width = 1.dp,
+                color = colors.textFieldBorder
+            ),
+            shape = RoundedCornerShape(8.dp)
+        ) {
+            Text(
+                text = "Continue with Google",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
+
+        if (isIos()) {
+            // Apple Sign Up Button
+            OutlinedButton(
+                onClick = onAppleClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = colors.primaryText
+                ),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = colors.textFieldBorder
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "Continue with Apple",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ErrorCard(
+    error: FirebaseAuthException,
+    colors: TalaColors,
+    modifier: Modifier = Modifier
+) {
+    val errorMessage = error.message
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = colors.textFieldErrorBackground
+        ),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Text(
+            text = errorMessage ?: "An error occurred",
+            modifier = Modifier.padding(16.dp),
+            color = colors.errorText,
+            fontSize = 14.sp
+        )
     }
 }

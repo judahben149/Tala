@@ -1,76 +1,81 @@
 package com.judahben149.tala.navigation
 
 import com.arkivanov.decompose.ComponentContext
+import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
-import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.childStack
-import com.arkivanov.decompose.router.stack.navigate
-import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.pushNew
-import com.judahben149.tala.navigation.components.HomeScreenComponent
-import com.judahben149.tala.navigation.components.LoginScreenComponent
-import com.judahben149.tala.navigation.components.SignUpScreenComponent
+import com.arkivanov.decompose.router.stack.replaceAll
+import com.arkivanov.decompose.value.Value
+import com.judahben149.tala.data.service.SignInStateTracker
+import kotlinx.serialization.Serializable
 
 class RootComponent(
-    componentContext: ComponentContext
-): ComponentContext by componentContext {
+    componentContext: ComponentContext,
+    private val signInStateTracker: SignInStateTracker
+) : ComponentContext by componentContext {
 
-    private val navigation = StackNavigation<Configuration>()
+    private val navigation = StackNavigation<RootConfiguration>()
 
-    val childStack = childStack(
+    val childStack: Value<ChildStack<*, RootChild>> = childStack(
         source = navigation,
-        serializer = Configuration.serializer(),
-        initialConfiguration = Configuration.SignUpScreen,
+        serializer = RootConfiguration.serializer(),
+        initialConfiguration = RootConfiguration.Loading,
         handleBackButton = true,
         childFactory = ::createChild
     )
 
-    private fun createChild(configuration: Configuration, componentContext: ComponentContext): Child =
-        when (configuration) {
+    private fun createChild(
+        configuration: RootConfiguration,
+        componentContext: ComponentContext
+    ): RootChild = when (configuration) {
+        is RootConfiguration.Loading -> RootChild.Loading
 
-            is Configuration.SignUpScreen -> Child.SignUpScreen(
-                SignUpScreenComponent(
-                    componentContext = componentContext,
-                    onButtonClick = { textFromFirstScreen ->
-                        navigation.pushNew(Configuration.LoginScreen)
-                    },
-                    onNavigateToLogin = { navigation.bringToFront(Configuration.LoginScreen) },
-                    onNavigateToHome = { navigation navigateTo Configuration.HomeScreen }
-                )
+        is RootConfiguration.Onboarding -> RootChild.Onboarding(
+            OnboardingFlowComponent(
+                componentContext = componentContext,
+                onOnboardingCompleted = ::navigateToMain
             )
+        )
 
-            is Configuration.LoginScreen -> Child.LoginScreen(
-                LoginScreenComponent(
-                    componentContext = componentContext,
-                    onBackButtonClick = { navigation.pop() },
-                    onNavigateToHome = { navigation navigateTo Configuration.HomeScreen },
-                    onNavigateToSignUp = { navigation.bringToFront(Configuration.SignUpScreen) }
-                )
+        is RootConfiguration.Main -> RootChild.Main(
+            MainFlowComponent(
+                componentContext = componentContext,
+                onSignOut = ::navigateToOnboarding
             )
+        )
+    }
 
-            is Configuration.HomeScreen -> Child.HomeScreen(
-                HomeScreenComponent(
-                    componentContext = componentContext,
-                    onBackButtonClick = { navigation.pop() }
-                )
-            )
-        }
-
-
-    private infix fun StackNavigation<Configuration>.navigateTo(configuration: Configuration) {
-        this.navigate { stack ->
-            if (stack.lastOrNull()?.let { it::class } != configuration::class) {
-                stack + configuration
-            } else {
-                stack
-            }
+    fun checkAuthenticationState() {
+        val isSignedIn = signInStateTracker.isSignedIn.value
+        when (isSignedIn) {
+            true -> navigateToMain()
+            else -> navigateToOnboarding()
         }
     }
 
-    sealed class Child {
-        data class SignUpScreen(val component: SignUpScreenComponent) : Child()
-        data class LoginScreen(val component: LoginScreenComponent) : Child()
+    private fun navigateToOnboarding() {
+        navigation.replaceAll(RootConfiguration.Onboarding)
+    }
 
-        data class HomeScreen(val component: HomeScreenComponent) : Child()
+    private fun navigateToMain() {
+        navigation.replaceAll(RootConfiguration.Main)
+    }
+
+    @Serializable
+    sealed class RootConfiguration {
+        @Serializable
+        data object Loading : RootConfiguration()
+
+        @Serializable
+        data object Onboarding : RootConfiguration()
+
+        @Serializable
+        data object Main : RootConfiguration()
+    }
+
+    sealed class RootChild {
+        data object Loading : RootChild()
+        data class Onboarding(val component: OnboardingFlowComponent) : RootChild()
+        data class Main(val component: MainFlowComponent) : RootChild()
     }
 }

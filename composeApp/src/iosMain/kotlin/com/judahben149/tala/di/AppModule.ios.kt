@@ -1,7 +1,7 @@
 package com.judahben149.tala.di
 
-import com.judahben149.tala.data.TalaDatabase
-import com.judahben149.tala.data.local.getTalaDatabaseBuilder
+import com.judahben149.tala.data.local.DatabaseDriverFactory
+import com.judahben149.tala.data.service.audio.AudioPlayerFactory
 import org.koin.dsl.module
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
@@ -10,15 +10,16 @@ fun initializeKoin() {
     try {
         stopKoin()
         startKoin {
-            modules(appModule + iosAppModule)
+            modules(appModule)
         }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         startKoin {
-            modules(appModule + iosAppModule)
+            modules(appModule)
         }
     }
 }
 
-val iosAppModule = module {
-    single<TalaDatabase> { getTalaDatabaseBuilder() }
+actual val platformModule = module {
+    single<DatabaseDriverFactory> { DatabaseDriverFactory() }
+    single { AudioPlayerFactory().create(get()) }
 }
