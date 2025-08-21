@@ -3,19 +3,35 @@ package com.judahben149.tala.presentation.screens.speak
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import com.judahben149.tala.data.service.audio.SpeechPlayer
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.speech.CharacterTimestamp
 import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
+import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
+import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
+import com.judahben149.tala.domain.usecases.speech.GetFeaturedVoicesUseCase
+import com.judahben149.tala.domain.usecases.speech.GetVoicesByGenderUseCase
 import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
+import com.judahben149.tala.util.decodeBase64Audio
+import com.judahben149.tala.util.mimeTypeForOutputFormat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SpeakScreenViewModel(
     private val generateContentUseCase: GenerateContentUseCase,
     private val streamTtsUseCase: StreamTextToSpeechUseCase,
-    private val logger: Logger
+    private val getAllVoicesUseCase: GetAllVoicesUseCase,
+    private val getFeaturedVoicesUseCase: GetFeaturedVoicesUseCase,
+    private val getVoicesByGenderUseCase: GetVoicesByGenderUseCase,
+    private val streamTextToSpeechUseCase: StreamTextToSpeechUseCase,
+    private val downloadTextToSpeechUseCase: DownloadTextToSpeechUseCase,
+    private val logger: Logger,
+    private val player: SpeechPlayer
 ) : ViewModel() {
 
     private val _userInput = MutableStateFlow("")
@@ -26,6 +42,33 @@ class SpeakScreenViewModel(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    init {
+
+        viewModelScope.launch {
+            val result = downloadTextToSpeechUseCase(
+                text = "Heyy there, what are you doing? My young good son, in whom I am well pleased. You have done me well bro",
+                voiceId = "21m00Tcm4TlvDq8ikWAM",
+            )
+
+            when(result) {
+                is Result.Success -> {
+//                    val bytes = decodeBase64Audio(result.data.audioBase64)
+                    val bytes = withContext(Dispatchers.IO) { decodeBase64Audio(result.data.audioBase64) }
+                    val mimeType = mimeTypeForOutputFormat("mp3_44100_128")
+
+                    withContext(Dispatchers.Main) {
+                        player.load(bytes, mimeType)
+                        player.play()
+                    }
+                }
+
+                is Result.Failure -> {
+                    logger.d { "Error: ${result.error}" }
+                }
+            }
+        }
+    }
 
     fun onUserInputChange(text: String) {
         _userInput.value = text

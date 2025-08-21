@@ -1,7 +1,8 @@
 package com.judahben149.tala.data.repository
 
+import com.judahben149.tala.data.model.network.speech.DownloadTtsWithTimestampsResponse
 import com.judahben149.tala.data.model.network.speech.ElevenLabsTtsRequest
-import com.judahben149.tala.data.model.network.speech.ElevenLabsTtsResponseChunk
+import com.judahben149.tala.data.model.network.speech.StreamTtsWithTimestampsResponse
 import com.judahben149.tala.data.model.network.speech.VoiceSettings
 import com.judahben149.tala.data.service.speechSynthesis.ElevenLabsService
 import com.judahben149.tala.domain.mappers.toNetworkFailure
@@ -72,6 +73,52 @@ class TtsRepositoryImpl(
         )
     }
 
+    override suspend fun downloadTextToSpeech(
+        text: String,
+        voiceId: String,
+        apiKey: String,
+        model: SpeechModel,
+        voiceSettings: VoiceSettings?,
+        outputFormat: String
+    ): Result<DownloadTtsWithTimestampsResponse, NetworkException> {
+
+        // Input validation
+        if (apiKey.isBlank()) {
+            return Result.Failure(NetworkException.Unauthorized("Missing API key"))
+        }
+        if (text.isBlank()) {
+            return Result.Failure(NetworkException.BadRequest("Text cannot be blank"))
+        }
+        if (voiceId.isBlank()) {
+            return Result.Failure(NetworkException.BadRequest("Voice ID cannot be blank"))
+        }
+
+        val request = ElevenLabsTtsRequest(
+            text = text,
+            modelId = model.modelId,
+            voiceSettings = voiceSettings?.let {
+                VoiceSettings(
+                    stability = it.stability,
+                    similarityBoost = it.similarityBoost,
+                    style = it.style,
+                    useSpeakerBoost = it.useSpeakerBoost
+                )
+            }
+        )
+
+        return runCatching {
+            service.downloadTextToSpeechWithTimestamps(
+                voiceId = voiceId,
+                outputFormat = outputFormat,
+                apiKey = apiKey,
+                request = request
+            )
+        }.fold(
+            onSuccess = { Result.Success(it) },
+            onFailure = { it.toNetworkFailure() }
+        )
+    }
+
     private suspend fun createAudioChunkFlow(response: HttpResponse): Flow<AudioChunk> = flow {
         try {
             val channel = response.bodyAsChannel()
@@ -83,7 +130,7 @@ class TtsRepositoryImpl(
 
                     if (line.isNotBlank()) {
                         // Parse the JSON chunk
-                        val responseChunk = Json.decodeFromString<ElevenLabsTtsResponseChunk>(line)
+                        val responseChunk = Json.decodeFromString<StreamTtsWithTimestampsResponse>(line)
 
                         // Convert base64 audio to bytes
                         val audioBytes = responseChunk.audioBase64.decodeBase64Bytes()

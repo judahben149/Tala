@@ -1,5 +1,6 @@
 package com.judahben149.tala.data.service.speechSynthesis
 
+import com.judahben149.tala.data.model.network.speech.DownloadTtsWithTimestampsResponse
 import com.judahben149.tala.data.model.network.speech.ElevenLabsTtsRequest
 import com.judahben149.tala.data.model.network.speech.ElevenLabsVoicesResponse
 import de.jensklingenberg.ktorfit.http.Body
@@ -21,6 +22,15 @@ interface ElevenLabsService {
         @Body request: ElevenLabsTtsRequest,
         @Header("xi-api-key") apiKey: String
     ): HttpResponse
+
+    @POST("v1/text-to-speech/{voiceId}/with-timestamps")
+    @Headers("Content-Type: application/json")
+    suspend fun downloadTextToSpeechWithTimestamps(
+        @Path("voiceId") voiceId: String,
+        @Query("output_format") outputFormat: String,
+        @Header("xi-api-key") apiKey: String,
+        @Body request: ElevenLabsTtsRequest
+    ): DownloadTtsWithTimestampsResponse
 
     @GET("v2/voices")
     suspend fun getVoices(

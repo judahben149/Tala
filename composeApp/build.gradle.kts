@@ -71,6 +71,13 @@ kotlin {
         framework {
             baseName = "ComposeApp"
             isStatic = true
+
+            linkerOpts += listOf("-framework", "AVFoundation")
+            linkerOpts += listOf("-framework", "AudioToolbox")
+            linkerOpts += listOf("-framework", "CoreAudio")
+
+            linkerOpts += listOf("-framework", "MediaPlayer")
+            linkerOpts += listOf("-framework", "CoreMedia")
         }
 
         pod("sqlite3")
@@ -105,6 +112,12 @@ kotlin {
 
             // Splash Screen
             implementation(libs.splash.screen)
+//            implementation(libs.ktor.logging.jvm)
+
+            // Exoplayer
+            implementation(libs.media3.exoplayer)
+            implementation(libs.media3.ui)
+            implementation(libs.media3.common)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -138,6 +151,7 @@ kotlin {
 
             // Ktorfit
             implementation(libs.ktorfit)
+            implementation(libs.ktor.logging)
             implementation(libs.content.negotiation)
             implementation(libs.kotlinx.json)
 
@@ -147,9 +161,13 @@ kotlin {
             // Multiplatform Settings
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.noargs)
+
+            // Korge
+//            implementation(libs.korge.core)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native)
+//            implementation(libs.ktor.logging.ios)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

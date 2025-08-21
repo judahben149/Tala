@@ -1,0 +1,4 @@
+headers = AudioStreaming.h
+staticLibraries =
+libraryPaths =
+compilerOpts = -framework AVFoundation -framework AudioToolbox -framework CoreAudio

@@ -1,14 +1,13 @@
 package com.judahben149.tala.domain.usecases.speech
 
 import com.judahben149.tala.BuildKonfig
+import com.judahben149.tala.data.model.network.speech.DownloadTtsWithTimestampsResponse
 import com.judahben149.tala.data.model.network.speech.VoiceSettings
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
-import com.judahben149.tala.domain.models.speech.AudioChunk
 import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
-import kotlinx.coroutines.flow.Flow
 
-class StreamTextToSpeechUseCase(
+class DownloadTextToSpeechUseCase(
     private val repository: ElevenLabsTtsRepository
 ) {
     
@@ -16,7 +15,7 @@ class StreamTextToSpeechUseCase(
         text: String,
         voiceId: String,
         voiceSettings: VoiceSettings? = null
-    ): Result<Flow<AudioChunk>, NetworkException> {
+    ): Result<DownloadTtsWithTimestampsResponse, NetworkException> {
 
         if (text.length > 5000) { // ElevenLabs character limit
             return Result.Failure(
@@ -24,7 +23,7 @@ class StreamTextToSpeechUseCase(
             )
         }
         
-        return repository.streamTextToSpeech(
+        return repository.downloadTextToSpeech(
             text = text,
             voiceId = voiceId,
             apiKey = BuildKonfig.ELEVEN_LABS_API_KEY,
@@ -40,7 +39,7 @@ class StreamTextToSpeechUseCase(
         similarityBoost: Float? = null,
         style: Float? = null,
         useSpeakerBoost: Boolean? = null
-    ): Result<Flow<AudioChunk>, NetworkException> {
+    ): Result<DownloadTtsWithTimestampsResponse, NetworkException> {
         
         val voiceSettings = if (stability != null || similarityBoost != null || 
                               style != null || useSpeakerBoost != null) {
