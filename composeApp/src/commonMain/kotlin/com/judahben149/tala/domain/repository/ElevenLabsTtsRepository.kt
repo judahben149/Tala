@@ -1,6 +1,7 @@
 package com.judahben149.tala.domain.repository
 
 import com.judahben149.tala.data.model.network.speech.DownloadTtsWithTimestampsResponse
+import com.judahben149.tala.data.model.network.speech.SpeechToTextResponse
 import com.judahben149.tala.data.model.network.speech.VoiceSettings
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
@@ -26,4 +27,11 @@ interface ElevenLabsTtsRepository {
         voiceSettings: VoiceSettings? = null,
         outputFormat: String = "mp3_44100_128"
     ): Result<DownloadTtsWithTimestampsResponse, NetworkException>
+
+    suspend fun speechToText(
+        apiKey: String,
+        audioBytes: ByteArray,
+        fileName: String,
+        mimeType: String
+    ): Result<SpeechToTextResponse, NetworkException>
 }

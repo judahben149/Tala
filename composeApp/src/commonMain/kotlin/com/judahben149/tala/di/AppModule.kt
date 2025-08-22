@@ -2,17 +2,21 @@ package com.judahben149.tala.di
 
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.local.UserDatabaseHelper
+import com.judahben149.tala.data.repository.AudioRepositoryImpl
 import com.judahben149.tala.data.repository.AuthenticationRepositoryImpl
 import com.judahben149.tala.data.repository.GeminiRepositoryImpl
 import com.judahben149.tala.data.repository.TtsRepositoryImpl
 import com.judahben149.tala.data.repository.VoicesRepositoryImpl
 import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.data.service.audio.SpeechRecorderFactory
 import com.judahben149.tala.data.service.firebase.FirebaseService
 import com.judahben149.tala.data.service.firebase.FirebaseServiceImpl
 import com.judahben149.tala.data.service.gemini.GeminiService
 import com.judahben149.tala.data.service.gemini.createGeminiService
+import com.judahben149.tala.data.service.permission.AudioPermissionManager
 import com.judahben149.tala.data.service.speechSynthesis.ElevenLabsService
 import com.judahben149.tala.data.service.speechSynthesis.createElevenLabsService
+import com.judahben149.tala.domain.repository.AudioRepository
 import com.judahben149.tala.domain.repository.AuthenticationRepository
 import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
 import com.judahben149.tala.domain.repository.GeminiRepository
@@ -27,11 +31,16 @@ import com.judahben149.tala.domain.usecases.authentication.SignInUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignOutUseCase
 import com.judahben149.tala.domain.usecases.authentication.UpdateDisplayNameUseCase
 import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
+import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetFeaturedVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetVoicesByGenderUseCase
 import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.ObserveRecordingStatusUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.StartRecordingUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.StopRecordingUseCase
 import com.judahben149.tala.presentation.screens.login.AuthViewModel
 import com.judahben149.tala.presentation.screens.signUp.SignUpViewModel
 import com.judahben149.tala.presentation.screens.speak.SpeakScreenViewModel
@@ -42,6 +51,7 @@ import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.SIMPLE
@@ -62,6 +72,8 @@ val appModule = module {
     singleOf<Settings>(::Settings)
     singleOf(::SignInStateTracker)
     single { Logger.withTag("Talaxx") }
+    factory { get<SpeechRecorderFactory>().createRecorder() }
+    singleOf(::AudioPermissionManager)
 
     // Network Clients
     single {
@@ -86,12 +98,12 @@ val appModule = module {
 
 //            install(Logging) {
 //                logger = io.ktor.client.plugins.logging.Logger.SIMPLE
-//                level = LogLevel.BODY
-//                logger = object : io.ktor.client.plugins.logging.Logger {
-//                    override fun log(message: String) {
-//                        println("Request Header ->> $message")
-//                    }
-//                }
+//                level = LogLevel.INFO
+////                logger = object : io.ktor.client.plugins.logging.Logger {
+////                    override fun log(message: String) {
+////                        println("Request Header ->> $message")
+////                    }
+////                }
 //            }
 
         }
@@ -134,6 +146,7 @@ val appModule = module {
     singleOf(::GeminiRepositoryImpl).bind<GeminiRepository>()
     singleOf(::VoicesRepositoryImpl).bind<VoicesRepository>()
     singleOf(::TtsRepositoryImpl).bind<ElevenLabsTtsRepository>()
+    singleOf(::AudioRepositoryImpl).bind<AudioRepository>()
 
 
     // Use Cases
@@ -152,6 +165,12 @@ val appModule = module {
     singleOf(::GetVoicesByGenderUseCase)
     singleOf(::GetAllVoicesUseCase)
     singleOf(::GetFeaturedVoicesUseCase)
+    singleOf(::StartRecordingUseCase)
+    singleOf(::StopRecordingUseCase)
+    singleOf(::CancelRecordingUseCase)
+    singleOf(::ObserveRecordingStatusUseCase)
+    singleOf(::ConvertSpeechToTextUseCase)
+
 
     // ViewModels
     viewModelOf(::SignUpViewModel)
