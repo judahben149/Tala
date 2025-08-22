@@ -3,6 +3,7 @@ package com.judahben149.tala.data.service.speechSynthesis
 import com.judahben149.tala.data.model.network.speech.DownloadTtsWithTimestampsResponse
 import com.judahben149.tala.data.model.network.speech.ElevenLabsTtsRequest
 import com.judahben149.tala.data.model.network.speech.ElevenLabsVoicesResponse
+import com.judahben149.tala.data.model.network.speech.SpeechToTextResponse
 import de.jensklingenberg.ktorfit.http.Body
 import de.jensklingenberg.ktorfit.http.GET
 import de.jensklingenberg.ktorfit.http.Headers
@@ -11,6 +12,7 @@ import de.jensklingenberg.ktorfit.http.Path
 import de.jensklingenberg.ktorfit.http.Query
 import io.ktor.client.statement.HttpResponse
 import de.jensklingenberg.ktorfit.http.Header
+import io.ktor.client.request.forms.MultiPartFormDataContent
 
 interface ElevenLabsService {
     
@@ -31,6 +33,14 @@ interface ElevenLabsService {
         @Header("xi-api-key") apiKey: String,
         @Body request: ElevenLabsTtsRequest
     ): DownloadTtsWithTimestampsResponse
+
+    @POST("v1/speech-to-text")
+    @Headers("Accept: application/json")
+    suspend fun speechToText(
+        @Header("xi-api-key") apiKey: String,
+        @Body audioFile: MultiPartFormDataContent,
+
+    ): SpeechToTextResponse
 
     @GET("v2/voices")
     suspend fun getVoices(

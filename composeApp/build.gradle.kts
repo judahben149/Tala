@@ -162,6 +162,9 @@ kotlin {
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.noargs)
 
+            // Kotlinx Date-Time
+            implementation(libs.kotlinx.datetime)
+
             // Korge
 //            implementation(libs.korge.core)
         }

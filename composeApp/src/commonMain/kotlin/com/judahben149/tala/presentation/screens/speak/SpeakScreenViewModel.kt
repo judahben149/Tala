@@ -4,140 +4,227 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.service.audio.SpeechPlayer
-import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
-import com.judahben149.tala.domain.models.speech.CharacterTimestamp
-import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
+import com.judahben149.tala.domain.models.speech.RecorderConfig
+import com.judahben149.tala.domain.models.speech.RecorderStatus
+import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
-import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
-import com.judahben149.tala.domain.usecases.speech.GetFeaturedVoicesUseCase
-import com.judahben149.tala.domain.usecases.speech.GetVoicesByGenderUseCase
-import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.ObserveRecordingStatusUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.StartRecordingUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.StopRecordingUseCase
 import com.judahben149.tala.util.decodeBase64Audio
 import com.judahben149.tala.util.mimeTypeForOutputFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+/**
+ * This ViewModel focuses on:
+ * - Recording audio as WAV (wrapAsWav = true)
+ * - Letting the user play back the recorded file locally to verify it’s playable
+ *
+ * It does not invoke STT or TTS. It’s purely for capture-and-play verification.
+ */
 class SpeakScreenViewModel(
-    private val generateContentUseCase: GenerateContentUseCase,
-    private val streamTtsUseCase: StreamTextToSpeechUseCase,
-    private val getAllVoicesUseCase: GetAllVoicesUseCase,
-    private val getFeaturedVoicesUseCase: GetFeaturedVoicesUseCase,
-    private val getVoicesByGenderUseCase: GetVoicesByGenderUseCase,
-    private val streamTextToSpeechUseCase: StreamTextToSpeechUseCase,
+    private val startRecordingUseCase: StartRecordingUseCase,
+    private val stopRecordingUseCase: StopRecordingUseCase,
+    private val cancelRecordingUseCase: CancelRecordingUseCase,
+    private val observeRecordingStatusUseCase: ObserveRecordingStatusUseCase,
+    private val convertSpeechToTextUseCase: ConvertSpeechToTextUseCase,
     private val downloadTextToSpeechUseCase: DownloadTextToSpeechUseCase,
-    private val logger: Logger,
-    private val player: SpeechPlayer
+    private val player: SpeechPlayer,
+    private val logger: Logger
 ) : ViewModel() {
 
-    private val _userInput = MutableStateFlow("")
-    val userInput: StateFlow<String> = _userInput
+    private val _recordingStatus = MutableStateFlow(RecorderStatus.Idle)
+    val recordingStatus: StateFlow<RecorderStatus> = _recordingStatus
 
-    private val _aiResponse = MutableStateFlow("")
-    val aiResponse: StateFlow<String> = _aiResponse
+    private val _isRecordingLoading = MutableStateFlow(false)
+    val isRecordingLoading: StateFlow<Boolean> = _isRecordingLoading
 
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    private val _recordingError = MutableStateFlow<String?>(null)
+    val recordingError: StateFlow<String?> = _recordingError
+
+    private val _recordedAudioBytes = MutableStateFlow<ByteArray?>(null)
+    val recordedAudioBytes: StateFlow<ByteArray?> = _recordedAudioBytes
+
+    private val _isPlaying = MutableStateFlow(false)
+    val isPlaying: StateFlow<Boolean> = _isPlaying
+
+    private val _mimeType = MutableStateFlow("audio/wav")
+    val mimeType: StateFlow<String> = _mimeType
 
     init {
+        // Observe recording status and keep UI updated
+        observeRecordingStatusUseCase()
+            .onEach { status ->
+                _recordingStatus.value = status
+                logger.d { "Recording status: $status" }
+            }
+            .launchIn(viewModelScope)
+    }
+
+    fun startRecording() {
+        if (_recordingStatus.value == RecorderStatus.Recording || _isRecordingLoading.value) return
 
         viewModelScope.launch {
-            val result = downloadTextToSpeechUseCase(
-                text = "Heyy there, what are you doing? My young good son, in whom I am well pleased. You have done me well bro",
-                voiceId = "21m00Tcm4TlvDq8ikWAM",
+            _isRecordingLoading.value = true
+            _recordingError.value = null
+            _recordedAudioBytes.value = null
+
+            // Force WAV wrapping here so we can play back easily and upload as audio/wav
+            val config = RecorderConfig(
+                sampleRate = 16_000,
+                channelCount = 1,
+                bitsPerSample = 16,
+                wrapAsWav = true
             )
 
-            when(result) {
+            when (val res = startRecordingUseCase(config)) {
                 is Result.Success -> {
-//                    val bytes = decodeBase64Audio(result.data.audioBase64)
-                    val bytes = withContext(Dispatchers.IO) { decodeBase64Audio(result.data.audioBase64) }
-                    val mimeType = mimeTypeForOutputFormat("mp3_44100_128")
-
-                    withContext(Dispatchers.Main) {
-                        player.load(bytes, mimeType)
-                        player.play()
-                    }
+                    logger.d { "Recording started (16kHz mono 16-bit, WAV)" }
+                    _isRecordingLoading.value = false
                 }
-
                 is Result.Failure -> {
-                    logger.d { "Error: ${result.error}" }
+                    _isRecordingLoading.value = false
+                    _recordingError.value = res.error.message ?: "Failed to start recording"
+                    logger.e { "Failed to start recording: ${res.error}" }
                 }
             }
         }
     }
 
-    fun onUserInputChange(text: String) {
-        _userInput.value = text
-    }
-
-    fun sendMessage() {
-        val prompt = _userInput.value.trim()
-        logger.d { "Prompt: $prompt" }
-        if (prompt.isEmpty()) return
+    fun stopRecording() {
+        if (_recordingStatus.value != RecorderStatus.Recording || _isRecordingLoading.value) return
 
         viewModelScope.launch {
-            _isLoading.value = true
-            _aiResponse.value = ""
-            try {
-                when (val result = generateContentUseCase(prompt, emptyList())) {
-                    is Result.Success -> {
-                        _aiResponse.value = result.data.candidates[0].content.parts[0].text
-                    }
-                    is Result.Failure -> {
-                        _aiResponse.value = when (result.error) {
-                            is NetworkException -> "Network error: ${result.error.message}"
-                            else -> "Unknown error occurred"
+            _isRecordingLoading.value = true
+            when (val res = stopRecordingUseCase()) {
+
+                is Result.Success -> {
+                    val (wavBytes, base64Audio) = res.data
+
+                    _isRecordingLoading.value = false
+                    _recordedAudioBytes.value = wavBytes
+                    _mimeType.value = "audio/wav"
+
+                    // Optional quick local verification: attempt to load into player (no play yet)
+                    try {
+                        withContext(Dispatchers.Main) {
+                            player.load(wavBytes, _mimeType.value)
+
+//                            val result = convertSpeechToTextUseCase(wavBytes)
+
+                            when(val result = convertSpeechToTextUseCase(wavBytes)) {
+                                is Result.Success -> {
+                                    generateAndPlaySpeech(result.data.text)
+                                }
+
+                                is Result.Failure -> {
+                                    logger.d { "Failed to convert speech to text" }
+                                }
+                            }
                         }
+                        logger.d { "WAV loaded into player successfully (size=${wavBytes.size} bytes)" }
+                    } catch (t: Throwable) {
+                        logger.e(t) { "Failed to load WAV into player" }
+                        _recordingError.value = "Failed to load audio: ${t.message}"
                     }
                 }
-            } catch (e: Exception) {
-                _aiResponse.value = "Error: ${e.message}"
-            } finally {
-                _isLoading.value = false
+                is Result.Failure -> {
+                    _isRecordingLoading.value = false
+                    _recordingError.value = res.error.message ?: "Failed to stop recording"
+                    logger.e { "Failed to stop recording: ${res.error}" }
+                }
             }
         }
     }
 
-    suspend fun startTextToSpeech(
-        text: String,
-        voiceId: String,
-        apiKey: String
-    ) {
-        val result = streamTtsUseCase(
+    fun cancelRecording() {
+        if (_recordingStatus.value != RecorderStatus.Recording) return
+
+        viewModelScope.launch {
+            when (val res = cancelRecordingUseCase()) {
+                is Result.Success -> {
+                    _isRecordingLoading.value = false
+                    _recordingError.value = null
+                    logger.d { "Recording cancelled" }
+                }
+                is Result.Failure -> {
+                    _isRecordingLoading.value = false
+                    _recordingError.value = res.error.message ?: "Failed to cancel recording"
+                    logger.e { "Failed to cancel recording: ${res.error}" }
+                }
+            }
+        }
+    }
+
+    fun playRecorded() {
+        val bytes = _recordedAudioBytes.value ?: run {
+            _recordingError.value = "No recorded audio available"
+            return
+        }
+
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                // If already loaded in stopRecording(), load is optional; call play directly.
+                player.load(bytes, _mimeType.value) // safe to reload
+                player.play()
+                _isPlaying.value = true
+                logger.d { "Playback started" }
+            } catch (t: Throwable) {
+                _isPlaying.value = false
+                logger.e(t) { "Playback failed" }
+                _recordingError.value = "Playback failed: ${t.message}"
+            }
+        }
+    }
+
+    fun stopPlayback() {
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                player.stop()
+                _isPlaying.value = false
+                logger.d { "Playback stopped" }
+            } catch (t: Throwable) {
+                logger.e(t) { "Stopping playback failed" }
+            }
+        }
+    }
+
+    fun clearRecording() {
+        _recordedAudioBytes.value = null
+        _recordingError.value = null
+        _isPlaying.value = false
+        logger.d { "Cleared recorded audio buffer" }
+    }
+
+    private suspend fun generateAndPlaySpeech(text: String) {
+        val result = downloadTextToSpeechUseCase(
             text = text,
-            voiceId = voiceId,
-            apiKey = apiKey,
-            stability = 0.75f,
-            similarityBoost = 0.75f,
-            useSpeakerBoost = true
+            voiceId = "21m00Tcm4TlvDq8ikWAM",
         )
 
-        when (result) {
+        when(result) {
             is Result.Success -> {
-                result.data.collect { audioChunk ->
-                    // Play audio chunk
-                    playAudioChunk(audioChunk.audioData)
+                val bytes = withContext(Dispatchers.IO) { decodeBase64Audio(result.data.audioBase64) }
+                val mimeType = mimeTypeForOutputFormat("mp3_44100_128")
 
-                    // Update UI with character timing
-                    updateTimestamps(audioChunk.timestamps)
+                withContext(Dispatchers.Main) {
+                    player.load(bytes, mimeType)
+                    player.play()
                 }
             }
+
             is Result.Failure -> {
-                // Handle error
-//                handleTtsError(result.error)
+                logger.d { "Error: ${result.error}" }
             }
         }
-    }
-
-    private fun playAudioChunk(audioData: ByteArray) {
-        // Implement audio playback logic
-    }
-
-    private fun updateTimestamps(timestamps: List<CharacterTimestamp>) {
-        // Update UI with character-level timing for text highlighting
     }
 }

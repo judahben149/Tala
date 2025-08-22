@@ -1,7 +1,9 @@
 package com.judahben149.tala.data.repository
 
+import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.model.network.speech.DownloadTtsWithTimestampsResponse
 import com.judahben149.tala.data.model.network.speech.ElevenLabsTtsRequest
+import com.judahben149.tala.data.model.network.speech.SpeechToTextResponse
 import com.judahben149.tala.data.model.network.speech.StreamTtsWithTimestampsResponse
 import com.judahben149.tala.data.model.network.speech.VoiceSettings
 import com.judahben149.tala.data.service.speechSynthesis.ElevenLabsService
@@ -12,16 +14,24 @@ import com.judahben149.tala.domain.models.speech.AudioChunk
 import com.judahben149.tala.domain.models.speech.CharacterTimestamp
 import com.judahben149.tala.domain.models.speech.SpeechModel
 import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
+import io.ktor.client.request.forms.FormDataContent
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.Headers
+import io.ktor.http.HttpHeaders
 import io.ktor.util.decodeBase64Bytes
 import io.ktor.utils.io.readUTF8Line
+import kotlinx.atomicfu.TraceBase.None.append
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
 
 class TtsRepositoryImpl(
-    private val service: ElevenLabsService
+    private val service: ElevenLabsService,
+    private val logger: Logger
 ) : ElevenLabsTtsRepository {
 
     override suspend fun streamTextToSpeech(
@@ -160,4 +170,44 @@ class TtsRepositoryImpl(
             throw e // Re-throw to be handled by outer runCatching
         }
     }
+
+    override suspend fun speechToText(
+        apiKey: String,
+        audioBytes: ByteArray,
+        fileName: String,
+        mimeType: String
+    ): Result<SpeechToTextResponse, NetworkException> {
+        if (apiKey.isBlank()) {
+            return Result.Failure(NetworkException.Unauthorized("Missing API key"))
+        }
+        if (audioBytes.isEmpty()) {
+            return Result.Failure(NetworkException.BadRequest("No audio provided"))
+        }
+
+        val formData = MultiPartFormDataContent(
+            formData {
+                append("file", audioBytes, Headers.build {
+                    append(HttpHeaders.ContentDisposition, "form-data; name=\"file\"; filename=\"$fileName\"")
+                    append(HttpHeaders.ContentType, mimeType)
+                })
+                append("model_id", "scribe_v1")
+                // Append other optional parameters as needed, e.g.:
+                // append("language_code", "en")
+                // append("timestamps_granularity", "word")
+            }
+        )
+
+
+        return runCatching {
+            service.speechToText(
+                apiKey = apiKey,
+                audioFile = formData
+            )
+        }.fold(
+            onSuccess = { Result.Success(it) },
+//            onSuccess = { Result.Success(it) },
+            onFailure = { it.toNetworkFailure() }
+        )
+    }
+
 }
