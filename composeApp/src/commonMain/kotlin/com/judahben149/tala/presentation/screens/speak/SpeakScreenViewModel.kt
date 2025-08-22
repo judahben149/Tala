@@ -7,6 +7,7 @@ import com.judahben149.tala.data.service.audio.SpeechPlayer
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.speech.RecorderConfig
 import com.judahben149.tala.domain.models.speech.RecorderStatus
+import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
 import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
@@ -38,6 +39,7 @@ class SpeakScreenViewModel(
     private val observeRecordingStatusUseCase: ObserveRecordingStatusUseCase,
     private val convertSpeechToTextUseCase: ConvertSpeechToTextUseCase,
     private val downloadTextToSpeechUseCase: DownloadTextToSpeechUseCase,
+    private val generateContentUseCase: GenerateContentUseCase,
     private val player: SpeechPlayer,
     private val logger: Logger
 ) : ViewModel() {
@@ -119,11 +121,25 @@ class SpeakScreenViewModel(
                         withContext(Dispatchers.Main) {
                             player.load(wavBytes, _mimeType.value)
 
-//                            val result = convertSpeechToTextUseCase(wavBytes)
 
                             when(val result = convertSpeechToTextUseCase(wavBytes)) {
                                 is Result.Success -> {
-                                    generateAndPlaySpeech(result.data.text)
+
+
+                                    when(
+                                        val result = generateContentUseCase(
+                                            result.data.text,
+                                            emptyList(),
+                                        )
+                                    ) {
+                                        is Result.Success -> {
+                                            generateAndPlaySpeech(result.data.candidates[0].content.parts[0].text)
+                                        }
+
+                                        is Result.Failure -> {
+
+                                        }
+                                    }
                                 }
 
                                 is Result.Failure -> {
