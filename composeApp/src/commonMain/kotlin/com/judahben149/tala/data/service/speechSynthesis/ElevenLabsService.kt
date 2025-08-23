@@ -39,8 +39,8 @@ interface ElevenLabsService {
     suspend fun speechToText(
         @Header("xi-api-key") apiKey: String,
         @Body audioFile: MultiPartFormDataContent,
-
     ): SpeechToTextResponse
+//    ): HttpResponse
 
     @GET("v2/voices")
     suspend fun getVoices(

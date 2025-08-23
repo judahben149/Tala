@@ -1,0 +1,41 @@
+CREATE TABLE messages (
+    id TEXT NOT NULL PRIMARY KEY,
+    conversation_id TEXT NOT NULL,
+    content TEXT NOT NULL,
+    is_user INTEGER NOT NULL,
+    timestamp INTEGER NOT NULL,
+    user_audio_path TEXT,
+    ai_audio_path TEXT,
+    correction TEXT,
+    vocabulary_highlighted TEXT,
+    grammar_feedback TEXT,
+    response_time_ms INTEGER,
+    message_order INTEGER NOT NULL,
+    firestore_sync_status INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+);
+
+getMessagesByConversationId:
+SELECT * FROM messages WHERE conversation_id = ? ORDER BY message_order ASC;
+
+getLastMessage:
+SELECT * FROM messages WHERE conversation_id = ? ORDER BY message_order DESC LIMIT 1;
+
+insertMessage:
+INSERT INTO messages(id, conversation_id, content, is_user, timestamp, user_audio_path, ai_audio_path, correction,
+                    vocabulary_highlighted, grammar_feedback, response_time_ms, message_order)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateMessage:
+UPDATE messages
+SET content = ?, correction = ?, vocabulary_highlighted = ?, grammar_feedback = ?, response_time_ms = ?
+WHERE id = ?;
+
+deleteMessage:
+DELETE FROM messages WHERE id = ?;
+
+deleteMessagesByConversationId:
+DELETE FROM messages WHERE conversation_id = ?;
+
+updateMessageSyncStatus:
+UPDATE messages SET firestore_sync_status = ? WHERE id = ?;

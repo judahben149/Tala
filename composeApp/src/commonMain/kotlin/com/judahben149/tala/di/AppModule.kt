@@ -1,9 +1,12 @@
 package com.judahben149.tala.di
 
 import co.touchlab.kermit.Logger
+import com.judahben149.tala.data.local.ConversationDatabaseHelper
 import com.judahben149.tala.data.local.UserDatabaseHelper
+import com.judahben149.tala.util.preferences.PrefsPersister
 import com.judahben149.tala.data.repository.AudioRepositoryImpl
 import com.judahben149.tala.data.repository.AuthenticationRepositoryImpl
+import com.judahben149.tala.data.repository.ConversationRepositoryImpl
 import com.judahben149.tala.data.repository.GeminiRepositoryImpl
 import com.judahben149.tala.data.repository.TtsRepositoryImpl
 import com.judahben149.tala.data.repository.VoicesRepositoryImpl
@@ -16,11 +19,18 @@ import com.judahben149.tala.data.service.gemini.createGeminiService
 import com.judahben149.tala.data.service.permission.AudioPermissionManager
 import com.judahben149.tala.data.service.speechSynthesis.ElevenLabsService
 import com.judahben149.tala.data.service.speechSynthesis.createElevenLabsService
+import com.judahben149.tala.domain.managers.MessageManager
+import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.repository.AudioRepository
 import com.judahben149.tala.domain.repository.AuthenticationRepository
+import com.judahben149.tala.domain.repository.ConversationRepository
 import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
 import com.judahben149.tala.domain.repository.GeminiRepository
 import com.judahben149.tala.domain.repository.VoicesRepository
+import com.judahben149.tala.domain.usecases.analytics.GetLearningStatsUseCase
+import com.judahben149.tala.domain.usecases.analytics.GetWeeklyProgressUseCase
+import com.judahben149.tala.domain.usecases.analytics.TrackConversationTimeUseCase
+import com.judahben149.tala.domain.usecases.analytics.UpdateConversationStatsUseCase
 import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
 import com.judahben149.tala.domain.usecases.authentication.DeleteUserUseCase
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentAppUseCase
@@ -30,7 +40,15 @@ import com.judahben149.tala.domain.usecases.authentication.SendPasswordResetEmai
 import com.judahben149.tala.domain.usecases.authentication.SignInUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignOutUseCase
 import com.judahben149.tala.domain.usecases.authentication.UpdateDisplayNameUseCase
+import com.judahben149.tala.domain.usecases.conversations.CompleteConversationUseCase
+import com.judahben149.tala.domain.usecases.conversations.GetActiveConversationUseCase
+import com.judahben149.tala.domain.usecases.conversations.GetConversationByIdUseCase
+import com.judahben149.tala.domain.usecases.conversations.GetConversationHistoryUseCase
+import com.judahben149.tala.domain.usecases.conversations.StartConversationUseCase
 import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
+import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
+import com.judahben149.tala.domain.usecases.messages.AddUserMessageUseCase
+import com.judahben149.tala.domain.usecases.messages.GetConversationMessagesUseCase
 import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
@@ -41,6 +59,9 @@ import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseC
 import com.judahben149.tala.domain.usecases.speech.recording.ObserveRecordingStatusUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.StartRecordingUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.StopRecordingUseCase
+import com.judahben149.tala.domain.usecases.vocabulary.AddVocabularyItemUseCase
+import com.judahben149.tala.domain.usecases.vocabulary.GetRecentVocabularyUseCase
+import com.judahben149.tala.domain.usecases.vocabulary.GetUserVocabularyUseCase
 import com.judahben149.tala.presentation.screens.login.AuthViewModel
 import com.judahben149.tala.presentation.screens.signUp.SignUpViewModel
 import com.judahben149.tala.presentation.screens.speak.SpeakScreenViewModel
@@ -49,9 +70,7 @@ import com.judahben149.tala.util.GEMINI_BASE_URL
 import com.russhwolf.settings.Settings
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
-import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.logging.SIMPLE
@@ -74,6 +93,10 @@ val appModule = module {
     single { Logger.withTag("Talaxx") }
     factory { get<SpeechRecorderFactory>().createRecorder() }
     singleOf(::AudioPermissionManager)
+    single { Settings() }
+    single { PrefsPersister(get()) }
+    single { SessionManager(get(), get()) }
+    singleOf(::MessageManager)
 
     // Network Clients
     single {
@@ -96,15 +119,15 @@ val appModule = module {
 //            }
 
 
-//            install(Logging) {
-//                logger = io.ktor.client.plugins.logging.Logger.SIMPLE
-//                level = LogLevel.INFO
-////                logger = object : io.ktor.client.plugins.logging.Logger {
-////                    override fun log(message: String) {
-////                        println("Request Header ->> $message")
-////                    }
-////                }
-//            }
+            install(Logging) {
+                logger = io.ktor.client.plugins.logging.Logger.SIMPLE
+                level = LogLevel.INFO
+//                logger = object : io.ktor.client.plugins.logging.Logger {
+//                    override fun log(message: String) {
+//                        println("Request Header ->> $message")
+//                    }
+//                }
+            }
 
         }
     }
@@ -147,6 +170,7 @@ val appModule = module {
     singleOf(::VoicesRepositoryImpl).bind<VoicesRepository>()
     singleOf(::TtsRepositoryImpl).bind<ElevenLabsTtsRepository>()
     singleOf(::AudioRepositoryImpl).bind<AudioRepository>()
+    singleOf(::ConversationRepositoryImpl).bind<ConversationRepository>()
 
 
     // Use Cases
@@ -170,6 +194,21 @@ val appModule = module {
     singleOf(::CancelRecordingUseCase)
     singleOf(::ObserveRecordingStatusUseCase)
     singleOf(::ConvertSpeechToTextUseCase)
+    singleOf(::StartConversationUseCase)
+    singleOf(::GetActiveConversationUseCase)
+    singleOf(::GetConversationHistoryUseCase)
+    singleOf(::GetConversationByIdUseCase)
+    singleOf(::CompleteConversationUseCase)
+    singleOf(::AddAiMessageUseCase)
+    singleOf(::AddUserMessageUseCase)
+    singleOf(::GetConversationMessagesUseCase)
+    singleOf(::AddVocabularyItemUseCase)
+    singleOf(::GetRecentVocabularyUseCase)
+    singleOf(::GetUserVocabularyUseCase)
+    singleOf(::GetLearningStatsUseCase)
+    singleOf(::GetWeeklyProgressUseCase)
+    singleOf(::TrackConversationTimeUseCase)
+    singleOf(::UpdateConversationStatsUseCase)
 
 
     // ViewModels
@@ -179,6 +218,7 @@ val appModule = module {
 
     // Database
     single { UserDatabaseHelper(get()) }
+    single { ConversationDatabaseHelper(get()) }
 
     // Platform-specific
     includes(platformModule)

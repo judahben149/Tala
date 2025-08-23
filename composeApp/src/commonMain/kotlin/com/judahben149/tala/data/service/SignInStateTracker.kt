@@ -55,6 +55,8 @@ class SignInStateTracker(
         _isSignedIn.value = true
     }
 
+    fun getUserId(): String = settings.getString(KEY_USER_ID, "")
+
     fun markOnboardingCompleted() {
         settings[KEY_ONBOARDING_COMPLETED] = true
         _onboardingCompleted.value = true

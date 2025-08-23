@@ -1,0 +1,48 @@
+CREATE TABLE conversations (
+    id TEXT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    title TEXT NOT NULL,
+    topic TEXT,
+    language TEXT NOT NULL,
+    difficulty_level TEXT NOT NULL DEFAULT 'beginner',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    is_completed INTEGER NOT NULL DEFAULT 0,
+    session_duration INTEGER DEFAULT 0,
+    total_messages INTEGER DEFAULT 0,
+    corrections_count INTEGER DEFAULT 0,
+    vocabulary_learned INTEGER DEFAULT 0,
+    ai_model_used TEXT DEFAULT 'gemini',
+    conversation_type TEXT NOT NULL DEFAULT 'ai_learning',
+    firestore_sync_status INTEGER NOT NULL DEFAULT 0,
+    last_synced_at INTEGER,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+getConversationById:
+SELECT * FROM conversations WHERE id = ?;
+
+getConversationsByUserId:
+SELECT * FROM conversations WHERE user_id = ? ORDER BY updated_at DESC;
+
+getActiveConversation:
+SELECT * FROM conversations WHERE user_id = ? AND is_completed = 0 ORDER BY updated_at DESC LIMIT 1;
+
+insertConversation:
+INSERT INTO conversations(id, user_id, title, topic, language, difficulty_level, created_at, updated_at, conversation_type)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateConversation:
+UPDATE conversations
+SET title = ?, topic = ?, difficulty_level = ?, updated_at = ?, is_completed = ?,
+    session_duration = ?, total_messages = ?, corrections_count = ?, vocabulary_learned = ?
+WHERE id = ?;
+
+markConversationCompleted:
+UPDATE conversations SET is_completed = 1, updated_at = ? WHERE id = ?;
+
+deleteConversation:
+DELETE FROM conversations WHERE id = ?;
+
+updateFirestoreSyncStatus:
+UPDATE conversations SET firestore_sync_status = ?, last_synced_at = ? WHERE id = ?;

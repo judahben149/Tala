@@ -1,0 +1,34 @@
+CREATE TABLE vocabulary_items (
+    id TEXT NOT NULL PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    word TEXT NOT NULL,
+    definition TEXT NOT NULL,
+    language TEXT NOT NULL,
+    conversation_id TEXT,
+    learned_at INTEGER NOT NULL,
+    practice_count INTEGER DEFAULT 0,
+    mastery_level INTEGER DEFAULT 0,
+    context_sentence TEXT,
+    firestore_sync_status INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+);
+
+getVocabularyByUserId:
+SELECT * FROM vocabulary_items WHERE user_id = ? ORDER BY learned_at DESC;
+
+getVocabularyByConversationId:
+SELECT * FROM vocabulary_items WHERE conversation_id = ? ORDER BY learned_at DESC;
+
+insertVocabularyItem:
+INSERT INTO vocabulary_items(id, user_id, word, definition, language, conversation_id, learned_at, context_sentence)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+
+updateVocabularyMastery:
+UPDATE vocabulary_items SET practice_count = ?, mastery_level = ? WHERE id = ?;
+
+deleteVocabularyItem:
+DELETE FROM vocabulary_items WHERE id = ?;
+
+updateVocabularySyncStatus:
+UPDATE vocabulary_items SET firestore_sync_status = ? WHERE id = ?;

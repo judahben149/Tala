@@ -7,6 +7,7 @@ import com.judahben149.tala.data.service.audio.SpeechRecorderFactory
 import com.judahben149.tala.domain.usecases.permissions.CheckRecordingPermissionUseCase
 import com.judahben149.tala.domain.usecases.permissions.RequestRecordingPermissionUseCase
 import org.koin.dsl.module
+import com.judahben149.tala.util.AudioFileManager
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 
@@ -27,6 +28,7 @@ actual val platformModule = module {
     single<DatabaseDriverFactory> { DatabaseDriverFactory() }
     single { AudioPlayerFactory().create(get()) }
     single<SpeechRecorderFactory> { IOSAudioRecorderFactory() }
+    single<AudioFileManager> { AudioFileManager() }
 
     // Platform UseCases
     single { CheckRecordingPermissionUseCase() }
