@@ -126,7 +126,8 @@ private fun StateIndicator(
             text = uiState.buttonLabel,
             color = textColor,
             fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
+            fontStyle = latoTypography().bodySmall.fontStyle,
+            fontWeight = FontWeight.Normal,
             textAlign = TextAlign.Center
         )
 
@@ -136,7 +137,8 @@ private fun StateIndicator(
             text = uiState.buttonAction,
             color = primaryColor,
             fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
+            fontStyle = latoTypography().bodySmall.fontStyle,
+            fontWeight = FontWeight.Normal,
             textAlign = TextAlign.Center
         )
     }
@@ -203,7 +205,8 @@ private fun ErrorDisplay(
                 fontSize = 14.sp,
                 modifier = Modifier.padding(16.dp),
                 textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Normal,
+                fontStyle = latoTypography().bodySmall.fontStyle
             )
         }
     }
@@ -226,7 +229,8 @@ private fun BottomControls(
                     text = "Cancel",
                     color = textColor.copy(alpha = 0.7f),
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Normal,
+                    fontStyle = latoTypography().bodySmall.fontStyle
                 )
             }
         }
@@ -239,7 +243,8 @@ private fun BottomControls(
                 fontSize = 12.sp,
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(horizontal = 32.dp)
+                modifier = Modifier.padding(horizontal = 32.dp),
+                fontStyle = latoTypography().bodySmall.fontStyle
             )
         }
     }
