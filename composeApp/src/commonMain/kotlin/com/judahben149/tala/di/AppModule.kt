@@ -3,6 +3,7 @@ package com.judahben149.tala.di
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.local.ConversationDatabaseHelper
 import com.judahben149.tala.data.local.UserDatabaseHelper
+import com.judahben149.tala.data.local.VoicesDatabaseHelper
 import com.judahben149.tala.util.preferences.PrefsPersister
 import com.judahben149.tala.data.repository.AudioRepositoryImpl
 import com.judahben149.tala.data.repository.AuthenticationRepositoryImpl
@@ -53,7 +54,10 @@ import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetFeaturedVoicesUseCase
+import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.GetVoicesByGenderUseCase
+import com.judahben149.tala.domain.usecases.speech.IsVoiceSelectionCompletedUseCase
+import com.judahben149.tala.domain.usecases.speech.SetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.ObserveRecordingStatusUseCase
@@ -62,9 +66,11 @@ import com.judahben149.tala.domain.usecases.speech.recording.StopRecordingUseCas
 import com.judahben149.tala.domain.usecases.vocabulary.AddVocabularyItemUseCase
 import com.judahben149.tala.domain.usecases.vocabulary.GetRecentVocabularyUseCase
 import com.judahben149.tala.domain.usecases.vocabulary.GetUserVocabularyUseCase
+import com.judahben149.tala.presentation.screens.home.HomeScreenViewModel
 import com.judahben149.tala.presentation.screens.login.AuthViewModel
 import com.judahben149.tala.presentation.screens.signUp.SignUpViewModel
 import com.judahben149.tala.presentation.screens.speak.SpeakScreenViewModel
+import com.judahben149.tala.presentation.screens.voices.VoicesScreenViewModel
 import com.judahben149.tala.util.ELEVEN_LABS_BASE_URL
 import com.judahben149.tala.util.GEMINI_BASE_URL
 import com.russhwolf.settings.Settings
@@ -209,16 +215,22 @@ val appModule = module {
     singleOf(::GetWeeklyProgressUseCase)
     singleOf(::TrackConversationTimeUseCase)
     singleOf(::UpdateConversationStatsUseCase)
+    singleOf(::GetSelectedVoiceUseCase)
+    singleOf(::SetSelectedVoiceUseCase)
+    singleOf(::IsVoiceSelectionCompletedUseCase)
 
 
     // ViewModels
     viewModelOf(::SignUpViewModel)
     viewModelOf(::AuthViewModel)
     viewModelOf(::SpeakScreenViewModel)
+    viewModelOf(::HomeScreenViewModel)
+    viewModelOf(::VoicesScreenViewModel)
 
     // Database
     single { UserDatabaseHelper(get()) }
     single { ConversationDatabaseHelper(get()) }
+    single { VoicesDatabaseHelper(get()) }
 
     // Platform-specific
     includes(platformModule)

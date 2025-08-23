@@ -6,6 +6,7 @@ class HomeScreenComponent(
     componentContext: ComponentContext,
     private val onNavigateToProfile: () -> Unit,
     private val onNavigateToSpeak: () -> Unit,
+    private val onNavigateToVoices: () -> Unit
 ) : ComponentContext by componentContext {
 
     fun navigateToProfile() {
@@ -14,5 +15,9 @@ class HomeScreenComponent(
 
     fun navigateToSpeak() {
         onNavigateToSpeak()
+    }
+
+    fun navigateToVoices() {
+        onNavigateToVoices()
     }
 }

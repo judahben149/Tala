@@ -7,8 +7,9 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.judahben149.tala.navigation.MainFlowComponent
-import com.judahben149.tala.presentation.screens.HomeScreen
+import com.judahben149.tala.presentation.screens.home.HomeScreen
 import com.judahben149.tala.presentation.screens.speak.SpeakScreen
+import com.judahben149.tala.presentation.screens.voices.VoicesScreen
 
 @Composable
 fun MainFlow(component: MainFlowComponent) {
@@ -27,6 +28,9 @@ fun MainFlow(component: MainFlowComponent) {
 //                ProfileScreen(instance.component)
             is MainFlowComponent.MainChild.Speak ->
                 SpeakScreen(instance.component)
+
+            is MainFlowComponent.MainChild.Voices ->
+                VoicesScreen(instance.component)
         }
     }
 }

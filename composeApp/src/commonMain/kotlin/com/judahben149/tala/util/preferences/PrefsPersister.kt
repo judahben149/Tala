@@ -10,7 +10,7 @@ class PrefsPersister(
         settings.putBoolean(key, value)
     }
 
-    fun loadBoolean(key: String, defaultValue: Boolean): Boolean {
+    fun fetchBoolean(key: String, defaultValue: Boolean): Boolean {
         return settings.getBoolean(key, defaultValue)
     }
 
@@ -18,7 +18,7 @@ class PrefsPersister(
         settings.putString(key, value)
     }
 
-    fun loadString(key: String, defaultValue: String): String {
+    fun fetchString(key: String, defaultValue: String): String {
         return settings.getString(key, defaultValue)
     }
 
@@ -26,7 +26,7 @@ class PrefsPersister(
         settings.putInt(key, value)
     }
 
-    fun loadInt(key: String, defaultValue: Int): Int {
+    fun fetchInt(key: String, defaultValue: Int): Int {
         return settings.getInt(key, defaultValue)
     }
 
@@ -34,7 +34,7 @@ class PrefsPersister(
         settings.putLong(key, value)
     }
 
-    fun loadLong(key: String, defaultValue: Long): Long {
+    fun fetchLong(key: String, defaultValue: Long): Long {
         return settings.getLong(key, defaultValue)
     }
 }
