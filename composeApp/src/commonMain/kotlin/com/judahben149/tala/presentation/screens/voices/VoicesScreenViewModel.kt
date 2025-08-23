@@ -18,6 +18,7 @@ class VoicesScreenViewModel(
     private val getAllVoicesUseCase: GetAllVoicesUseCase,
     private val downloadTextToSpeechUseCase: DownloadTextToSpeechUseCase,
     private val setSelectedVoiceUseCase: SetSelectedVoiceUseCase,
+    private val setVoiceSelectionCompleteUseCase: SetVoiceSelectionCompleteUseCase,
     private val player: SpeechPlayer,
     private val logger: Logger
 ) : ViewModel() {
@@ -127,6 +128,7 @@ class VoicesScreenViewModel(
                 try {
                     setSelectedVoiceUseCase(selectedVoice.voiceId)
                     logger.d { "Saved selected voice: ${selectedVoice.name}" }
+                    setVoiceSelectionCompleteUseCase()
                     onComplete()
                 } catch (e: Exception) {
                     logger.e(e) { "Failed to save selected voice" }

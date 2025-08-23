@@ -56,7 +56,7 @@ import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetFeaturedVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.GetVoicesByGenderUseCase
-import com.judahben149.tala.domain.usecases.speech.IsVoiceSelectionCompletedUseCase
+import com.judahben149.tala.domain.usecases.speech.SetVoiceSelectionCompleteUseCase
 import com.judahben149.tala.domain.usecases.speech.SetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
@@ -217,7 +217,7 @@ val appModule = module {
     singleOf(::UpdateConversationStatsUseCase)
     singleOf(::GetSelectedVoiceUseCase)
     singleOf(::SetSelectedVoiceUseCase)
-    singleOf(::IsVoiceSelectionCompletedUseCase)
+    singleOf(::SetVoiceSelectionCompleteUseCase)
 
 
     // ViewModels
