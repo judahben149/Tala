@@ -8,8 +8,6 @@ import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthInva
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.repository.AuthenticationRepository
 
-//expect class AuthenticationRepositoryImpl(firebaseService: FirebaseService): AuthenticationRepository
-
 class AuthenticationRepositoryImpl(
     private val firebaseService: FirebaseService
 ) : AuthenticationRepository {

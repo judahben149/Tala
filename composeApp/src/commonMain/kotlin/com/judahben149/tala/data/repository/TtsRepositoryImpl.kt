@@ -10,21 +10,19 @@ import com.judahben149.tala.data.service.speechSynthesis.ElevenLabsService
 import com.judahben149.tala.domain.mappers.toNetworkFailure
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.language.Language
 import com.judahben149.tala.domain.models.speech.AudioChunk
 import com.judahben149.tala.domain.models.speech.CharacterTimestamp
 import com.judahben149.tala.domain.models.speech.SpeechModel
 import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
-import io.ktor.client.request.forms.FormDataContent
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsChannel
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.util.decodeBase64Bytes
 import io.ktor.utils.io.readUTF8Line
-import kotlinx.atomicfu.TraceBase.None.append
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
@@ -175,7 +173,8 @@ class TtsRepositoryImpl(
         apiKey: String,
         audioBytes: ByteArray,
         fileName: String,
-        mimeType: String
+        mimeType: String,
+        language: Language,
     ): Result<SpeechToTextResponse, NetworkException> {
         if (apiKey.isBlank()) {
             return Result.Failure(NetworkException.Unauthorized("Missing API key"))
@@ -192,20 +191,24 @@ class TtsRepositoryImpl(
                 })
                 append("model_id", "scribe_v1")
                 // Append other optional parameters as needed, e.g.:
-                // append("language_code", "en")
+                 append("language_code", language.code)
                 // append("timestamps_granularity", "word")
             }
         )
 
 
         return runCatching {
-            service.speechToText(
+            val response = service.speechToText(
                 apiKey = apiKey,
                 audioFile = formData
             )
+            logger.d { "API KEY - $apiKey" }
+
+            logger.e { "Speech to text response: $response" }
+            response
         }.fold(
             onSuccess = { Result.Success(it) },
-//            onSuccess = { Result.Success(it) },
+//            onSuccess = { Result.Success(SpeechToTextResponse("Heyyoo, how are you doing? Good morning")) },
             onFailure = { it.toNetworkFailure() }
         )
     }

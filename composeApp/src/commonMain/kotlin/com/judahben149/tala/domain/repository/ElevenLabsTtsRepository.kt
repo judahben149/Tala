@@ -5,6 +5,7 @@ import com.judahben149.tala.data.model.network.speech.SpeechToTextResponse
 import com.judahben149.tala.data.model.network.speech.VoiceSettings
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
+import com.judahben149.tala.domain.models.language.Language
 import com.judahben149.tala.domain.models.speech.AudioChunk
 import com.judahben149.tala.domain.models.speech.SpeechModel
 import kotlinx.coroutines.flow.Flow
@@ -32,6 +33,7 @@ interface ElevenLabsTtsRepository {
         apiKey: String,
         audioBytes: ByteArray,
         fileName: String,
-        mimeType: String
+        mimeType: String,
+        language: Language,
     ): Result<SpeechToTextResponse, NetworkException>
 }

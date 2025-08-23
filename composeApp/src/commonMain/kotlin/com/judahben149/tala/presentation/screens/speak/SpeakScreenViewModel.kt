@@ -4,10 +4,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.service.audio.SpeechPlayer
+import com.judahben149.tala.domain.managers.MessageManager
+import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.speech.RecorderConfig
 import com.judahben149.tala.domain.models.speech.RecorderStatus
+import com.judahben149.tala.domain.usecases.conversations.StartConversationUseCase
 import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
+import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
+import com.judahben149.tala.domain.usecases.messages.AddUserMessageUseCase
 import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
@@ -25,13 +31,6 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * This ViewModel focuses on:
- * - Recording audio as WAV (wrapAsWav = true)
- * - Letting the user play back the recorded file locally to verify it’s playable
- *
- * It does not invoke STT or TTS. It’s purely for capture-and-play verification.
- */
 class SpeakScreenViewModel(
     private val startRecordingUseCase: StartRecordingUseCase,
     private val stopRecordingUseCase: StopRecordingUseCase,
@@ -40,6 +39,11 @@ class SpeakScreenViewModel(
     private val convertSpeechToTextUseCase: ConvertSpeechToTextUseCase,
     private val downloadTextToSpeechUseCase: DownloadTextToSpeechUseCase,
     private val generateContentUseCase: GenerateContentUseCase,
+    private val addAiMessageUseCase: AddAiMessageUseCase,
+    private val addUserMessageUseCase: AddUserMessageUseCase,
+    private val startConversationUseCase: StartConversationUseCase,
+    private val messageManager: MessageManager,
+    private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
     private val logger: Logger
 ) : ViewModel() {
@@ -62,6 +66,9 @@ class SpeakScreenViewModel(
     private val _mimeType = MutableStateFlow("audio/wav")
     val mimeType: StateFlow<String> = _mimeType
 
+    // Hold the current conversation ID
+    private var currentConversationId: String? = null
+
     init {
         // Observe recording status and keep UI updated
         observeRecordingStatusUseCase()
@@ -70,6 +77,32 @@ class SpeakScreenViewModel(
                 logger.d { "Recording status: $status" }
             }
             .launchIn(viewModelScope)
+
+        sessionManager.run {
+            initializeNewConversation(
+                getUserId(),
+                getUserLanguagePreference().name
+            )
+        }
+    }
+
+    fun initializeNewConversation(
+        userId: String,
+        language: String,
+        topic: String = "General"
+    ) {
+        viewModelScope.launch {
+            when (val result = startConversationUseCase(userId, language, topic)) {
+                is Result.Success -> {
+                    currentConversationId = result.data
+                    logger.d { "New conversation started: ${result.data}" }
+                }
+                is Result.Failure -> {
+                    logger.e { "Failed to start conversation: ${result.error}" }
+                    _recordingError.value = "Failed to start conversation"
+                }
+            }
+        }
     }
 
     fun startRecording() {
@@ -115,35 +148,71 @@ class SpeakScreenViewModel(
                     _isRecordingLoading.value = false
                     _recordedAudioBytes.value = wavBytes
                     _mimeType.value = "audio/wav"
+                    val language = sessionManager.getUserLanguagePreference()
 
                     // Optional quick local verification: attempt to load into player (no play yet)
                     try {
                         withContext(Dispatchers.Main) {
-                            player.load(wavBytes, _mimeType.value)
+//                            player.load(wavBytes, _mimeType.value)
 
 
-                            when(val result = convertSpeechToTextUseCase(wavBytes)) {
+                            when(
+                                val result = convertSpeechToTextUseCase(
+                                    audioBytes = wavBytes,
+                                    language = language
+                                )
+                            ) {
                                 is Result.Success -> {
-
-
-                                    when(
-                                        val result = generateContentUseCase(
-                                            result.data.text,
-                                            emptyList(),
-                                        )
-                                    ) {
-                                        is Result.Success -> {
-                                            generateAndPlaySpeech(result.data.candidates[0].content.parts[0].text)
-                                        }
-
-                                        is Result.Failure -> {
-
-                                        }
-                                    }
+                                    handleUserSpeech(result.data.text)
                                 }
 
                                 is Result.Failure -> {
-                                    logger.d { "Failed to convert speech to text" }
+                                    when(result.error) {
+                                        is NetworkException.BadRequest -> {
+                                            logger.e { "BadRequest error: ${result.error.message}" }
+                                            _recordingError.value = "Bad request: ${result.error.message}"
+                                        }
+                                        is NetworkException.Forbidden -> {
+                                            logger.e { "Forbidden error: ${result.error.message}" }
+                                            _recordingError.value = "Forbidden: ${result.error.message}"
+                                        }
+                                        is NetworkException.HttpError -> {
+                                            logger.e { "HttpError: ${result.error.message}, Code: ${result.error.code}" }
+                                            _recordingError.value = "HTTP error ${result.error.code}: ${result.error.message}"
+                                        }
+                                        is NetworkException.IO -> {
+                                            logger.e(result.error.cause) { "IO error: ${result.error.message}" }
+                                            _recordingError.value = "Network IO error: ${result.error.message}"
+                                        }
+                                        is NetworkException.InvalidResponse -> {
+                                            logger.e { "InvalidResponse error: ${result.error.message}" }
+                                            _recordingError.value = "Invalid server response: ${result.error.message}"
+                                        }
+                                        is NetworkException.NotFound -> {
+                                            logger.e { "NotFound error: ${result.error.message}" }
+                                            _recordingError.value = "Resource not found: ${result.error.message}"
+                                        }
+                                        is NetworkException.Serialization -> {
+                                            logger.e(result.error.cause) { "Serialization error: ${result.error.message}" }
+                                            _recordingError.value = "Data serialization error: ${result.error.message}"
+                                        }
+                                        is NetworkException.ServerError -> {
+                                            logger.e { "ServerError: ${result.error.message}" }
+                                            _recordingError.value = "Server error: ${result.error.message}"
+                                        }
+                                        is NetworkException.Timeout -> {
+                                            logger.e { "Timeout error: ${result.error.message}" }
+                                            _recordingError.value = "Request timed out: ${result.error.message}"
+                                        }
+                                        is NetworkException.Unauthorized -> {
+                                            logger.e { "Unauthorized error: ${result.error.message}" }
+                                            _recordingError.value = "Unauthorized: ${result.error.message}"
+                                        }
+                                        is NetworkException.Unknown -> {
+                                            logger.e(result.error.cause) { "Unknown network error: ${result.error.message}" }
+                                            _recordingError.value = "Unknown network error: ${result.error.message}"
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -161,6 +230,25 @@ class SpeakScreenViewModel(
             }
         }
     }
+
+    private suspend fun handleUserSpeech(transcribedText: String) {
+        when (val result = messageManager.generateResponse(currentConversationId!!, transcribedText)) {
+            is Result.Success -> {
+                // Add user message to conversation
+                addUserMessageUseCase(currentConversationId!!, transcribedText, userAudioBase64 = null)
+
+                // Add AI response to conversation
+                addAiMessageUseCase(currentConversationId!!, result.data, aiAudioBase64 = null)
+
+                // Generate and play AI speech
+                generateAndPlaySpeech(result.data)
+            }
+            is Result.Failure -> {
+                logger.e { "Failed to generate AI response: ${result.error}" }
+                _recordingError.value = "Failed to get response: ${result.error.message}"
+            }
+        }
+}
 
     fun cancelRecording() {
         if (_recordingStatus.value != RecorderStatus.Recording) return
