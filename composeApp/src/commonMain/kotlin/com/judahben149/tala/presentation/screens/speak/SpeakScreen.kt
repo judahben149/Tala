@@ -2,13 +2,27 @@ package com.judahben149.tala.presentation.screens.speak
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,7 +32,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.judahben149.tala.navigation.components.others.SpeakScreenComponent
-import com.judahben149.tala.ui.theme.*
+import com.judahben149.tala.presentation.screens.speak.components.BottomControls
+import com.judahben149.tala.presentation.screens.speak.components.MainActionButton
+import com.judahben149.tala.ui.theme.Black
+import com.judahben149.tala.ui.theme.TalaColors
+import com.judahben149.tala.ui.theme.White
+import com.judahben149.tala.ui.theme.getTalaColors
+import com.judahben149.tala.ui.theme.latoTypography
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -43,34 +63,36 @@ fun SpeakScreen(
             modifier = Modifier.align(Alignment.TopCenter)
         )
 
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            StateIndicator(
-                uiState = uiState,
-                textColor = textColor,
-                primaryColor = colors.primary
-            )
+        // State indicator in center
+        StateIndicator(
+            uiState = uiState,
+            textColor = textColor,
+            primaryColor = colors.primary,
+            modifier = Modifier.align(Alignment.Center)
+        )
 
-            Spacer(modifier = Modifier.height(48.dp))
-
-            MainActionButton(
-                uiState = uiState,
-                onClick = viewModel::onButtonClicked,
-                colors = colors
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
-
+        // Error display just below center
+        uiState.error?.let {
             ErrorDisplay(
-                error = uiState.error,
-                colors = colors
+                error = it,
+                colors = colors,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(y = 100.dp)
+                    .padding(horizontal = 24.dp)
             )
         }
+
+
+        MainActionButton(
+            uiState = uiState,
+            onClick = viewModel::onButtonClicked,
+            colors = colors,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 140.dp)
+        )
+
 
         BottomControls(
             uiState = uiState,
@@ -93,7 +115,9 @@ private fun TopBar(
             .padding(top = 48.dp, start = 24.dp, end = 24.dp),
         horizontalArrangement = Arrangement.End
     ) {
-        IconButton(onClick = onCloseClick) {
+        IconButton(
+            onClick = onCloseClick
+        ) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = "Close",
@@ -108,9 +132,11 @@ private fun TopBar(
 private fun StateIndicator(
     uiState: SpeakScreenUiState,
     textColor: Color,
-    primaryColor: Color
+    primaryColor: Color,
+    modifier: Modifier = Modifier
 ) {
     Column(
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
@@ -145,107 +171,27 @@ private fun StateIndicator(
 }
 
 @Composable
-private fun MainActionButton(
-    uiState: SpeakScreenUiState,
-    onClick: () -> Unit,
-    colors: TalaColors
-) {
-    Button(
-        onClick = onClick,
-        enabled = uiState.isButtonEnabled,
-        modifier = Modifier.size(120.dp),
-        shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = colors.primaryButtonBackground,
-            contentColor = colors.primaryButtonText,
-            disabledContainerColor = colors.disabledButtonBackground,
-            disabledContentColor = colors.disabledButtonText
-        ),
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 8.dp,
-            pressedElevation = 12.dp,
-            disabledElevation = 0.dp
-        )
-    ) {
-        if (uiState.isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(32.dp),
-                color = colors.primaryButtonText,
-                strokeWidth = 3.dp
-            )
-        } else {
-            Icon(
-                imageVector = uiState.buttonIcon,
-                contentDescription = uiState.buttonLabel,
-                modifier = Modifier.size(48.dp)
-            )
-        }
-    }
-}
-
-@Composable
 private fun ErrorDisplay(
-    error: String?,
-    colors: TalaColors
-) {
-    error?.let { errorMessage ->
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = colors.textFieldErrorBackground
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Text(
-                text = errorMessage,
-                color = colors.errorText,
-                fontSize = 14.sp,
-                modifier = Modifier.padding(16.dp),
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Normal,
-                fontStyle = latoTypography().bodySmall.fontStyle
-            )
-        }
-    }
-}
-
-@Composable
-private fun BottomControls(
-    uiState: SpeakScreenUiState,
-    onCancelClick: () -> Unit,
-    textColor: Color,
+    error: String,
+    colors: TalaColors,
     modifier: Modifier = Modifier
 ) {
-    Column(
-        modifier = modifier.padding(bottom = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = colors.textFieldErrorBackground
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
-        if (uiState.conversationState == ConversationState.Recording) {
-            TextButton(onClick = onCancelClick) {
-                Text(
-                    text = "Cancel",
-                    color = textColor.copy(alpha = 0.7f),
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    fontStyle = latoTypography().bodySmall.fontStyle
-                )
-            }
-        }
-
-        if (uiState.canInterrupt) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Tap to interrupt and speak again",
-                color = textColor.copy(alpha = 0.6f),
-                fontSize = 12.sp,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.Normal,
-                modifier = Modifier.padding(horizontal = 32.dp),
-                fontStyle = latoTypography().bodySmall.fontStyle
-            )
-        }
+        Text(
+            text = error,
+            color = colors.errorText,
+            fontSize = 14.sp,
+            modifier = Modifier.padding(16.dp),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.Normal,
+            fontStyle = latoTypography().bodySmall.fontStyle
+        )
     }
 }
