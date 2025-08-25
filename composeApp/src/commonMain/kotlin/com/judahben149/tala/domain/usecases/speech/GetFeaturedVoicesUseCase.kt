@@ -12,5 +12,4 @@ class GetFeaturedVoicesUseCase(
     suspend operator fun invoke(): Result<List<SimpleVoice>, NetworkException> {
         return repository.getFeaturedVoices(BuildKonfig.ELEVEN_LABS_API_KEY)
     }
-
 }

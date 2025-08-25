@@ -190,7 +190,7 @@ private fun VoicesContent(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(100.dp))
+        Spacer(modifier = Modifier.height(56.dp))
         
         // Voice pager
         HorizontalPager(
@@ -201,6 +201,7 @@ private fun VoicesContent(
         ) { page ->
             VoiceCard(
                 voice = uiState.voices[page],
+                voicePersonaNumber = page + 1,
                 isSelected = page == pagerState.currentPage,
                 colors = colors
             )
@@ -252,6 +253,7 @@ private fun VoicesContent(
 @Composable
 private fun VoiceCard(
     voice: SimpleVoice,
+    voicePersonaNumber: Int,
     isSelected: Boolean,
     colors: TalaColors
 ) {
@@ -298,7 +300,10 @@ private fun VoiceCard(
         
         Spacer(modifier = Modifier.height(32.dp))
 
-        LoadingSpinner(Modifier.size(200.dp))
+        LoadingSpinner(
+            modifier = Modifier.size(200.dp),
+            voicePersonaNumber = voicePersonaNumber,
+        )
 
         Text(
             text = voice.name,

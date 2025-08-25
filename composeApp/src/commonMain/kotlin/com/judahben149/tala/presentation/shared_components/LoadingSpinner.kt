@@ -19,10 +19,26 @@ import androidx.compose.ui.graphics.graphicsLayer
 import com.judahben149.tala.ui.theme.Amber400
 import com.judahben149.tala.ui.theme.Amber500
 import com.judahben149.tala.ui.theme.Amber600
+import com.judahben149.tala.ui.theme.Fuchsia400
+import com.judahben149.tala.ui.theme.Fuchsia500
+import com.judahben149.tala.ui.theme.Fuchsia600
+import com.judahben149.tala.ui.theme.Lime400
+import com.judahben149.tala.ui.theme.Lime500
+import com.judahben149.tala.ui.theme.Lime600
+import com.judahben149.tala.ui.theme.Rose400
+import com.judahben149.tala.ui.theme.Rose500
+import com.judahben149.tala.ui.theme.Rose600
+import com.judahben149.tala.ui.theme.Teal400
+import com.judahben149.tala.ui.theme.Teal500
+import com.judahben149.tala.ui.theme.Teal600
+import com.judahben149.tala.ui.theme.Violet400
+import com.judahben149.tala.ui.theme.Violet500
+import com.judahben149.tala.ui.theme.Violet600
 
 @Composable
 fun LoadingSpinner(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    voicePersonaNumber: Int = 1
 ) {
     val animation = rememberInfiniteTransition()  
     val rotation = animation.animateFloat(  
@@ -31,11 +47,14 @@ fun LoadingSpinner(
         animationSpec = infiniteRepeatable(  
             animation = tween(durationMillis = 20_000)  
         ), label = "rotation"  
-    )  
+    )
+
+    val (color1, color2, color3) = getLoadingPersonaColours(voicePersonaNumber)
+
     Box(modifier = modifier.graphicsLayer { rotationZ = rotation.value }) {  
-        GradientCircle(color = Amber400)
-        GradientCircle(color = Amber500, delay = 600)
-        GradientCircle(color = Amber600, delay = 1200)
+        GradientCircle(color = color1)
+        GradientCircle(color = color2, delay = 600)
+        GradientCircle(color = color3, delay = 1200)
     }  
 }  
   
@@ -76,4 +95,19 @@ fun GradientCircle(
                 )  
             }  
     )  
+}
+
+
+fun getLoadingPersonaColours(
+    personaNumber: Int
+): Triple<Color, Color, Color> {
+    return when(personaNumber) {
+        1 -> return Triple(Amber400, Amber500, Amber600)
+        2 -> return Triple(Teal400, Teal500, Teal600)
+        3 -> return Triple(Lime400, Lime500, Lime600)
+        4 -> return Triple(Rose400, Rose500, Rose600)
+        5 -> return Triple(Violet400, Violet500, Violet600)
+        6 -> return Triple(Fuchsia400, Fuchsia500, Fuchsia600)
+        else -> Triple(Amber400, Amber500, Amber600)
+    }
 }
