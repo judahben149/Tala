@@ -1,4 +1,4 @@
-package com.judahben149.tala.presentation.components
+package com.judahben149.tala.presentation.shared_components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedContentScope

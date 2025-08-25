@@ -167,6 +167,9 @@ kotlin {
 
             // Korge
 //            implementation(libs.korge.core)
+
+            // Coil SVG
+            implementation(libs.coil.svg)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native)
