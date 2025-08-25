@@ -8,6 +8,7 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.judahben149.tala.navigation.MainFlowComponent
 import com.judahben149.tala.presentation.screens.home.HomeScreen
+import com.judahben149.tala.presentation.screens.settings.SettingsScreen
 import com.judahben149.tala.presentation.screens.speak.SpeakScreen
 import com.judahben149.tala.presentation.screens.voices.VoicesScreen
 
@@ -31,6 +32,9 @@ fun MainFlow(component: MainFlowComponent) {
 
             is MainFlowComponent.MainChild.Voices ->
                 VoicesScreen(instance.component)
+
+            is MainFlowComponent.MainChild.Settings ->
+                SettingsScreen(instance.component)
         }
     }
 }

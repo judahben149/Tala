@@ -63,25 +63,17 @@ fun SpeakScreen(
             modifier = Modifier.align(Alignment.TopCenter)
         )
 
-        // State indicator in center
-        StateIndicator(
-            uiState = uiState,
-            textColor = textColor,
-            primaryColor = colors.primary,
-            modifier = Modifier.align(Alignment.Center)
-        )
-
         // Error display just below center
-        uiState.error?.let {
-            ErrorDisplay(
-                error = it,
-                colors = colors,
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(y = 100.dp)
-                    .padding(horizontal = 24.dp)
-            )
-        }
+//        uiState.error?.let {
+//            ErrorDisplay(
+//                error = it,
+//                colors = colors,
+//                modifier = Modifier
+//                    .align(Alignment.Center)
+//                    .offset(y = 100.dp)
+//                    .padding(horizontal = 24.dp)
+//            )
+//        }
 
 
         MainActionButton(
@@ -90,18 +82,23 @@ fun SpeakScreen(
             colors = colors,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 140.dp)
+                .padding(bottom = 64.dp)
         )
 
-
-        BottomControls(
-            uiState = uiState,
-            onCancelClick = viewModel::cancelRecording,
-            textColor = textColor,
-            modifier = Modifier.align(Alignment.BottomCenter)
+        Text(
+            text = uiState.buttonLabel,
+            color = textColor,
+            fontSize = 13.sp,
+            fontStyle = latoTypography().bodySmall.fontStyle,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 36.dp)
         )
     }
 }
+
 
 @Composable
 private fun TopBar(

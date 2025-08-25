@@ -10,6 +10,7 @@ import com.judahben149.tala.data.repository.AuthenticationRepositoryImpl
 import com.judahben149.tala.data.repository.ConversationRepositoryImpl
 import com.judahben149.tala.data.repository.GeminiRepositoryImpl
 import com.judahben149.tala.data.repository.TtsRepositoryImpl
+import com.judahben149.tala.data.repository.UserRepositoryImpl
 import com.judahben149.tala.data.repository.VoicesRepositoryImpl
 import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.data.service.audio.SpeechRecorderFactory
@@ -27,6 +28,7 @@ import com.judahben149.tala.domain.repository.AuthenticationRepository
 import com.judahben149.tala.domain.repository.ConversationRepository
 import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
 import com.judahben149.tala.domain.repository.GeminiRepository
+import com.judahben149.tala.domain.repository.UserRepository
 import com.judahben149.tala.domain.repository.VoicesRepository
 import com.judahben149.tala.domain.usecases.analytics.GetLearningStatsUseCase
 import com.judahben149.tala.domain.usecases.analytics.GetWeeklyProgressUseCase
@@ -50,6 +52,13 @@ import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
 import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.AddUserMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.GetConversationMessagesUseCase
+import com.judahben149.tala.domain.usecases.settings.DeleteAccountUseCase
+import com.judahben149.tala.domain.usecases.settings.GetLearningLanguageUseCase
+import com.judahben149.tala.domain.usecases.settings.GetUserProfileUseCase
+import com.judahben149.tala.domain.usecases.settings.UpdateLearningLanguageUseCase
+import com.judahben149.tala.domain.usecases.settings.UpdateNotificationSettingsUseCase
+import com.judahben149.tala.domain.usecases.settings.UpdatePasswordUseCase
+import com.judahben149.tala.domain.usecases.settings.UpdateUserProfileUseCase
 import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
@@ -71,6 +80,7 @@ import com.judahben149.tala.presentation.screens.login.AuthViewModel
 import com.judahben149.tala.presentation.screens.signUp.SignUpViewModel
 import com.judahben149.tala.presentation.screens.speak.SpeakScreenViewModel
 import com.judahben149.tala.presentation.screens.voices.VoicesScreenViewModel
+import com.judahben149.tala.presentation.screens.settings.SettingsScreenViewModel
 import com.judahben149.tala.util.ELEVEN_LABS_BASE_URL
 import com.judahben149.tala.util.GEMINI_BASE_URL
 import com.russhwolf.settings.Settings
@@ -177,6 +187,7 @@ val appModule = module {
     singleOf(::TtsRepositoryImpl).bind<ElevenLabsTtsRepository>()
     singleOf(::AudioRepositoryImpl).bind<AudioRepository>()
     singleOf(::ConversationRepositoryImpl).bind<ConversationRepository>()
+    singleOf(::UserRepositoryImpl).bind<UserRepository>()
 
 
     // Use Cases
@@ -218,6 +229,13 @@ val appModule = module {
     singleOf(::GetSelectedVoiceUseCase)
     singleOf(::SetSelectedVoiceUseCase)
     singleOf(::SetVoiceSelectionCompleteUseCase)
+    singleOf(::GetUserProfileUseCase)
+    singleOf(::UpdateUserProfileUseCase)
+    singleOf(::UpdatePasswordUseCase)
+    singleOf(::DeleteAccountUseCase)
+    singleOf(::UpdateLearningLanguageUseCase)
+    singleOf(::GetLearningLanguageUseCase)
+    singleOf(::UpdateNotificationSettingsUseCase)
 
 
     // ViewModels
@@ -226,6 +244,7 @@ val appModule = module {
     viewModelOf(::SpeakScreenViewModel)
     viewModelOf(::HomeScreenViewModel)
     viewModelOf(::VoicesScreenViewModel)
+    viewModelOf(::SettingsScreenViewModel)
 
     // Database
     single { UserDatabaseHelper(get()) }

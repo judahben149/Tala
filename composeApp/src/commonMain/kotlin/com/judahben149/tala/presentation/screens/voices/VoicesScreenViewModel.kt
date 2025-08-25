@@ -16,6 +16,7 @@ import kotlinx.coroutines.withContext
 
 class VoicesScreenViewModel(
     private val getAllVoicesUseCase: GetAllVoicesUseCase,
+    private val getFeaturedVoicesUseCase: GetFeaturedVoicesUseCase,
     private val downloadTextToSpeechUseCase: DownloadTextToSpeechUseCase,
     private val setSelectedVoiceUseCase: SetSelectedVoiceUseCase,
     private val setVoiceSelectionCompleteUseCase: SetVoiceSelectionCompleteUseCase,
@@ -45,7 +46,7 @@ class VoicesScreenViewModel(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             
-            when (val result = getAllVoicesUseCase()) {
+            when (val result = getFeaturedVoicesUseCase()) {
                 is Result.Success -> {
                     _uiState.update { 
                         it.copy(

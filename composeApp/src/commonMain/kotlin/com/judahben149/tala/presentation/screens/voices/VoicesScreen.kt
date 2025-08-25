@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.judahben149.tala.domain.models.speech.SimpleVoice
 import com.judahben149.tala.navigation.components.others.VoicesScreenComponent
+import com.judahben149.tala.presentation.shared_components.LoadingSpinner
 import com.judahben149.tala.ui.theme.*
 import org.koin.compose.viewmodel.koinViewModel
 
@@ -278,23 +279,27 @@ private fun VoiceCard(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Voice avatar (placeholder circle with gradient)
-        Box(
-            modifier = Modifier
-                .size(200.dp)
-                .clip(CircleShape)
-                .background(backgroundColor),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = voice.name.firstOrNull()?.toString() ?: "?",
-                color = colors.primary,
-                fontSize = 72.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
+//        Box(
+//            modifier = Modifier
+//                .size(200.dp)
+//                .clip(CircleShape)
+//                .background(backgroundColor),
+//            contentAlignment = Alignment.Center
+//        ) {
+////            Text(
+////                text = voice.name.firstOrNull()?.toString() ?: "?",
+////                color = colors.primary,
+////                fontSize = 72.sp,
+////                fontWeight = FontWeight.Bold
+////            )
+//
+////            LoadingSpinner()
+//        }
         
         Spacer(modifier = Modifier.height(32.dp))
-        
+
+        LoadingSpinner(Modifier.size(200.dp))
+
         Text(
             text = voice.name,
             color = colors.primaryText,

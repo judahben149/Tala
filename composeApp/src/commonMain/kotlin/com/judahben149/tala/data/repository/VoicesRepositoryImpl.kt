@@ -72,8 +72,20 @@ class VoicesRepositoryImpl(
     override suspend fun getFeaturedVoices(apiKey: String): Result<List<SimpleVoice>, NetworkException> {
         when (val result = getAllVoices(apiKey)) {
             is Result.Success -> {
-                val featuredVoices = databaseHelper.getFeaturedVoices()
-                return Result.Success(featuredVoices)
+//                val featuredVoices = databaseHelper.getFeaturedVoices()
+                val allVoices = databaseHelper.getAllVoices()
+
+                val sortedVoices = allVoices
+                    .filter { it.description != null && it.description.isNotBlank() }
+                    .sortedBy { it.description?.length }
+
+                val maleVoices = sortedVoices.filter { it.gender.equals("male", ignoreCase = true) }.take(3)
+                val femaleVoices = sortedVoices.filter { it.gender.equals("female", ignoreCase = true) }.take(3)
+
+                val selectedVoices = (maleVoices + femaleVoices).distinctBy { it.voiceId }
+
+                logger.d { "Returning ${selectedVoices.size} voices after filtering and sorting" }
+                return Result.Success(selectedVoices)
             }
             is Result.Failure -> return result
         }

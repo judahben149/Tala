@@ -17,7 +17,8 @@ fun HomeScreen(
 //        signInTracker.markSignedOut()
 
         if (viewModel.isVoicesSelectionComplete()) {
-            component.navigateToSpeak()
+//            component.navigateToSpeak()
+            component.navigateToSettings()
         } else {
             component.navigateToVoices()
         }

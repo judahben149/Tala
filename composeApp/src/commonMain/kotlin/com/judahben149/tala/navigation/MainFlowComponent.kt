@@ -9,6 +9,7 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.judahben149.tala.navigation.components.top.HomeScreenComponent
 import com.judahben149.tala.navigation.components.others.ProfileScreenComponent
+import com.judahben149.tala.navigation.components.others.SettingsScreenComponent
 import com.judahben149.tala.navigation.components.others.SpeakScreenComponent
 import com.judahben149.tala.navigation.components.others.VoicesScreenComponent
 import kotlinx.serialization.Serializable
@@ -44,6 +45,9 @@ class MainFlowComponent(
                 },
                 onNavigateToVoices = {
                     navigation.pushNew(MainConfiguration.Voices)
+                },
+                onNavigateToSettings = {
+                    navigation.pushNew(MainConfiguration.Settings)
                 }
             )
         )
@@ -52,6 +56,17 @@ class MainFlowComponent(
             ProfileScreenComponent(
                 componentContext = componentContext,
                 onSignOut = onSignOut,
+                onBackPressed = { navigation.pop() }
+            )
+        )
+
+        is MainConfiguration.Settings -> MainChild.Settings(
+            SettingsScreenComponent(
+                componentContext = componentContext,
+                onNavigateToTerms = {},
+                onNavigateToSupport = {},
+                onNavigateToFeedback = {},
+                onNavigateToPrivacyPolicy = {},
                 onBackPressed = { navigation.pop() }
             )
         )
@@ -84,6 +99,9 @@ class MainFlowComponent(
         data object Profile : MainConfiguration()
 
         @Serializable
+        data object Settings : MainConfiguration()
+
+        @Serializable
         data object Speak : MainConfiguration()
 
         @Serializable
@@ -93,6 +111,7 @@ class MainFlowComponent(
     sealed class MainChild {
         data class Home(val component: HomeScreenComponent) : MainChild()
         data class Profile(val component: ProfileScreenComponent) : MainChild()
+        data class Settings(val component: SettingsScreenComponent) : MainChild()
         data class Speak(val component: SpeakScreenComponent) : MainChild()
         data class Voices(val component: VoicesScreenComponent) : MainChild()
     }
