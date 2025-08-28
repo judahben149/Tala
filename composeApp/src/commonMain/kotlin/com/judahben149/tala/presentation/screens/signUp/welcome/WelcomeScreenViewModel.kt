@@ -3,7 +3,6 @@ package com.judahben149.tala.presentation.screens.signUp.welcome
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.Language
@@ -18,7 +17,6 @@ import kotlinx.coroutines.launch
 class WelcomeScreenViewModel(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getLearningLanguageUseCase: GetLearningLanguageUseCase,
-    private val signInStateTracker: SignInStateTracker,
     private val sessionManager: SessionManager,
     private val logger: Logger
 ) : ViewModel() {
@@ -76,7 +74,7 @@ class WelcomeScreenViewModel(
     fun completeOnboarding() {
         viewModelScope.launch {
             try {
-                signInStateTracker.markOnboardingCompleted()
+                sessionManager.markOnboardingCompleted()
                 logger.d { "Onboarding completed successfully" }
             } catch (e: Exception) {
                 logger.e(e) { "Failed to mark onboarding as completed" }

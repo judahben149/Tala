@@ -7,8 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.retainedComponent
-import com.judahben149.tala.data.service.SignInStateTracker
-import com.judahben149.tala.domain.usecases.permissions.RequestRecordingPermissionUseCase
+import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.navigation.RootComponent
 import org.koin.android.ext.android.inject
 
@@ -17,10 +16,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
-        val signInStateTracker: SignInStateTracker by inject()
+        val sessionManager: SessionManager by inject()
 
         val rootComponent = retainedComponent { componentContext ->
-            RootComponent(componentContext, signInStateTracker)
+            RootComponent(componentContext, sessionManager)
         }
 
         setContent {

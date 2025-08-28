@@ -6,12 +6,12 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
-import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.domain.managers.SessionManager
 import kotlinx.serialization.Serializable
 
 class RootComponent(
     componentContext: ComponentContext,
-    private val signInStateTracker: SignInStateTracker
+    private val sessionManager: SessionManager
 ) : ComponentContext by componentContext {
 
     private val navigation = StackNavigation<RootConfiguration>()
@@ -46,10 +46,14 @@ class RootComponent(
     }
 
     fun checkAuthenticationState() {
-        val isSignedIn = signInStateTracker.isSignedIn.value
-        when (isSignedIn) {
-            true -> navigateToMain()
-            else -> navigateToOnboarding()
+        val appState = sessionManager.appState.value
+        when (appState) {
+            SessionManager.AppState.LoggedOut -> navigateToOnboarding()
+            SessionManager.AppState.NeedsOnboarding -> navigateToOnboarding()
+            SessionManager.AppState.LoggedIn -> navigateToMain()
+            SessionManager.AppState.Unknown -> {
+                // Stay in loading state
+            }
         }
     }
 

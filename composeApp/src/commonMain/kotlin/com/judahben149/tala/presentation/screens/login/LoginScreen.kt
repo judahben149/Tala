@@ -3,7 +3,16 @@ package com.judahben149.tala.presentation.screens.login
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -14,8 +23,25 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -27,8 +53,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.judahben149.tala.data.service.SignInStateTracker
-import com.judahben149.tala.domain.models.authentication.errors.*
+import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.navigation.components.others.LoginScreenComponent
@@ -49,7 +75,7 @@ fun LoginScreen(
     val signInState by viewModel.signInState.collectAsState()
     val formState by viewModel.formState.collectAsState()
     val colors = getTalaColors()
-    val signInStateTracker: SignInStateTracker = koinInject()
+    val sessionManager: SessionManager = koinInject()
 
     // Handle sign in success
     LaunchedEffect(signInState) {
@@ -59,12 +85,22 @@ fun LoginScreen(
                     is Result.Success -> {
                         val user = result.data
                         viewModel.clearFormState()
-                        component.handleLoginSuccess()
 
-                        signInStateTracker.markSignedIn(
-                            userId = user.userId,
-                            isNewUser = false
-                        )
+                        // Check if user actually completed onboarding
+                        val hasCompletedOnboarding = sessionManager.checkUserOnboardingStatus(user.userId)
+
+                        if (hasCompletedOnboarding) {
+                            sessionManager.markSignedIn(
+                                userId = user.userId,
+                                isNewUser = false
+                            )
+                            component.handleLoginSuccess()
+                        } else {
+                            sessionManager.markSignedIn(
+                                userId = user.userId,
+                                isNewUser = false
+                            )
+                        }
                     }
                     is Result.Failure -> {
                         // Handle error if needed
@@ -75,6 +111,7 @@ fun LoginScreen(
             null -> {  }
         }
     }
+
 
     LoginScreenContent(
         formState = formState,

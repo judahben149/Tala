@@ -24,10 +24,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.navigation.components.others.EmailVerificationComponent
 import com.judahben149.tala.ui.theme.getTalaColors
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -40,16 +38,12 @@ fun EmailVerificationScreen(
     val userId by viewModel.userId.collectAsStateWithLifecycle()
 
     val colors = getTalaColors()
-    val signInStateTracker: SignInStateTracker = koinInject()
 
     // Navigate to main app when verification complete
     LaunchedEffect(verificationState.canProceed) {
         if (verificationState.canProceed) {
             userId?.let {
-                signInStateTracker.markSignedIn(
-                    userId = it,
-                    isNewUser = true
-                )
+                component.onEmailVerified(it)
             }
         }
     }

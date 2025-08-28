@@ -14,7 +14,7 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.navigation.RootComponent
 import com.judahben149.tala.navigation.flow.MainFlow
 import com.judahben149.tala.navigation.flow.OnboardingFlow
@@ -22,17 +22,17 @@ import org.koin.compose.koinInject
 
 @Composable
 fun TalaApp(rootComponent: RootComponent) {
-    val signInStateTracker: SignInStateTracker = koinInject()
+    val sessionManager: SessionManager = koinInject()
 
     LaunchedEffect(Unit) {
-        signInStateTracker.checkSignInState()
+        sessionManager.checkAppState()
     }
 
     // Listen to auth state changes and trigger navigation
-    val isSignedIn by signInStateTracker.isSignedIn.collectAsState()
+    val appState by sessionManager.appState.collectAsState()
 
-    LaunchedEffect(isSignedIn) {
-        if (isSignedIn != null) {
+    LaunchedEffect(appState) {
+        if (appState != SessionManager.AppState.Unknown) {
             rootComponent.checkAuthenticationState()
         }
     }

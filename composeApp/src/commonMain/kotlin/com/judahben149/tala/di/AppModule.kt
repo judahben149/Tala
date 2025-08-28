@@ -4,7 +4,6 @@ import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.local.ConversationDatabaseHelper
 import com.judahben149.tala.data.local.UserDatabaseHelper
 import com.judahben149.tala.data.local.VoicesDatabaseHelper
-import com.judahben149.tala.util.preferences.PrefsPersister
 import com.judahben149.tala.data.repository.AudioRepositoryImpl
 import com.judahben149.tala.data.repository.AuthenticationRepositoryImpl
 import com.judahben149.tala.data.repository.ConversationRepositoryImpl
@@ -12,7 +11,6 @@ import com.judahben149.tala.data.repository.GeminiRepositoryImpl
 import com.judahben149.tala.data.repository.TtsRepositoryImpl
 import com.judahben149.tala.data.repository.UserRepositoryImpl
 import com.judahben149.tala.data.repository.VoicesRepositoryImpl
-import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.data.service.audio.SpeechRecorderFactory
 import com.judahben149.tala.data.service.firebase.FirebaseService
 import com.judahben149.tala.data.service.firebase.FirebaseServiceImpl
@@ -71,8 +69,8 @@ import com.judahben149.tala.domain.usecases.speech.GetFeaturedVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceIdUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.GetVoicesByGenderUseCase
-import com.judahben149.tala.domain.usecases.speech.SetVoiceSelectionCompleteUseCase
 import com.judahben149.tala.domain.usecases.speech.SetSelectedVoiceUseCase
+import com.judahben149.tala.domain.usecases.speech.SetVoiceSelectionCompleteUseCase
 import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.ObserveRecordingStatusUseCase
@@ -83,16 +81,17 @@ import com.judahben149.tala.domain.usecases.vocabulary.GetRecentVocabularyUseCas
 import com.judahben149.tala.domain.usecases.vocabulary.GetUserVocabularyUseCase
 import com.judahben149.tala.presentation.screens.home.HomeScreenViewModel
 import com.judahben149.tala.presentation.screens.login.AuthViewModel
-import com.judahben149.tala.presentation.screens.signUp.SignUpViewModel
-import com.judahben149.tala.presentation.screens.speak.SpeakScreenViewModel
-import com.judahben149.tala.presentation.screens.voices.VoicesScreenViewModel
 import com.judahben149.tala.presentation.screens.settings.SettingsScreenViewModel
+import com.judahben149.tala.presentation.screens.signUp.SignUpViewModel
 import com.judahben149.tala.presentation.screens.signUp.interests.InterestsSelectionViewModel
 import com.judahben149.tala.presentation.screens.signUp.language.LanguageSelectionViewModel
 import com.judahben149.tala.presentation.screens.signUp.verification.EmailVerificationViewModel
 import com.judahben149.tala.presentation.screens.signUp.welcome.WelcomeScreenViewModel
+import com.judahben149.tala.presentation.screens.speak.SpeakScreenViewModel
+import com.judahben149.tala.presentation.screens.voices.VoicesScreenViewModel
 import com.judahben149.tala.util.ELEVEN_LABS_BASE_URL
 import com.judahben149.tala.util.GEMINI_BASE_URL
+import com.judahben149.tala.util.preferences.PrefsPersister
 import com.russhwolf.settings.Settings
 import de.jensklingenberg.ktorfit.Ktorfit
 import io.ktor.client.HttpClient
@@ -115,7 +114,6 @@ val appModule = module {
     // Services
     singleOf(::FirebaseServiceImpl).bind<FirebaseService>()
     singleOf<Settings>(::Settings)
-    singleOf(::SignInStateTracker)
     single { Logger.withTag("Talaxx") }
     factory { get<SpeechRecorderFactory>().createRecorder() }
     singleOf(::AudioPermissionManager)

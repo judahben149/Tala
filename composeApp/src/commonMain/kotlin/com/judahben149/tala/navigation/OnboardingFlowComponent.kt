@@ -8,7 +8,7 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
-import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.navigation.components.others.EmailVerificationComponent
 import com.judahben149.tala.navigation.components.others.LoginScreenComponent
 import com.judahben149.tala.navigation.components.others.SignUpScreenComponent
@@ -24,7 +24,7 @@ class OnboardingFlowComponent(
     private val onOnboardingCompleted: () -> Unit
 ) : ComponentContext by componentContext, KoinComponent {
 
-    private val signInStateTracker: SignInStateTracker by inject()
+    private val sessionManager: SessionManager by inject()
     private val navigation = StackNavigation<OnboardingConfiguration>()
 
     val childStack: Value<ChildStack<*, OnboardingChild>> = childStack(
@@ -36,7 +36,7 @@ class OnboardingFlowComponent(
     )
 
     private fun getInitialScreen(): OnboardingConfiguration {
-        return if (signInStateTracker.hasSignedInBefore()) {
+        return if (sessionManager.hasSignedInBefore()) {
             OnboardingConfiguration.Login
         } else {
             OnboardingConfiguration.SignUp
@@ -70,7 +70,8 @@ class OnboardingFlowComponent(
                 componentContext = componentContext,
                 userEmail = configuration.userEmail,
                 onNavigateToWelcome = ::handleEmailVerificationSuccess,
-                onBackPressed = ::handleEmailVerificationBackPressed
+                onBackPressed = ::handleEmailVerificationBackPressed,
+                sessionManager = sessionManager
             )
         )
 
@@ -126,9 +127,25 @@ class OnboardingFlowComponent(
     }
 
     private fun handleLoginSuccess() {
-        // For existing users, go straight to main app
-        completeOnboarding()
+        // Check app state instead of assuming login means completion**
+        val sessionManager: SessionManager by inject()
+        val currentState = sessionManager.appState.value
+
+        when (currentState) {
+            SessionManager.AppState.LoggedIn -> {
+                completeOnboarding()
+            }
+
+            SessionManager.AppState.NeedsOnboarding -> {
+                navigation.pushNew(OnboardingConfiguration.LanguageSelection)
+            }
+
+            else -> {
+                completeOnboarding()
+            }
+        }
     }
+
 
     private fun handleBackPressed() {
         navigation.pop { isSuccess ->

@@ -3,7 +3,7 @@ package com.judahben149.tala.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.session.PasswordUpdateData
 import com.judahben149.tala.domain.models.session.UserProfile
@@ -20,7 +20,10 @@ import com.judahben149.tala.domain.usecases.settings.UpdateUserProfileUseCase
 import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.SetSelectedVoiceUseCase
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class SettingsScreenViewModel(
@@ -36,7 +39,7 @@ class SettingsScreenViewModel(
     private val updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase,
     private val getNotificationSettingsUseCase: GetNotificationSettingsUseCase,
     private val signOutUseCase: SignOutUseCase,
-    private val signInStateTracker: SignInStateTracker,
+    private val sessionManager: SessionManager,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -273,7 +276,7 @@ class SettingsScreenViewModel(
                     _uiState.update { it.copy(isDeletingAccount = false) }
                     logger.d { "Account deleted successfully" }
 
-                    signInStateTracker.markSignedOut()
+                    sessionManager.markSignedOut()
                     // Trigger navigation away from app
                 }
                 is Result.Failure -> {
