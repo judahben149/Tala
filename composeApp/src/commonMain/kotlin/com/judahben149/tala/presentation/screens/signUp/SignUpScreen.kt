@@ -53,7 +53,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.navigation.components.others.SignUpScreenComponent
@@ -61,7 +60,6 @@ import com.judahben149.tala.presentation.UiState
 import com.judahben149.tala.ui.theme.TalaColors
 import com.judahben149.tala.ui.theme.getTalaColors
 import com.judahben149.tala.util.isIos
-import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,24 +71,20 @@ fun SignUpScreen(
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
     val colors = getTalaColors()
-    val signInStateTracker: SignInStateTracker = koinInject()
 
-    // Handle sign up success
+
     LaunchedEffect(uiState) {
         when (val currentState = uiState) {
             is UiState.Loaded -> {
                 when (val result = currentState.result) {
                     is Result.Success -> {
                         val user = result.data
+                        // Navigate to email verification screen instead of main app
+                        component.navigateToEmailVerification(user.email)
                         viewModel.clearState()
-                        component.handleSignUpSuccess()
-                        signInStateTracker.markSignedIn(
-                            userId = user.userId,
-                            isNewUser = true
-                        )
                     }
                     is Result.Failure -> {
-                        // Handle error if needed
+                        // Handle error - error is displayed in UI already
                     }
                 }
             }
@@ -133,7 +127,7 @@ fun SignUpScreen(
                     tint = colors.iconTint,
                     modifier = Modifier
                         .size(24.dp)
-                        .clickable { /* Handle close */ }
+                        .clickable { component.navigateToLogin() }
                 )
             }
 
@@ -241,6 +235,7 @@ fun SignUpScreen(
         }
     }
 }
+
 
 @Composable
 private fun SignUpForm(

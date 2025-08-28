@@ -5,7 +5,7 @@ import com.judahben149.tala.data.model.network.speech.SpeechToTextResponse
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
 import com.judahben149.tala.domain.models.common.Result
-import com.judahben149.tala.domain.models.language.Language
+import com.judahben149.tala.domain.models.user.Language
 
 class ConvertSpeechToTextUseCase(
     private val repository: ElevenLabsTtsRepository

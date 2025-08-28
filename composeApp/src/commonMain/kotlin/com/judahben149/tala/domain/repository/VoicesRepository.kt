@@ -14,4 +14,6 @@ interface VoicesRepository {
         apiKey: String,
         gender: String
     ): Result<List<SimpleVoice>, NetworkException>
+
+    suspend fun getVoiceById(voiceId: String): SimpleVoice?
 }

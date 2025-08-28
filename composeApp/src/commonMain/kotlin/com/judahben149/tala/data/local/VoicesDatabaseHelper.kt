@@ -62,4 +62,8 @@ class VoicesDatabaseHelper(driverFactory: DatabaseDriverFactory) {
     suspend fun getCacheTimestamp(): Long? {
         return voicesQueries.getCacheMetadata().executeAsOneOrNull()?.last_fetched
     }
+
+    suspend fun getVoiceById(voiceId: String): SimpleVoice? {
+        return voicesQueries.getVoiceById(voiceId).executeAsOneOrNull()?.toDomain()
+    }
 }

@@ -1,8 +1,9 @@
 package com.judahben149.tala.domain.managers
 
 import com.judahben149.tala.data.service.SignInStateTracker
-import com.judahben149.tala.domain.models.language.Language
+import com.judahben149.tala.domain.models.user.Language
 import com.judahben149.tala.util.IS_VOICE_SELECTION_COMPLETED
+import com.judahben149.tala.util.SELECTED_INTERESTS_KEY
 import com.judahben149.tala.util.SELECTED_VOICE_ID
 import com.judahben149.tala.util.USER_LANGUAGE_LEARNING_CHOICE
 import com.judahben149.tala.util.preferences.PrefsPersister
@@ -37,5 +38,24 @@ class SessionManager(
 
     fun saveVoiceSelectionCompleted() {
         persister.saveBoolean(IS_VOICE_SELECTION_COMPLETED, true)
+    }
+
+    fun saveUserInterests(interests: List<String>) {
+        persister.saveStringSet(SELECTED_INTERESTS_KEY, interests.toSet())
+    }
+
+    fun getUserInterests(): Set<String> {
+        return persister.fetchStringSet(SELECTED_INTERESTS_KEY, emptySet())
+    }
+
+    fun clearUserInterests() {
+        persister.removeKey(SELECTED_INTERESTS_KEY)
+    }
+
+    fun clearAllUserPreferences() {
+        persister.removeKey(USER_LANGUAGE_LEARNING_CHOICE)
+        persister.removeKey(SELECTED_INTERESTS_KEY)
+        persister.removeKey(SELECTED_VOICE_ID)
+        persister.removeKey(IS_VOICE_SELECTION_COMPLETED)
     }
 }

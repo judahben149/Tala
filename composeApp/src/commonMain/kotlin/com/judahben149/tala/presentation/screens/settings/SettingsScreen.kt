@@ -15,6 +15,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -165,7 +166,10 @@ fun SettingsScreen(
                 subtitle = "Sign out of your account",
                 colors = colors,
                 textColor = colors.secondaryText,
-                onClick = { viewModel.signOut() }
+                onClick = {
+                    viewModel.signOut()
+                    component.onSignedOut()
+                }
             )
 
             SettingsItem(
@@ -175,21 +179,43 @@ fun SettingsScreen(
                 colors = colors,
                 textColor = colors.errorText,
                 onClick = { viewModel.showDeleteConfirmation() }
+
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
     }
 
+    // Loading overlay
+    if (uiState.isLoading || uiState.isDeletingAccount) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = colors.primary)
+        }
+    }
+
+    // Error display
+    uiState.error?.let { error ->
+        LaunchedEffect(error) {
+            // TODO: Show snackbar or toast with error
+        }
+    }
+
     // Dialogs
     if (uiState.showDeleteConfirmation) {
         DeleteAccountDialog(
-            onConfirm = {
+            onConfirm = { password ->
                 viewModel.hideDeleteConfirmation()
-                viewModel.deleteAccount()
+                viewModel.deleteAccount(password) // Pass password to ViewModel
+                component.onAccountDeleted()
             },
             onDismiss = { viewModel.hideDeleteConfirmation() },
-            colors = colors
+            colors = colors,
+            isLoading = uiState.isDeletingAccount
         )
     }
 
@@ -445,12 +471,15 @@ private fun SettingsToggleItem(
 
 @Composable
 private fun DeleteAccountDialog(
-    onConfirm: () -> Unit,
+    onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
-    colors: TalaColors
+    colors: TalaColors,
+    isLoading: Boolean = false
 ) {
+    var password by remember { mutableStateOf("") }
+
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = if (isLoading) { {} } else onDismiss,
         title = {
             Text(
                 text = "Delete Account?",
@@ -459,22 +488,63 @@ private fun DeleteAccountDialog(
             )
         },
         text = {
-            Text(
-                text = "This action cannot be undone. All your progress, conversations, and data will be permanently deleted.",
-                color = colors.secondaryText
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
+            Column {
                 Text(
-                    text = "Delete",
-                    color = colors.errorText,
-                    fontWeight = FontWeight.Bold
+                    text = "This action cannot be undone. All your progress, conversations, and data will be permanently deleted.",
+                    color = colors.secondaryText
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Enter your password to confirm") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = colors.primary,
+                        unfocusedBorderColor = colors.textFieldBorder
+                    )
                 )
             }
         },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(password) },
+                enabled = password.isNotBlank() && !isLoading
+            ) {
+                if (isLoading) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = colors.errorText,
+                            strokeWidth = 2.dp
+                        )
+                        Text(
+                            text = "Deleting...",
+                            color = colors.errorText,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "Delete",
+                        color = colors.errorText,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isLoading
+            ) {
                 Text(
                     text = "Cancel",
                     color = colors.secondaryText
@@ -510,6 +580,7 @@ private fun PasswordUpdateDialog(
                     value = currentPassword,
                     onValueChange = { currentPassword = it },
                     label = { Text("Current Password") },
+                    visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
@@ -523,6 +594,7 @@ private fun PasswordUpdateDialog(
                     value = newPassword,
                     onValueChange = { newPassword = it },
                     label = { Text("New Password") },
+                    visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
@@ -536,6 +608,7 @@ private fun PasswordUpdateDialog(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
                     label = { Text("Confirm Password") },
+                    visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
@@ -554,7 +627,10 @@ private fun PasswordUpdateDialog(
                             confirmPassword = confirmPassword
                         )
                     )
-                }
+                },
+                enabled = currentPassword.isNotBlank() &&
+                        newPassword.isNotBlank() &&
+                        confirmPassword.isNotBlank()
             ) {
                 Text(
                     text = "Update",

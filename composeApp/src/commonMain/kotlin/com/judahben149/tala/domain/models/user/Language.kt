@@ -1,4 +1,4 @@
-package com.judahben149.tala.domain.models.language
+package com.judahben149.tala.domain.models.user
 
 enum class Language(val code: String) {
     ENGLISH("en"),

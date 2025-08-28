@@ -3,7 +3,7 @@ package com.judahben149.tala.domain.managers
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.conversation.ConversationMessage
-import com.judahben149.tala.domain.models.language.Language
+import com.judahben149.tala.domain.models.user.Language
 import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
 import com.judahben149.tala.domain.usecases.messages.GetConversationMessagesUseCase
 import kotlinx.coroutines.flow.first

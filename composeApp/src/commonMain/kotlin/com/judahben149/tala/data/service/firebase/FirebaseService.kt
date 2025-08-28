@@ -1,5 +1,8 @@
 package com.judahben149.tala.data.service.firebase
 
+import com.judahben149.tala.domain.models.user.AppUser
+import kotlinx.coroutines.flow.Flow
+
 interface FirebaseService {
     fun getCurrentApp(): FirebaseAppInfo
     fun getCurrentUser(): AppUser?
@@ -9,6 +12,19 @@ interface FirebaseService {
     suspend fun doSendPasswordResetEmail(email: String)
     suspend fun doDeleteUser()
     suspend fun signOut()
+
+    suspend fun saveUserProfile(userId: String, profileData: Map<String, Any>)
+    suspend fun fetchUserProfile(userId: String): Map<String, Any>?
+    fun observeUserProfile(userId: String): Flow<Map<String, Any>?>
+    suspend fun updateUserStats(userId: String, stats: Map<String, Any>)
+    suspend fun incrementUserConversationCount(userId: String)
+    suspend fun updateStreakDays(userId: String, streakDays: Int)
+    suspend fun sendEmailVerification()
+    suspend fun reloadUser()
+    fun isEmailVerified(): Boolean
+    suspend fun reauthenticateFirebaseUser(password: String)
+    suspend fun refreshUserToken(): Boolean
+    suspend fun deleteUserData(userId: String)
 }
 
 data class FirebaseAppInfo(
@@ -17,15 +33,6 @@ data class FirebaseAppInfo(
 ) {
     override fun toString(): String =
         "$projectName ($projectId)"
-}
-
-data class AppUser(
-    val userId: String,
-    val displayName: String,
-    val email: String
-) {
-    fun greeting(): String =
-        "Hello, $displayName! Your email is $email and your user ID is $userId."
 }
 
 class FirebaseServiceImpl : FirebaseService {
@@ -63,6 +70,56 @@ class FirebaseServiceImpl : FirebaseService {
 
     override suspend fun signOut() =
         signOutFirebaseUser()
+
+    override suspend fun saveUserProfile(userId: String, profileData: Map<String, Any>) {
+        saveFirebaseUserProfile(userId, profileData)
+    }
+
+    override suspend fun fetchUserProfile(userId: String): Map<String, Any>? {
+        return fetchFirebaseUserProfile(userId)
+    }
+
+    override fun observeUserProfile(userId: String): Flow<Map<String, Any>?> {
+        return observeFirebaseUserProfile(userId)
+    }
+
+    override suspend fun updateUserStats(userId: String, stats: Map<String, Any>) {
+        updateFirebaseUserStats(userId, stats)
+    }
+
+    override suspend fun incrementUserConversationCount(userId: String) {
+        val currentProfile = fetchUserProfile(userId) ?: emptyMap()
+        val currentCount = (currentProfile["totalConversations"] as? Long) ?: 0L
+        updateUserStats(userId, mapOf("totalConversations" to currentCount + 1))
+    }
+
+    override suspend fun updateStreakDays(userId: String, streakDays: Int) {
+        updateUserStats(userId, mapOf("streakDays" to streakDays))
+    }
+
+    override suspend fun sendEmailVerification() {
+        sendFirebaseEmailVerification()
+    }
+
+    override suspend fun reloadUser() {
+        reloadFirebaseUser()
+    }
+
+    override fun isEmailVerified(): Boolean {
+        return isFirebaseEmailVerified()
+    }
+
+    override suspend fun reauthenticateFirebaseUser(password: String) {
+        reauthenticateUser(password)
+    }
+
+    override suspend fun refreshUserToken(): Boolean {
+        return refreshFirebaseUserToken()
+    }
+
+    override suspend fun deleteUserData(userId: String) {
+        deleteFirebaseUserData(userId)
+    }
 }
 
 expect fun getCurrentFirebaseApp(): FirebaseAppInfo
@@ -74,3 +131,16 @@ expect suspend fun createFirebaseUser(email: String, password: String, displayNa
 expect suspend fun sendPasswordResetEmail(email: String)
 
 expect suspend fun deleteUser()
+
+expect suspend fun saveFirebaseUserProfile(userId: String, profileData: Map<String, Any>)
+expect suspend fun fetchFirebaseUserProfile(userId: String): Map<String, Any>?
+expect fun observeFirebaseUserProfile(userId: String): Flow<Map<String, Any>?>
+expect suspend fun updateFirebaseUserStats(userId: String, stats: Map<String, Any>)
+
+expect suspend fun sendFirebaseEmailVerification()
+expect suspend fun reloadFirebaseUser()
+expect fun isFirebaseEmailVerified(): Boolean
+
+expect suspend fun reauthenticateUser(password: String)
+expect suspend fun refreshFirebaseUserToken(): Boolean
+expect suspend fun deleteFirebaseUserData(userId: String)

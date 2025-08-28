@@ -91,6 +91,11 @@ kotlin {
             version = "~> 11.13"
             extraOpts += listOf("-compiler-option", "-fmodules")
         }
+
+        pod("FirebaseDatabase") {
+            version = "~> 11.13"
+            extraOpts += listOf("-compiler-option", "-fmodules")
+        }
     }
     
     sourceSets {
@@ -101,10 +106,13 @@ kotlin {
             implementation(libs.room.runtime.android)
             implementation(project.dependencies.platform(libs.android.firebase.bom))
             implementation(libs.android.firebase.auth)
+
             implementation(libs.android.firebase.analytics)
             implementation(libs.android.firebase.auth)
+            implementation(libs.android.firebase.database.ktx)
             implementation(libs.play.services.auth)
             implementation(libs.sqldelight.android)
+            implementation(libs.coroutines.play.services)
 
             // Stream-Chat
             implementation(libs.stream.chat.compose)

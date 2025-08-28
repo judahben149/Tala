@@ -2,20 +2,22 @@ package com.judahben149.tala.presentation.screens.signUp
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.judahben149.tala.data.service.SignInStateTracker
-import com.judahben149.tala.data.service.firebase.AppUser
+import co.touchlab.kermit.Logger
+import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
-import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.presentation.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
+import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 
 class SignUpViewModel(
     private val createUserUseCase: CreateUserUseCase,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
+    private val logger: Logger
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState<AppUser, FirebaseAuthException>?>(null)
@@ -44,32 +46,46 @@ class SignUpViewModel(
         _formState.value = _formState.value.copy(password = password)
     }
 
-    // Keep this for backward compatibility with existing screen code
-    fun updateDisplayName(displayName: String) {
-        _formState.value = _formState.value.copy(firstName = displayName)
-    }
-
     fun signUp() {
         val currentState = _formState.value
-
-        // Validate form before proceeding
         if (!currentState.isValid()) {
+            logger.w { "Form validation failed" }
             return
         }
 
         viewModelScope.launch {
             _uiState.value = UiState.Loading
 
-            // Combine first and last name for display name
             val fullDisplayName = "${currentState.firstName} ${currentState.lastName}".trim()
-
             val result = createUserUseCase(
                 email = currentState.email,
                 password = currentState.password,
                 displayName = fullDisplayName.ifEmpty { currentState.firstName }
             )
 
-            _uiState.value = UiState.Loaded(result)
+            when (result) {
+                is Result.Success -> {
+                    logger.d { "User created successfully: ${result.data.email}" }
+
+                    // Send verification email immediately after user creation
+                    when (sendEmailVerificationUseCase()) {
+                        is Result.Success -> {
+                            logger.d { "Verification email sent successfully" }
+                            _uiState.value = UiState.Loaded(result)
+                        }
+                        is Result.Failure -> {
+                            logger.e { "Failed to send verification email, but user was created" }
+                            // Still navigate to verification screen even if email sending failed
+                            // User can resend from there
+                            _uiState.value = UiState.Loaded(result)
+                        }
+                    }
+                }
+                is Result.Failure -> {
+                    logger.e { "User creation failed: ${result.error}" }
+                    _uiState.value = UiState.Loaded(result)
+                }
+            }
         }
     }
 
@@ -79,6 +95,7 @@ class SignUpViewModel(
     }
 }
 
+// Keep SignUpFormState unchanged
 data class SignUpFormState(
     val email: String = "",
     val confirmEmail: String = "",
@@ -114,7 +131,6 @@ data class SignUpFormState(
         return password.length >= 6
     }
 
-    // Helper properties for validation states
     val showEmailMismatchError: Boolean
         get() = confirmEmail.isNotBlank() && !emailsMatch()
 

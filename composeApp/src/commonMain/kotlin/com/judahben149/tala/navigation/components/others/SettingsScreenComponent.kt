@@ -8,7 +8,9 @@ class SettingsScreenComponent(
     private val onNavigateToSupport: () -> Unit,
     private val onNavigateToPrivacyPolicy: () -> Unit,
     private val onNavigateToFeedback: () -> Unit,
-    private val onBackPressed: () -> Unit
+    private val onBackPressed: () -> Unit,
+    private val onSignOut: () -> Unit,
+    private val onDeleteAccount: () -> Unit
 ) : ComponentContext by componentContext {
 
     fun navigateToTerms() {
@@ -29,5 +31,13 @@ class SettingsScreenComponent(
 
     fun goBack() {
         onBackPressed()
+    }
+
+    fun onSignedOut() {
+        onSignOut()
+    }
+
+    fun onAccountDeleted() {
+        onDeleteAccount()
     }
 }

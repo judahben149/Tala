@@ -6,8 +6,8 @@ import co.touchlab.kermit.Logger
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.session.PasswordUpdateData
 import com.judahben149.tala.domain.models.speech.SimpleVoice
+import com.judahben149.tala.domain.usecases.authentication.DeleteAccountWithAuthUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignOutUseCase
-import com.judahben149.tala.domain.usecases.settings.DeleteAccountUseCase
 import com.judahben149.tala.domain.usecases.settings.GetLearningLanguageUseCase
 import com.judahben149.tala.domain.usecases.settings.GetUserProfileUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateLearningLanguageUseCase
@@ -24,7 +24,7 @@ class SettingsScreenViewModel(
     private val getUserProfileUseCase: GetUserProfileUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val updatePasswordUseCase: UpdatePasswordUseCase,
-    private val deleteAccountUseCase: DeleteAccountUseCase,
+    private val deleteAccountWithAuthUseCase: DeleteAccountWithAuthUseCase,
     private val getSelectedVoiceUseCase: GetSelectedVoiceUseCase,
     private val setSelectedVoiceUseCase: SetSelectedVoiceUseCase,
     private val getAllVoicesUseCase: GetAllVoicesUseCase,
@@ -77,31 +77,88 @@ class SettingsScreenViewModel(
 
     private fun loadSelectedVoice() {
         viewModelScope.launch {
-            // Implementation will fetch selected voice
+            when (val result = getSelectedVoiceUseCase()) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(selectedVoice = result.data) }
+                }
+
+                is Result.Failure -> {
+                    logger.e { "Failed to load selected voice: ${result.error}" }
+                    // Continue without error as this is optional
+                }
+            }
         }
     }
+
 
     private fun loadLearningLanguage() {
         viewModelScope.launch {
-            // Implementation will fetch learning language
+            when (val result = getLearningLanguageUseCase()) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(selectedLanguage = result.data.name) }
+                }
+                is Result.Failure -> {
+                    logger.e { "Failed to load learning language: ${result.error}" }
+                    // Use default language
+                    _uiState.update { it.copy(selectedLanguage = "Spanish") }
+                }
+            }
         }
     }
+
 
     fun updateProfile(name: String, email: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isUpdatingProfile = true) }
-            
-            // Implementation will update profile
-            
-            _uiState.update { it.copy(isUpdatingProfile = false) }
+            _uiState.update { it.copy(isUpdatingProfile = true, error = null) }
+
+            when (val result = updateUserProfileUseCase(name, email)) {
+                is Result.Success -> {
+                    // Update local user state
+                    val updatedUser = _uiState.value.user?.copy(name = name, email = email)
+                    _uiState.update {
+                        it.copy(
+                            user = updatedUser,
+                            isUpdatingProfile = false
+                        )
+                    }
+                    logger.d { "Profile updated successfully" }
+                }
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            error = "Failed to update profile: ${result.error.message}",
+                            isUpdatingProfile = false
+                        )
+                    }
+                    logger.e { "Failed to update profile: ${result.error}" }
+                }
+            }
         }
     }
 
+
     fun updatePassword(passwordData: PasswordUpdateData) {
         viewModelScope.launch {
-            // Implementation will update password
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            when (val result = updatePasswordUseCase(passwordData.currentPassword, passwordData.newPassword)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    logger.d { "Password updated successfully" }
+                }
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            error = "Failed to update password: ${result.error.message}",
+                            isLoading = false
+                        )
+                    }
+                    logger.e { "Failed to update password: ${result.error}" }
+                }
+            }
         }
     }
+
 
     fun selectVoice(voice: SimpleVoice) {
         viewModelScope.launch {
@@ -111,37 +168,116 @@ class SettingsScreenViewModel(
 
     fun selectLanguage(language: String) {
         viewModelScope.launch {
-            // Implementation will update learning language
+            when (val result = updateLearningLanguageUseCase(language)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(selectedLanguage = language) }
+                    logger.d { "Learning language updated to: $language" }
+                }
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(error = "Failed to update language: ${result.error.message}")
+                    }
+                    logger.e { "Failed to update learning language: ${result.error}" }
+                }
+            }
         }
     }
+
 
     fun toggleNotifications(enabled: Boolean) {
         viewModelScope.launch {
-            // Implementation will update notification settings
+            val currentReminders = _uiState.value.user?.practiceRemindersEnabled ?: true
+
+            when (val result = updateNotificationSettingsUseCase(enabled, currentReminders)) {
+                is Result.Success -> {
+                    val updatedUser = _uiState.value.user?.copy(notificationsEnabled = enabled)
+                    _uiState.update { it.copy(user = updatedUser) }
+                    logger.d { "Notifications ${if (enabled) "enabled" else "disabled"}" }
+                }
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(error = "Failed to update notifications: ${result.error.message}")
+                    }
+                    logger.e { "Failed to update notification settings: ${result.error}" }
+                }
+            }
         }
     }
+
 
     fun togglePracticeReminders(enabled: Boolean) {
         viewModelScope.launch {
-            // Implementation will update practice reminder settings
+            val currentNotifications = _uiState.value.user?.notificationsEnabled ?: true
+
+            when (val result = updateNotificationSettingsUseCase(currentNotifications, enabled)) {
+                is Result.Success -> {
+                    val updatedUser = _uiState.value.user?.copy(practiceRemindersEnabled = enabled)
+                    _uiState.update { it.copy(user = updatedUser) }
+                    logger.d { "Practice reminders ${if (enabled) "enabled" else "disabled"}" }
+                }
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(error = "Failed to update reminders: ${result.error.message}")
+                    }
+                    logger.e { "Failed to update practice reminder settings: ${result.error}" }
+                }
+            }
         }
     }
 
-    fun deleteAccount() {
+
+    fun deleteAccount(password: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isDeletingAccount = true) }
-            
-            // Implementation will delete account
-            
-            _uiState.update { it.copy(isDeletingAccount = false) }
+            _uiState.update { it.copy(isDeletingAccount = true, error = null) }
+
+            when (val result = deleteAccountWithAuthUseCase(password)) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(isDeletingAccount = false) }
+                    logger.d { "Account deleted successfully" }
+                    // Trigger navigation away from app
+                }
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            error = when {
+                                result.error.message?.contains("wrong-password") == true ->
+                                    "Incorrect password. Please try again."
+                                result.error.message?.contains("too-many-requests") == true ->
+                                    "Too many attempts. Please try again later."
+                                else -> "Failed to delete account: ${result.error.message}"
+                            },
+                            isDeletingAccount = false
+                        )
+                    }
+                    logger.e { "Failed to delete account: ${result.error}" }
+                }
+            }
         }
     }
 
     fun signOut() {
         viewModelScope.launch {
-            // Implementation will sign out user
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            when (val result = signOutUseCase()) {
+                is Result.Success -> {
+                    _uiState.update { it.copy(isLoading = false) }
+                    logger.d { "User signed out successfully" }
+                    // Sign out successful - this should trigger navigation to login
+                }
+                is Result.Failure -> {
+                    _uiState.update {
+                        it.copy(
+                            error = "Failed to sign out: ${result.error.message}",
+                            isLoading = false
+                        )
+                    }
+                    logger.e { "Failed to sign out: ${result.error}" }
+                }
+            }
         }
     }
+
 
     fun showDeleteConfirmation() {
         _uiState.update { it.copy(showDeleteConfirmation = true) }

@@ -5,14 +5,14 @@ import com.arkivanov.decompose.ComponentContext
 class SignUpScreenComponent(
     componentContext: ComponentContext,
     private val onNavigateToLogin: () -> Unit,
-    private val onSignUpSuccess: () -> Unit,
+    private val onNavigateToEmailVerification: (email: String) -> Unit,
 ) : ComponentContext by componentContext {
 
     fun navigateToLogin() {
         onNavigateToLogin()
     }
 
-    fun handleSignUpSuccess() {
-        onSignUpSuccess()
+    fun navigateToEmailVerification(email: String) {
+        onNavigateToEmailVerification(email)
     }
 }

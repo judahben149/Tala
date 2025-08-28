@@ -3,9 +3,13 @@ package com.judahben149.tala.data.service.firebase
 import cocoapods.FirebaseAuth.FIRAuth
 import cocoapods.FirebaseAuth.FIRUser
 import cocoapods.FirebaseCore.FIRApp
+import cocoapods.FirebaseAuth.FIREmailAuthProvider
+import cocoapods.FirebaseDatabase.*
+import cocoapods.FirebaseDatabase.FIRDataEventType.FIRDataEventTypeValue
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthInvalidUserException
 import com.judahben149.tala.domain.models.authentication.errors.mapIOSFirebaseError
+import com.judahben149.tala.domain.models.user.AppUser
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -15,6 +19,9 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.Foundation.NSError
 import kotlin.coroutines.resume
@@ -158,3 +165,177 @@ private fun FIRUser.toAppUser(): AppUser =
         displayName = displayName() ?: "Unknown",
         email = email() ?: "Unknown"
     )
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun saveFirebaseUserProfile(userId: String, profileData: Map<String, Any>) =
+    suspendCancellableCoroutine { continuation ->
+        val database = FIRDatabase.database()
+        val userRef = database.reference().child("users").child(userId)
+
+        userRef.setValue(profileData) { error, _ ->
+            if (error != null) {
+                continuation.resumeWithException(Exception(error.localizedDescription))
+            } else {
+                continuation.resume(Unit)
+            }
+        }
+    }
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun fetchFirebaseUserProfile(userId: String): Map<String, Any>? =
+    suspendCancellableCoroutine { continuation ->
+        val database = FIRDatabase.database()
+        val userRef = database.reference().child("users").child(userId)
+
+        userRef.observeSingleEventOfType(
+            eventType = FIRDataEventTypeValue,
+            withBlock = { snapshot ->
+                val value = snapshot?.value() as? Map<String, Any>
+                continuation.resume(value)
+            },
+            withCancelBlock = { error ->
+                continuation.resumeWithException(Exception(error?.localizedDescription ?: "Unknown error"))
+            }
+        )
+    }
+
+@OptIn(ExperimentalForeignApi::class)
+actual fun observeFirebaseUserProfile(userId: String): Flow<Map<String, Any>?> = callbackFlow {
+    val database = FIRDatabase.database()
+    val userRef = database.reference().child("users").child(userId)
+
+    val handle = userRef.observeEventType(
+        eventType = FIRDataEventTypeValue,
+        withBlock = { snapshot ->
+            val value = snapshot?.value() as? Map<String, Any>
+            trySend(value)
+        },
+        withCancelBlock = { error ->
+            close(Exception(error?.localizedDescription ?: "Unknown error"))
+        }
+    )
+
+    awaitClose {
+        userRef.removeObserverWithHandle(handle)
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun updateFirebaseUserStats(userId: String, stats: Map<String, Any>) =
+    suspendCancellableCoroutine { continuation ->
+        val database = FIRDatabase.database()
+        val userRef = database.reference().child("users").child(userId)
+
+        // First get current data, then update
+        userRef.observeSingleEventOfType(
+            eventType = FIRDataEventTypeValue,
+            withBlock = { snapshot ->
+                val currentValue = snapshot?.value() as? Map<String, Any> ?: emptyMap()
+                val updatedValue = currentValue.toMutableMap()
+                updatedValue.putAll(stats)
+
+                userRef.setValue(updatedValue) { error, _ ->
+                    if (error != null) {
+                        continuation.resumeWithException(Exception(error.localizedDescription))
+                    } else {
+                        continuation.resume(Unit)
+                    }
+                }
+            },
+            withCancelBlock = { error ->
+                continuation.resumeWithException(Exception(error?.localizedDescription ?: "Unknown error"))
+            }
+        )
+    }
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun sendFirebaseEmailVerification() = suspendCancellableCoroutine { continuation ->
+    val user = FIRAuth.auth().currentUser()
+    user?.sendEmailVerificationWithCompletion { error ->
+        if (error != null) {
+            continuation.resumeWithException(Exception(error.localizedDescription))
+        } else {
+            continuation.resume(Unit)
+        }
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun reloadFirebaseUser() = suspendCancellableCoroutine { continuation ->
+    val user = FIRAuth.auth().currentUser()
+    user?.reloadWithCompletion { error ->
+        if (error != null) {
+            continuation.resumeWithException(Exception(error.localizedDescription))
+        } else {
+            continuation.resume(Unit)
+        }
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual fun isFirebaseEmailVerified(): Boolean {
+    val user = FIRAuth.auth().currentUser()
+    return user?.emailVerified() ?: false
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun reauthenticateUser(password: String) = suspendCancellableCoroutine { continuation ->
+    val user = FIRAuth.auth().currentUser()
+    if (user == null) {
+        continuation.resumeWithException(Exception("No authenticated user"))
+        return@suspendCancellableCoroutine
+    }
+
+    val email = user.email()
+    if (email == null) {
+        continuation.resumeWithException(Exception("No email associated with user"))
+        return@suspendCancellableCoroutine
+    }
+
+    val credential = FIREmailAuthProvider.credentialWithEmail(email = email, password = password)
+
+    user.reauthenticateWithCredential(credential) { authResult, error ->
+        if (error != null) {
+            continuation.resumeWithException(Exception(error.localizedDescription))
+        } else {
+            continuation.resume(Unit)
+        }
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun refreshFirebaseUserToken(): Boolean = suspendCancellableCoroutine { continuation ->
+    val user = FIRAuth.auth().currentUser()
+    if (user == null) {
+        continuation.resume(false)
+        return@suspendCancellableCoroutine
+    }
+
+    user.reloadWithCompletion { error ->
+        if (error != null) {
+            continuation.resume(false)
+        } else {
+            user.getIDTokenForcingRefresh(true) { token, tokenError ->
+                if (tokenError == null && token != null) {
+                    continuation.resume(user.emailVerified())
+                } else {
+                    continuation.resume(false)
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun deleteFirebaseUserData(userId: String) = suspendCancellableCoroutine { continuation ->
+    val database = FIRDatabase.database().reference()
+    val userRef = database.child("users").child(userId)
+
+    userRef.removeValueWithCompletionBlock { error, _ ->
+        if (error == null) {
+            continuation.resume(Unit)
+        } else {
+            continuation.resumeWithException(Exception(error.localizedDescription))
+        }
+    }
+}

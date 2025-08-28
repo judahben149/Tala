@@ -9,6 +9,10 @@ import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import com.judahben149.tala.navigation.OnboardingFlowComponent
 import com.judahben149.tala.presentation.screens.login.LoginScreen
 import com.judahben149.tala.presentation.screens.signUp.SignUpScreen
+import com.judahben149.tala.presentation.screens.signUp.interests.InterestsSelectionScreen
+import com.judahben149.tala.presentation.screens.signUp.language.LanguageSelectionScreen
+import com.judahben149.tala.presentation.screens.signUp.verification.EmailVerificationScreen
+import com.judahben149.tala.presentation.screens.signUp.welcome.WelcomeScreen
 
 @Composable
 fun OnboardingFlow(component: OnboardingFlowComponent) {
@@ -24,18 +28,24 @@ fun OnboardingFlow(component: OnboardingFlowComponent) {
             
             is OnboardingFlowComponent.OnboardingChild.Login -> 
                 LoginScreen(instance.component)
-            
-            is OnboardingFlowComponent.OnboardingChild.Welcome ->
-                PlaceholderComposable()
-//                WelcomeScreen(instance.component)
+
+            is OnboardingFlowComponent.OnboardingChild.EmailVerification ->
+                EmailVerificationScreen(
+                    userEmail = instance.component.userEmail,
+                    component = instance.component
+                )
             
             is OnboardingFlowComponent.OnboardingChild.LanguageSelection ->
-                PlaceholderComposable()
-//                LanguageSelectionScreen(instance.component)
+//                PlaceholderComposable()
+                LanguageSelectionScreen(instance.component)
             
             is OnboardingFlowComponent.OnboardingChild.InterestsSelection ->
-                PlaceholderComposable()
-//                InterestsSelectionScreen(instance.component)
+//                PlaceholderComposable()
+                InterestsSelectionScreen(instance.component)
+
+            is OnboardingFlowComponent.OnboardingChild.Welcome ->
+//                PlaceholderComposable()
+                WelcomeScreen(instance.component)
         }
     }
 }

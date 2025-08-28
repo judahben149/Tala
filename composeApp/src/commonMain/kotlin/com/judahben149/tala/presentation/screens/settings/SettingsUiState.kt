@@ -1,6 +1,6 @@
 package com.judahben149.tala.presentation.screens.settings
 
-import com.judahben149.tala.domain.models.language.Language
+import com.judahben149.tala.domain.models.user.Language
 import com.judahben149.tala.domain.models.session.UserProfile
 import com.judahben149.tala.domain.models.speech.SimpleVoice
 

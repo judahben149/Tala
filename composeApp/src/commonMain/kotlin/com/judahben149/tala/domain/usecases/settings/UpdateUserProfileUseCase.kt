@@ -8,6 +8,10 @@ class UpdateUserProfileUseCase(
 ) {
     suspend operator fun invoke(name: String, email: String): Result<Unit, Exception> {
         // Implementation will update user profile
-        TODO("Implementation needed")
+        return repository.updateUserProfile(name, email)
+    }
+
+    suspend fun saveUserProfile(userId: String, profileData: Map<String, Any>): Result<Unit, Exception> {
+        return repository.saveUserProfile(userId, profileData)
     }
 }

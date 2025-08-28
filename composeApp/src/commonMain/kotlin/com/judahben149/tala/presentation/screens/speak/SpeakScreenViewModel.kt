@@ -15,6 +15,7 @@ import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.AddUserMessageUseCase
 import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
+import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceIdUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.*
 import com.judahben149.tala.util.decodeBase64Audio
@@ -35,7 +36,7 @@ class SpeakScreenViewModel(
     private val addAiMessageUseCase: AddAiMessageUseCase,
     private val addUserMessageUseCase: AddUserMessageUseCase,
     private val startConversationUseCase: StartConversationUseCase,
-    private val getSelectedVoiceUseCase: GetSelectedVoiceUseCase,
+    private val getSelectedVoiceIdUseCase: GetSelectedVoiceIdUseCase,
     private val messageManager: MessageManager,
     private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
@@ -222,7 +223,7 @@ class SpeakScreenViewModel(
             updateState(conversationState = ConversationState.Speaking)
             logger.d { "Converting text to speech: $text" }
 
-            when (val result = downloadTextToSpeechUseCase(text, getSelectedVoiceUseCase())) {
+            when (val result = downloadTextToSpeechUseCase(text, getSelectedVoiceIdUseCase())) {
                 is Result.Success -> {
                     logger.d { "Text-to-speech conversion successful" }
                     addAiMessageUseCase(convId, text, result.data.audioBase64)

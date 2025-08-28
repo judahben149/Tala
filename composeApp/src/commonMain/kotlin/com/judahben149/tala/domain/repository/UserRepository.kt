@@ -6,6 +6,7 @@ import com.judahben149.tala.domain.models.session.UserProfile
 interface UserRepository {
     suspend fun getUserProfile(): Result<UserProfile, Exception>
     suspend fun updateUserProfile(name: String, email: String): Result<Unit, Exception>
+    suspend fun saveUserProfile(userId: String, profileData: Map<String, Any>): Result<Unit, Exception>
     suspend fun updatePassword(currentPassword: String, newPassword: String): Result<Unit, Exception>
     suspend fun deleteAccount(): Result<Unit, Exception>
     suspend fun updateLearningLanguage(language: String): Result<Unit, Exception>
@@ -14,4 +15,6 @@ interface UserRepository {
         notificationsEnabled: Boolean,
         practiceRemindersEnabled: Boolean
     ): Result<Unit, Exception>
+    suspend fun saveLearningLanguage(language: String): Result<Unit, Exception>
+    suspend fun saveUserInterests(interests: List<String>): Result<Unit, Exception>
 }

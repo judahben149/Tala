@@ -107,5 +107,9 @@ class VoicesRepositoryImpl(
     fun getAllVoicesFlow(): Flow<List<SimpleVoice>> {
         return databaseHelper.getAllVoicesFlow()
     }
+
+    override suspend fun getVoiceById(voiceId: String): SimpleVoice? {
+        return databaseHelper.getVoiceById(voiceId)
+    }
 }
 

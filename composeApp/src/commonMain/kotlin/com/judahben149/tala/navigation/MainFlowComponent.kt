@@ -6,6 +6,7 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
+import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.judahben149.tala.navigation.components.top.HomeScreenComponent
 import com.judahben149.tala.navigation.components.others.ProfileScreenComponent
@@ -67,7 +68,9 @@ class MainFlowComponent(
                 onNavigateToSupport = {},
                 onNavigateToFeedback = {},
                 onNavigateToPrivacyPolicy = {},
-                onBackPressed = { navigation.pop() }
+                onBackPressed = { navigation.pop() },
+                onSignOut = {  },
+                onDeleteAccount = {  }
             )
         )
 

@@ -35,14 +35,17 @@ import com.judahben149.tala.domain.usecases.analytics.GetWeeklyProgressUseCase
 import com.judahben149.tala.domain.usecases.analytics.TrackConversationTimeUseCase
 import com.judahben149.tala.domain.usecases.analytics.UpdateConversationStatsUseCase
 import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
-import com.judahben149.tala.domain.usecases.authentication.DeleteUserUseCase
+import com.judahben149.tala.domain.usecases.authentication.DeleteAccountWithAuthUseCase
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentAppUseCase
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
 import com.judahben149.tala.domain.usecases.authentication.IsUserSignedInUseCase
+import com.judahben149.tala.domain.usecases.authentication.RefreshUserTokenUseCase
 import com.judahben149.tala.domain.usecases.authentication.SendPasswordResetEmailUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignInUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignOutUseCase
 import com.judahben149.tala.domain.usecases.authentication.UpdateDisplayNameUseCase
+import com.judahben149.tala.domain.usecases.authentication.verification.CheckEmailVerificationUseCase
+import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 import com.judahben149.tala.domain.usecases.conversations.CompleteConversationUseCase
 import com.judahben149.tala.domain.usecases.conversations.GetActiveConversationUseCase
 import com.judahben149.tala.domain.usecases.conversations.GetConversationByIdUseCase
@@ -52,7 +55,8 @@ import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
 import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.AddUserMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.GetConversationMessagesUseCase
-import com.judahben149.tala.domain.usecases.settings.DeleteAccountUseCase
+import com.judahben149.tala.domain.usecases.preferences.SaveLearningLanguageUseCase
+import com.judahben149.tala.domain.usecases.preferences.SaveUserInterestsUseCase
 import com.judahben149.tala.domain.usecases.settings.GetLearningLanguageUseCase
 import com.judahben149.tala.domain.usecases.settings.GetUserProfileUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateLearningLanguageUseCase
@@ -63,6 +67,7 @@ import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.GetAllVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetFeaturedVoicesUseCase
+import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceIdUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.GetVoicesByGenderUseCase
 import com.judahben149.tala.domain.usecases.speech.SetVoiceSelectionCompleteUseCase
@@ -81,6 +86,10 @@ import com.judahben149.tala.presentation.screens.signUp.SignUpViewModel
 import com.judahben149.tala.presentation.screens.speak.SpeakScreenViewModel
 import com.judahben149.tala.presentation.screens.voices.VoicesScreenViewModel
 import com.judahben149.tala.presentation.screens.settings.SettingsScreenViewModel
+import com.judahben149.tala.presentation.screens.signUp.interests.InterestsSelectionViewModel
+import com.judahben149.tala.presentation.screens.signUp.language.LanguageSelectionViewModel
+import com.judahben149.tala.presentation.screens.signUp.verification.EmailVerificationViewModel
+import com.judahben149.tala.presentation.screens.signUp.welcome.WelcomeScreenViewModel
 import com.judahben149.tala.util.ELEVEN_LABS_BASE_URL
 import com.judahben149.tala.util.GEMINI_BASE_URL
 import com.russhwolf.settings.Settings
@@ -199,7 +208,6 @@ val appModule = module {
     singleOf(::GetCurrentAppUseCase)
     singleOf(::IsUserSignedInUseCase)
     singleOf(::SendPasswordResetEmailUseCase)
-    singleOf(::DeleteUserUseCase)
     singleOf(::GenerateContentUseCase)
     singleOf(::StreamTextToSpeechUseCase)
     singleOf(::DownloadTextToSpeechUseCase)
@@ -232,10 +240,16 @@ val appModule = module {
     singleOf(::GetUserProfileUseCase)
     singleOf(::UpdateUserProfileUseCase)
     singleOf(::UpdatePasswordUseCase)
-    singleOf(::DeleteAccountUseCase)
     singleOf(::UpdateLearningLanguageUseCase)
     singleOf(::GetLearningLanguageUseCase)
     singleOf(::UpdateNotificationSettingsUseCase)
+    singleOf(::SendEmailVerificationUseCase)
+    singleOf(::CheckEmailVerificationUseCase)
+    singleOf(::GetSelectedVoiceIdUseCase)
+    singleOf(::DeleteAccountWithAuthUseCase)
+    singleOf(::RefreshUserTokenUseCase)
+    singleOf(::SaveLearningLanguageUseCase)
+    singleOf(::SaveUserInterestsUseCase)
 
 
     // ViewModels
@@ -245,6 +259,10 @@ val appModule = module {
     viewModelOf(::HomeScreenViewModel)
     viewModelOf(::VoicesScreenViewModel)
     viewModelOf(::SettingsScreenViewModel)
+    viewModelOf(::EmailVerificationViewModel)
+    viewModelOf(::LanguageSelectionViewModel)
+    viewModelOf(::InterestsSelectionViewModel)
+    viewModelOf(::WelcomeScreenViewModel)
 
     // Database
     single { UserDatabaseHelper(get()) }

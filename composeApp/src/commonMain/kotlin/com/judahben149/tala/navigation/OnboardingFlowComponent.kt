@@ -9,6 +9,7 @@ import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.navigation.components.others.EmailVerificationComponent
 import com.judahben149.tala.navigation.components.others.LoginScreenComponent
 import com.judahben149.tala.navigation.components.others.SignUpScreenComponent
 import com.judahben149.tala.navigation.components.others.LanguageSelectionComponent
@@ -51,7 +52,7 @@ class OnboardingFlowComponent(
             SignUpScreenComponent(
                 componentContext = componentContext,
                 onNavigateToLogin = { navigation.bringToFront(OnboardingConfiguration.Login) },
-                onSignUpSuccess = ::handleSignUpSuccess
+                onNavigateToEmailVerification = ::navigateToEmailVerification
             )
         )
 
@@ -64,10 +65,19 @@ class OnboardingFlowComponent(
             )
         )
 
+        is OnboardingConfiguration.EmailVerification -> OnboardingChild.EmailVerification(
+            EmailVerificationComponent(
+                componentContext = componentContext,
+                userEmail = configuration.userEmail,
+                onNavigateToWelcome = ::handleEmailVerificationSuccess,
+                onBackPressed = ::handleEmailVerificationBackPressed
+            )
+        )
+
         is OnboardingConfiguration.Welcome -> OnboardingChild.Welcome(
             WelcomeScreenComponent(
                 componentContext = componentContext,
-                onContinue = { navigation.pushNew(OnboardingConfiguration.LanguageSelection) }
+                onContinue = { completeOnboarding() }
             )
         )
 
@@ -86,17 +96,33 @@ class OnboardingFlowComponent(
             InterestsSelectionComponent(
                 componentContext = componentContext,
                 onInterestsSelected = { selectedInterests ->
-                    // Save interests and complete onboarding
-                    completeOnboarding()
+                    navigation.pushNew(OnboardingConfiguration.Welcome)
                 },
                 onBackPressed = { navigation.pop() }
             )
         )
     }
 
-    private fun handleSignUpSuccess() {
-        // For new users, show welcome and additional setup
-        navigation.pushNew(OnboardingConfiguration.Welcome)
+    /**
+     * Navigate to email verification screen with the user's email
+     */
+    private fun navigateToEmailVerification(email: String) {
+        navigation.pushNew(OnboardingConfiguration.EmailVerification(userEmail = email))
+    }
+
+    /**
+     * Handle successful email verification - proceed to Language selection screen for new users
+     */
+    private fun handleEmailVerificationSuccess() {
+        navigation.pushNew(OnboardingConfiguration.LanguageSelection)
+    }
+
+    /**
+     * Handle back press from email verification screen
+     */
+    private fun handleEmailVerificationBackPressed() {
+        // Allow user to go back to signup screen to correct email if needed
+        navigation.pop()
     }
 
     private fun handleLoginSuccess() {
@@ -123,6 +149,9 @@ class OnboardingFlowComponent(
         data object Login : OnboardingConfiguration()
 
         @Serializable
+        data class EmailVerification(val userEmail: String) : OnboardingConfiguration()
+
+        @Serializable
         data object Welcome : OnboardingConfiguration()
 
         @Serializable
@@ -135,6 +164,7 @@ class OnboardingFlowComponent(
     sealed class OnboardingChild {
         data class SignUp(val component: SignUpScreenComponent) : OnboardingChild()
         data class Login(val component: LoginScreenComponent) : OnboardingChild()
+        data class EmailVerification(val component: EmailVerificationComponent) : OnboardingChild()
         data class Welcome(val component: WelcomeScreenComponent) : OnboardingChild()
         data class LanguageSelection(val component: LanguageSelectionComponent) : OnboardingChild()
         data class InterestsSelection(val component: InterestsSelectionComponent) : OnboardingChild()

@@ -2,9 +2,10 @@ package com.judahben149.tala.presentation.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.judahben149.tala.data.service.firebase.AppUser
+
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
 import com.judahben149.tala.domain.usecases.authentication.IsUserSignedInUseCase
 import com.judahben149.tala.domain.usecases.authentication.SendPasswordResetEmailUseCase
