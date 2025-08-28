@@ -9,6 +9,7 @@ import com.judahben149.tala.domain.usecases.authentication.verification.CheckEma
 import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 import kotlinx.coroutines.launch
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateUserProfileUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,15 +22,32 @@ class EmailVerificationViewModel(
     private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val firebaseService: FirebaseService,
+    private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val logger: Logger
 ) : ViewModel() {
 
     private val _verificationState = MutableStateFlow(EmailVerificationState())
     val verificationState: StateFlow<EmailVerificationState> = _verificationState.asStateFlow()
 
+    private val _userId = MutableStateFlow<String?>(null)
+    val userId: StateFlow<String?> = _userId.asStateFlow()
+
 
     init {
+        loadUserId()
         startVerificationPolling()
+    }
+
+    private fun loadUserId() {
+        viewModelScope.launch {
+            val currentUser = getCurrentUserUseCase()
+
+            if (currentUser is Result.Success) {
+                _userId.value = currentUser.data?.userId
+            } else {
+                _userId.value = null
+            }
+        }
     }
 
     private fun startVerificationPolling() {

@@ -8,7 +8,8 @@ data class SpeakScreenUiState(
     val conversationState: ConversationState = ConversationState.Idle,
     val error: String? = null,
     val isLoading: Boolean = false,
-    val recordedAudio: ByteArray? = null
+    val recordedAudio: ByteArray? = null,
+    val permissionRequired: Boolean = false
 ) {
     val buttonLabel: String
         get() = when (conversationState) {

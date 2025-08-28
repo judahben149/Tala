@@ -16,6 +16,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import com.judahben149.tala.domain.models.common.Result
 
 actual fun getCurrentFirebaseApp(): FirebaseAppInfo {
     return FirebaseAppInfo(
@@ -133,8 +134,9 @@ actual fun observeFirebaseUserProfile(userId: String): Flow<Map<String, Any>?> =
 }
 
 actual suspend fun updateFirebaseUserStats(userId: String, stats: Map<String, Any>) {
-    val database = FirebaseDatabase.getInstance()
+    val database = FirebaseDatabase.getInstance("https://tala-dev-jj-default-rtdb.europe-west1.firebasedatabase.app")
     val userRef = database.getReference("users").child(userId)
+
     userRef.updateChildren(stats).await()
 }
 
@@ -183,4 +185,21 @@ actual suspend fun deleteFirebaseUserData(userId: String) {
 
     // Delete all user data from Realtime Database
     userRef.removeValue().await()
+}
+
+actual suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>, Exception> {
+    return try {
+        val database = FirebaseDatabase.getInstance("https://tala-dev-jj-default-rtdb.europe-west1.firebasedatabase.app")
+        val userRef = database.getReference("users").child(userId)
+
+        val snapshot = userRef.get().await()
+        if (snapshot.exists()) {
+            val userData = snapshot.value as? Map<String, Any> ?: emptyMap()
+            Result.Success(userData)
+        } else {
+            Result.Failure(Exception("User data not found"))
+        }
+    } catch (e: Exception) {
+        Result.Failure(e)
+    }
 }

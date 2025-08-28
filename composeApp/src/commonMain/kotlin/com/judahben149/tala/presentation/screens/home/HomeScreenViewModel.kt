@@ -73,6 +73,10 @@ class HomeScreenViewModel(
         }
     }
 
+    fun isVoiceSelectionComplete(): Boolean {
+        return sessionManager.isVoiceSelectionCompleted()
+    }
+
     private fun getRecentTopics(): List<String> {
         // TODO: Implement actual recent topics loading from database/preferences
         // For now, return dummy data based on user interests

@@ -2,10 +2,12 @@ package com.judahben149.tala.data.service.firebase
 
 import com.judahben149.tala.domain.models.user.AppUser
 import kotlinx.coroutines.flow.Flow
+import com.judahben149.tala.domain.models.common.Result
 
 interface FirebaseService {
     fun getCurrentApp(): FirebaseAppInfo
     fun getCurrentUser(): AppUser?
+    suspend fun getUserData(userId: String): Result<Map<String, Any>, Exception>
     suspend fun signIn(email: String, password: String): AppUser
     suspend fun setDisplayName(displayName: String)
     suspend fun createUser(email: String, password: String, displayName: String): AppUser
@@ -67,6 +69,10 @@ class FirebaseServiceImpl : FirebaseService {
 
     override fun getCurrentUser(): AppUser? =
         getCurrentFirebaseUser()
+
+    override suspend fun getUserData(userId: String): Result<Map<String, Any>, Exception> {
+        return getFirebaseUserData(userId)
+    }
 
     override suspend fun signOut() =
         signOutFirebaseUser()
@@ -144,3 +150,4 @@ expect fun isFirebaseEmailVerified(): Boolean
 expect suspend fun reauthenticateUser(password: String)
 expect suspend fun refreshFirebaseUserToken(): Boolean
 expect suspend fun deleteFirebaseUserData(userId: String)
+expect suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>, Exception>

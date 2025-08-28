@@ -77,7 +77,10 @@ class MainFlowComponent(
         is MainConfiguration.Voices -> MainChild.Voices(
             VoicesScreenComponent(
                 componentContext = componentContext,
-                onVoiceSelected = { navigation.pushNew(MainConfiguration.Speak) },
+                onVoiceSelected = {
+                    navigation.pop()
+                    navigation.pushNew(MainConfiguration.Speak)
+                },
                 onBackPressed = { navigation.pop() }
             )
         )

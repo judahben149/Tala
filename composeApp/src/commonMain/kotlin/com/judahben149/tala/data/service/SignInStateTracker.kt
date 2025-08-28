@@ -77,24 +77,4 @@ class SignInStateTracker(
     fun hasCompletedOnboarding(): Boolean {
         return settings.getBoolean(KEY_ONBOARDING_COMPLETED, false)
     }
-
-    fun saveSelectedLanguages(languages: List<String>) {
-        settings[KEY_SELECTED_LANGUAGES] = languages.joinToString(",")
-    }
-
-    fun saveSelectedInterests(interests: List<String>) {
-        settings[KEY_SELECTED_INTERESTS] = interests.joinToString(",")
-    }
-
-    fun getSelectedLanguages(): List<String> {
-        return settings.getString(KEY_SELECTED_LANGUAGES, "")
-            .split(",")
-            .filter { it.isNotBlank() }
-    }
-
-    fun getSelectedInterests(): List<String> {
-        return settings.getString(KEY_SELECTED_INTERESTS, "")
-            .split(",")
-            .filter { it.isNotBlank() }
-    }
 }

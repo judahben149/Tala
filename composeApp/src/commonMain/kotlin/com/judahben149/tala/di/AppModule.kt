@@ -58,6 +58,7 @@ import com.judahben149.tala.domain.usecases.messages.GetConversationMessagesUseC
 import com.judahben149.tala.domain.usecases.preferences.SaveLearningLanguageUseCase
 import com.judahben149.tala.domain.usecases.preferences.SaveUserInterestsUseCase
 import com.judahben149.tala.domain.usecases.settings.GetLearningLanguageUseCase
+import com.judahben149.tala.domain.usecases.settings.GetNotificationSettingsUseCase
 import com.judahben149.tala.domain.usecases.settings.GetUserProfileUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateLearningLanguageUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateNotificationSettingsUseCase
@@ -250,6 +251,7 @@ val appModule = module {
     singleOf(::RefreshUserTokenUseCase)
     singleOf(::SaveLearningLanguageUseCase)
     singleOf(::SaveUserInterestsUseCase)
+    singleOf(::GetNotificationSettingsUseCase)
 
 
     // ViewModels

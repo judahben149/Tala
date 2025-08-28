@@ -86,7 +86,13 @@ fun HomeScreen(
         // Quick Action Cards
         QuickActionsSection(
             colors = colors,
-            onSpeakClick = { component.navigateToVoices() },
+            onSpeakClick = {
+                if (viewModel.isVoiceSelectionComplete()) {
+                    component.navigateToSpeak()
+                } else {
+                    component.navigateToVoices()
+                }
+            },
             onVoicesClick = { component.navigateToVoices() }
         )
 

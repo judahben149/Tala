@@ -9,6 +9,7 @@ import cocoapods.FirebaseDatabase.FIRDataEventType.FIRDataEventTypeValue
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthInvalidUserException
 import com.judahben149.tala.domain.models.authentication.errors.mapIOSFirebaseError
+import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CPointer
@@ -339,3 +340,25 @@ actual suspend fun deleteFirebaseUserData(userId: String) = suspendCancellableCo
         }
     }
 }
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>, Exception> =
+    suspendCancellableCoroutine { continuation ->
+        val database = FIRDatabase.database().reference()
+        val userRef = database.child("users").child(userId)
+
+        userRef.observeSingleEventOfType(FIRDataEventTypeValue,
+            withBlock = { snapshot ->
+                if (snapshot?.exists() == true) {
+                    val userData = snapshot.value() as? Map<String, Any> ?: emptyMap()
+                    continuation.resume(Result.Success(userData))
+                } else {
+                    continuation.resume(Result.Failure(Exception("User data not found")))
+                }
+            },
+            withCancelBlock = { error ->
+                continuation.resume(Result.Failure(Exception(error?.localizedDescription ?: "Unknown error")))
+            }
+        )
+    }
+

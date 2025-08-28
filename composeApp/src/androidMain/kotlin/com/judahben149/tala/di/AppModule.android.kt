@@ -19,5 +19,5 @@ actual val platformModule = module {
 
     // Platform UseCases
     single { CheckRecordingPermissionUseCase(androidContext()) }
-    single { RequestRecordingPermissionUseCase(androidContext() as Activity) }
+    single { RequestRecordingPermissionUseCase(androidContext()) }
 }

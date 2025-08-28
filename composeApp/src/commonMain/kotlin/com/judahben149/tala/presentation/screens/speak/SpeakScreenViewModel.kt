@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.service.audio.SpeechPlayer
+import com.judahben149.tala.data.service.permission.AudioPermissionManager
 import com.judahben149.tala.domain.managers.MessageManager
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
@@ -40,6 +41,7 @@ class SpeakScreenViewModel(
     private val messageManager: MessageManager,
     private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
+    private val audioPermissionManager: AudioPermissionManager,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -48,10 +50,10 @@ class SpeakScreenViewModel(
 
     private var conversationId: String? = null
     private var recordingStatus: RecorderStatus = RecorderStatus.Idle
+    private var hasPermission = false
 
     init {
         observeRecordingStatus()
-        initializeConversation()
     }
 
     private fun observeRecordingStatus() {
@@ -63,7 +65,23 @@ class SpeakScreenViewModel(
             .launchIn(viewModelScope)
     }
 
-    private fun initializeConversation() {
+    fun onPermissionGranted() {
+        hasPermission = true
+        logger.d { "Microphone permission granted" }
+        clearError()
+        if (conversationId == null) {
+            initializeConversation()
+        }
+    }
+
+    fun onPermissionDenied() {
+        hasPermission = false
+        logger.w { "Microphone permission denied" }
+        updateError("Microphone permission is required to record audio")
+        updateState(conversationState = ConversationState.Stopped, isLoading = false)
+    }
+
+    fun initializeConversation() {
         viewModelScope.launch {
             updateState(isLoading = true)
 
@@ -105,6 +123,12 @@ class SpeakScreenViewModel(
     }
 
     private fun startRecording() {
+        if (!hasPermission) {
+            logger.w { "Cannot start recording without permission" }
+            updateError("Microphone permission required")
+            return
+        }
+
         val currentState = _uiState.value.conversationState
         if (currentState != ConversationState.Idle && currentState != ConversationState.Stopped) {
             logger.w { "Cannot start recording from state: $currentState" }

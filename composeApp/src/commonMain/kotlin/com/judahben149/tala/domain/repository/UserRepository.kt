@@ -1,6 +1,7 @@
 package com.judahben149.tala.domain.repository
 
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.session.NotificationSettings
 import com.judahben149.tala.domain.models.session.UserProfile
 
 interface UserRepository {
@@ -17,4 +18,5 @@ interface UserRepository {
     ): Result<Unit, Exception>
     suspend fun saveLearningLanguage(language: String): Result<Unit, Exception>
     suspend fun saveUserInterests(interests: List<String>): Result<Unit, Exception>
+    suspend fun getNotificationSettings(): Result<NotificationSettings, Exception>
 }

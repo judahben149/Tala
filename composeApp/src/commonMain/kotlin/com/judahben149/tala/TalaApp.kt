@@ -30,6 +30,7 @@ fun TalaApp(rootComponent: RootComponent) {
 
     // Listen to auth state changes and trigger navigation
     val isSignedIn by signInStateTracker.isSignedIn.collectAsState()
+
     LaunchedEffect(isSignedIn) {
         if (isSignedIn != null) {
             rootComponent.checkAuthenticationState()

@@ -10,7 +10,9 @@ class UpdateNotificationSettingsUseCase(
         notificationsEnabled: Boolean,
         practiceRemindersEnabled: Boolean
     ): Result<Unit, Exception> {
-        // Implementation will update notification settings
-        TODO("Implementation needed")
+        return repository.updateNotificationSettings(
+            notificationsEnabled,
+            practiceRemindersEnabled
+        )
     }
 }

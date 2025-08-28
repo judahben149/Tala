@@ -3,12 +3,15 @@ package com.judahben149.tala.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import com.judahben149.tala.data.service.SignInStateTracker
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.session.PasswordUpdateData
+import com.judahben149.tala.domain.models.session.UserProfile
 import com.judahben149.tala.domain.models.speech.SimpleVoice
 import com.judahben149.tala.domain.usecases.authentication.DeleteAccountWithAuthUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignOutUseCase
 import com.judahben149.tala.domain.usecases.settings.GetLearningLanguageUseCase
+import com.judahben149.tala.domain.usecases.settings.GetNotificationSettingsUseCase
 import com.judahben149.tala.domain.usecases.settings.GetUserProfileUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateLearningLanguageUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateNotificationSettingsUseCase
@@ -31,7 +34,9 @@ class SettingsScreenViewModel(
     private val updateLearningLanguageUseCase: UpdateLearningLanguageUseCase,
     private val getLearningLanguageUseCase: GetLearningLanguageUseCase,
     private val updateNotificationSettingsUseCase: UpdateNotificationSettingsUseCase,
+    private val getNotificationSettingsUseCase: GetNotificationSettingsUseCase,
     private val signOutUseCase: SignOutUseCase,
+    private val signInStateTracker: SignInStateTracker,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -47,6 +52,7 @@ class SettingsScreenViewModel(
         loadUserProfile()
         loadSelectedVoice()
         loadLearningLanguage()
+        loadNotificationSettings()
     }
 
     private fun loadUserProfile() {
@@ -101,6 +107,38 @@ class SettingsScreenViewModel(
                     logger.e { "Failed to load learning language: ${result.error}" }
                     // Use default language
                     _uiState.update { it.copy(selectedLanguage = "Spanish") }
+                }
+            }
+        }
+    }
+
+    private fun loadNotificationSettings() {
+        viewModelScope.launch {
+            when (val result = getNotificationSettingsUseCase()) {
+                is Result.Success -> {
+                    val settings = result.data
+
+                    val updatedUser = _uiState.value.user?.copy(
+                        notificationsEnabled = settings.notificationsEnabled,
+                        practiceRemindersEnabled = settings.practiceRemindersEnabled
+                    ) ?: UserProfile(
+                        id = "",
+                        name = "",
+                        email = "",
+                        avatarUrl = "",
+                        createdAt = 0,
+                        streakDays = 0,
+                        totalConversations = 0,
+                        notificationsEnabled = true,
+                        practiceRemindersEnabled = true
+                    )
+
+                    _uiState.update { it.copy(user = updatedUser) }
+                    logger.d { "Notification settings loaded: $settings" }
+                }
+                is Result.Failure -> {
+                    logger.e { "Failed to load notification settings: ${result.error}" }
+                    // Use defaults if loading fails
                 }
             }
         }
@@ -234,6 +272,8 @@ class SettingsScreenViewModel(
                 is Result.Success -> {
                     _uiState.update { it.copy(isDeletingAccount = false) }
                     logger.d { "Account deleted successfully" }
+
+                    signInStateTracker.markSignedOut()
                     // Trigger navigation away from app
                 }
                 is Result.Failure -> {

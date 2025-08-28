@@ -5,6 +5,7 @@ import com.judahben149.tala.data.local.getCurrentTimeMillis
 import com.judahben149.tala.data.service.firebase.FirebaseService
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.session.NotificationSettings
 import com.judahben149.tala.domain.models.user.Language
 import com.judahben149.tala.domain.models.session.UserProfile
 import com.judahben149.tala.domain.repository.UserRepository
@@ -199,6 +200,32 @@ class UserRepositoryImpl(
             Result.Success(Unit)
         } catch (e: Exception) {
             logger.e(e) { "Failed to save user interests" }
+            Result.Failure(e)
+        }
+    }
+
+    override suspend fun getNotificationSettings(): Result<NotificationSettings, Exception> {
+        return try {
+            val userId = firebaseService.getCurrentUser()?.userId
+                ?: return Result.Failure(Exception("User not authenticated"))
+
+            when (val result = firebaseService.getUserData(userId)) {
+                is Result.Success -> {
+                    val userData = result.data
+                    val settings = NotificationSettings(
+                        notificationsEnabled = userData["notificationsEnabled"] as? Boolean ?: true,
+                        practiceRemindersEnabled = userData["practiceRemindersEnabled"] as? Boolean ?: true
+                    )
+                    Result.Success(settings)
+                }
+                is Result.Failure -> {
+                    logger.w { "Failed to fetch notification settings from server, using defaults" }
+                    // Return default settings if fetch fails
+                    Result.Success(NotificationSettings())
+                }
+            }
+        } catch (e: Exception) {
+            logger.e(e) { "Failed to get notification settings" }
             Result.Failure(e)
         }
     }

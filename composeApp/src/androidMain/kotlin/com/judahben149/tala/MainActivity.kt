@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.arkivanov.decompose.retainedComponent
 import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.domain.usecases.permissions.RequestRecordingPermissionUseCase
 import com.judahben149.tala.navigation.RootComponent
 import org.koin.android.ext.android.inject
 
@@ -25,6 +26,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             TalaApp(rootComponent)
         }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+        deviceId: Int
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults, deviceId)
+//        RequestRecordingPermissionUseCase.handlePermissionResult(requestCode, grantResults)
     }
 }
 
