@@ -38,7 +38,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,8 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.judahben149.tala.navigation.components.top.HomeScreenComponent
-import com.judahben149.tala.ui.theme.TalaColors
-import com.judahben149.tala.ui.theme.getTalaColors
+import com.judahben149.tala.ui.theme.*
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
@@ -271,8 +269,8 @@ private fun QuickActionCard(
     title: String,
     subtitle: String,
     icon: ImageVector,
-    backgroundColor: Color,
-    contentColor: Color,
+    backgroundColor: androidx.compose.ui.graphics.Color,
+    contentColor: androidx.compose.ui.graphics.Color,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {

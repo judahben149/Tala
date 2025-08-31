@@ -41,33 +41,34 @@ data class TalaColors(
 
 @Composable
 fun getTalaColors(): TalaColors {
-    val primary = Color(0xFFeaaf24) or Color(0xFFfbbf24)
+    val primary = Amber600 or Amber400
 
     return TalaColors(
         primary = primary,
-        primaryButtonBackground = Amber800 or Amber400,
+        primaryButtonBackground = Amber700 or Amber400,
         primaryButtonText = White or Black,
-        secondaryButtonBackground = Orange600 or Orange300,
-        secondaryButtonText = White or Slate900,
-        disabledButtonBackground = Gray500 or Gray300,
-        disabledButtonText = Gray700 or Gray500,
-        textFieldBackground = Slate800 or White,
-        textFieldBorder = Slate600 or Slate300,
-        textFieldPlaceholderText = Gray600 or Gray400,
+        secondaryButtonBackground = Gray800 or Gray300,
+        secondaryButtonText = White or Black,
+        disabledButtonBackground = Gray600 or Gray300,
+        disabledButtonText = Gray500 or Gray500,
+        textFieldBackground = Gray900 or White,
+        textFieldBorder = Gray600 or Gray300,
+        textFieldPlaceholderText = Gray500 or Gray400,
         textFieldFocusedIndicator = primary,
-        textFieldErrorBackground = Red100 or Red50,
-        primaryText = Slate50 or Slate950,
+        textFieldErrorBackground = Red900 or Red100,
+        primaryText = White or Black,
         secondaryText = Gray400 or Gray600,
-        accentText = Yellow500 or Yellow300,
-        errorText = Red600 or Red500,
-        successText = Green600 or Green400,
-        appBackground = Slate900 or Slate50,
-        cardBackground = Slate700 or White,
+        accentText = Amber500 or Amber600,
+        errorText = Red500 or Red600,
+        successText = Green500 or Green600,
+        appBackground = Black or White,
+        cardBackground = Gray900 or White,
         progressBarFilled = primary,
         progressBarEmpty = Gray700 or Gray200,
         iconTint = primary,
-        divider = Slate600 or Slate200,
-        navigationBarBackground = Slate950 or White,
-        floatingActionButton = Teal500 or Teal300
+        divider = Gray600 or Gray200,
+        navigationBarBackground = Black or White,
+        floatingActionButton = Teal500 or Teal400
     )
 }
+

@@ -1,7 +1,11 @@
 package com.judahben149.tala
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -28,7 +32,6 @@ fun TalaApp(rootComponent: RootComponent) {
         sessionManager.checkAppState()
     }
 
-    // Listen to auth state changes and trigger navigation
     val appState by sessionManager.appState.collectAsState()
 
     LaunchedEffect(appState) {
@@ -38,20 +41,33 @@ fun TalaApp(rootComponent: RootComponent) {
     }
 
     MaterialTheme {
-        val childStack by rootComponent.childStack.subscribeAsState()
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+        ) {
+            val childStack by rootComponent.childStack.subscribeAsState()
 
-        Children(
-            stack = childStack,
-            animation = stackAnimation(slide())
-        ) { child ->
-            when (val instance = child.instance) {
-                is RootComponent.RootChild.Loading -> LoadingScreen()
-                is RootComponent.RootChild.Onboarding -> OnboardingFlow(instance.component)
-                is RootComponent.RootChild.Main -> MainFlow(instance.component)
+            Children(
+                stack = childStack,
+                animation = stackAnimation(slide()),
+                modifier = Modifier.weight(1f)
+            ) { child ->
+                when (val instance = child.instance) {
+                    is RootComponent.RootChild.Loading -> LoadingScreen()
+                    is RootComponent.RootChild.Onboarding -> OnboardingFlow(instance.component)
+                    is RootComponent.RootChild.Main -> MainFlow(instance.component)
+                }
             }
+
+            // Bottom spacer for navigation bar
+            Spacer(
+                modifier = Modifier.navigationBarsPadding()
+            )
         }
     }
 }
+
 
 @Composable
 private fun LoadingScreen() {

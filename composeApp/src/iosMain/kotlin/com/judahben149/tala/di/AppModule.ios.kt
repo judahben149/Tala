@@ -4,6 +4,8 @@ import com.judahben149.tala.data.local.DatabaseDriverFactory
 import com.judahben149.tala.data.service.audio.AudioPlayerFactory
 import com.judahben149.tala.data.service.audio.IOSAudioRecorderFactory
 import com.judahben149.tala.data.service.audio.SpeechRecorderFactory
+import com.judahben149.tala.domain.managers.HapticsManager
+import com.judahben149.tala.domain.managers.PlatformHapticsManager
 import com.judahben149.tala.domain.usecases.permissions.CheckRecordingPermissionUseCase
 import com.judahben149.tala.domain.usecases.permissions.RequestRecordingPermissionUseCase
 import org.koin.dsl.module
@@ -33,4 +35,12 @@ actual val platformModule = module {
     // Platform UseCases
     single { CheckRecordingPermissionUseCase() }
     single { RequestRecordingPermissionUseCase() }
+
+    single<HapticsManager> {
+        PlatformHapticsManager(
+            context = null,
+            settings = get(),
+            logger = get()
+        )
+    }
 }

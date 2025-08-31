@@ -9,8 +9,10 @@ import com.judahben149.tala.domain.usecases.authentication.verification.CheckEma
 import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 import kotlinx.coroutines.launch
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.speech.Gender
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateUserProfileUseCase
+import com.judahben149.tala.util.AvatarUrlGenerator
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -96,6 +98,7 @@ class EmailVerificationViewModel(
                 val profileData = mapOf(
                     "name" to currentUser.displayName,
                     "email" to currentUser.email,
+                    "avatarUrl" to AvatarUrlGenerator.generate(Gender.entries.random()),
                     "emailVerified" to true,
                     "createdAt" to getCurrentTimeMillis(),
                     "updatedAt" to getCurrentTimeMillis(),

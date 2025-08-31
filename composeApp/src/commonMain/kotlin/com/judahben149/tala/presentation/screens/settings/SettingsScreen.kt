@@ -179,7 +179,6 @@ fun SettingsScreen(
                 colors = colors,
                 textColor = colors.errorText,
                 onClick = { viewModel.showDeleteConfirmation() }
-
             )
         }
 
@@ -210,7 +209,7 @@ fun SettingsScreen(
         DeleteAccountDialog(
             onConfirm = { password ->
                 viewModel.hideDeleteConfirmation()
-                viewModel.deleteAccount(password) // Pass password to ViewModel
+                viewModel.deleteAccount(password)
                 component.onAccountDeleted()
             },
             onDismiss = { viewModel.hideDeleteConfirmation() },
@@ -273,7 +272,8 @@ private fun ProfileSection(
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
@@ -499,13 +499,22 @@ private fun DeleteAccountDialog(
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Enter your password to confirm") },
+                    label = {
+                        Text(
+                            "Enter your password to confirm",
+                            color = colors.secondaryText
+                        )
+                    },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.textFieldBorder
+                        unfocusedBorderColor = colors.textFieldBorder,
+                        focusedTextColor = colors.primaryText,
+                        unfocusedTextColor = colors.primaryText,
+                        focusedContainerColor = colors.textFieldBackground,
+                        unfocusedContainerColor = colors.textFieldBackground
                     )
                 )
             }
@@ -579,12 +588,21 @@ private fun PasswordUpdateDialog(
                 OutlinedTextField(
                     value = currentPassword,
                     onValueChange = { currentPassword = it },
-                    label = { Text("Current Password") },
+                    label = {
+                        Text(
+                            "Current Password",
+                            color = colors.secondaryText
+                        )
+                    },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.textFieldBorder
+                        unfocusedBorderColor = colors.textFieldBorder,
+                        focusedTextColor = colors.primaryText,
+                        unfocusedTextColor = colors.primaryText,
+                        focusedContainerColor = colors.textFieldBackground,
+                        unfocusedContainerColor = colors.textFieldBackground
                     )
                 )
 
@@ -593,12 +611,21 @@ private fun PasswordUpdateDialog(
                 OutlinedTextField(
                     value = newPassword,
                     onValueChange = { newPassword = it },
-                    label = { Text("New Password") },
+                    label = {
+                        Text(
+                            "New Password",
+                            color = colors.secondaryText
+                        )
+                    },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.textFieldBorder
+                        unfocusedBorderColor = colors.textFieldBorder,
+                        focusedTextColor = colors.primaryText,
+                        unfocusedTextColor = colors.primaryText,
+                        focusedContainerColor = colors.textFieldBackground,
+                        unfocusedContainerColor = colors.textFieldBackground
                     )
                 )
 
@@ -607,12 +634,21 @@ private fun PasswordUpdateDialog(
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Confirm Password") },
+                    label = {
+                        Text(
+                            "Confirm Password",
+                            color = colors.secondaryText
+                        )
+                    },
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.textFieldBorder
+                        unfocusedBorderColor = colors.textFieldBorder,
+                        focusedTextColor = colors.primaryText,
+                        unfocusedTextColor = colors.primaryText,
+                        focusedContainerColor = colors.textFieldBackground,
+                        unfocusedContainerColor = colors.textFieldBackground
                     )
                 )
             }
@@ -643,7 +679,7 @@ private fun PasswordUpdateDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     text = "Cancel",
-                    color = colors.secondaryText
+                    color = colors.primary
                 )
             }
         },

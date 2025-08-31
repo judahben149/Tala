@@ -117,6 +117,8 @@ class SettingsScreenViewModel(
 
     private fun loadNotificationSettings() {
         viewModelScope.launch {
+            logger.d { "Loading notification settings" }
+
             when (val result = getNotificationSettingsUseCase()) {
                 is Result.Success -> {
                     val settings = result.data
@@ -306,7 +308,7 @@ class SettingsScreenViewModel(
                 is Result.Success -> {
                     _uiState.update { it.copy(isLoading = false) }
                     logger.d { "User signed out successfully" }
-                    // Sign out successful - this should trigger navigation to login
+                    sessionManager.markSignedOut()
                 }
                 is Result.Failure -> {
                     _uiState.update {
