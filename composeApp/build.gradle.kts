@@ -1,3 +1,5 @@
+import com.android.build.api.dsl.Lint
+import com.android.build.api.dsl.LintOptions
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -96,6 +98,11 @@ kotlin {
             version = "~> 11.13"
             extraOpts += listOf("-compiler-option", "-fmodules")
         }
+
+        pod("GoogleSignIn") {
+            version = "~> 8.0"
+            extraOpts += listOf("-compiler-option", "-fmodules")
+        }
     }
     
     sourceSets {
@@ -113,6 +120,11 @@ kotlin {
             implementation(libs.play.services.auth)
             implementation(libs.sqldelight.android)
             implementation(libs.coroutines.play.services)
+
+            // Google sign-in
+//            implementation(libs.androidx.credentials)
+//            implementation(libs.androidx.credentials.play.services.auth)
+//            implementation(libs.google.id)
 
             // Stream-Chat
             implementation(libs.stream.chat.compose)
@@ -208,6 +220,16 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file(secretsProperties["store_path"]?.toString() ?: "")
+            storePassword = secretsProperties["store_password"]?.toString() ?: ""
+            keyAlias = secretsProperties["key_alias"]?.toString() ?: ""
+            keyPassword = secretsProperties["key_password"]?.toString() ?: ""
+        }
+    }
+
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
@@ -217,6 +239,11 @@ android {
 
         getByName("release") {
             isMinifyEnabled = false
+             signingConfig = signingConfigs.getByName("release")
+
+            lint {
+                checkReleaseBuilds = false
+            }
         }
     }
     compileOptions {

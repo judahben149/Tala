@@ -37,6 +37,8 @@ kotlinxDatetime = "0.7.1"
 coilSvg = "3.0.4"
 coroutinesPlayServices = "1.10.2"
 accompanist-permissions = "0.37.3"
+google-credentials = "1.3.0"
+google-id = "1.1.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -107,6 +109,12 @@ coil-svg = { module = "io.coil-kt.coil3:coil-svg", version.ref = "coilSvg" }
 coroutines-play-services = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-play-services", version.ref = "coroutinesPlayServices" }
 
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanist-permissions" }
+
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "google-credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "google-credentials" }
+google-id = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "google-id" }
+
+
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
