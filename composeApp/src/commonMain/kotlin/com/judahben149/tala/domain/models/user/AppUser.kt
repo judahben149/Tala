@@ -1,5 +1,6 @@
 package com.judahben149.tala.domain.models.user
 
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.speech.Gender
 import com.judahben149.tala.util.AvatarUrlGenerator
 import kotlin.time.ExperimentalTime
@@ -10,6 +11,7 @@ data class AppUser(
     val displayName: String,
     val email: String,
     val isPremiumUser: Boolean = false,
+    val signInMethod: SignInMethod = SignInMethod.EMAIL_PASSWORD,
     val firstName: String = "",
     val lastName: String = "",
     val avatarUrl: String? = AvatarUrlGenerator.generate(Gender.entries.random()),

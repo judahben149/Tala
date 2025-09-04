@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.domain.models.user.Language
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
 import com.judahben149.tala.domain.usecases.settings.GetLearningLanguageUseCase
+import com.judahben149.tala.domain.usecases.user.ObservePersistedUserDataUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,6 +19,7 @@ import kotlinx.coroutines.launch
 class HomeScreenViewModel(
     private val sessionManager: SessionManager,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val observePersistedUser: ObservePersistedUserDataUseCase,
     private val getLearningLanguageUseCase: GetLearningLanguageUseCase,
     private val logger: Logger
 ) : ViewModel() {
@@ -32,34 +35,34 @@ class HomeScreenViewModel(
 
             try {
                 // Load user data
-                val userResult = getCurrentUserUseCase()
-                val user = when (userResult) {
-                    is Result.Success -> userResult.data
-                    is Result.Failure -> null
+                if (observePersistedUser.hasPersistedUser()) {
+                    val user = observePersistedUser.getCurrentUser()
+
+                    // Load learning language
+                    val languageResult = getLearningLanguageUseCase()
+                    val learningLanguage = when (languageResult) {
+                        is Result.Success -> languageResult.data.name
+                        is Result.Failure -> Language.ENGLISH.name
+                    }
+
+                    // Load recent topics from preferences/cache
+                    val recentTopics = getRecentTopics()
+
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            user = user,
+                            userName = user.displayName.split(" ").first(),
+                            streakDays = user?.streakDays ?: 0,
+                            totalConversations = user.totalConversations,
+                            learningLanguage = learningLanguage,
+                            weeklyGoalProgress = calculateWeeklyProgress(user.totalConversations),
+                            recentTopics = recentTopics
+                        )
+                    }
+                } else {
+                    return@launch
                 }
-
-                // Load learning language
-                val languageResult = getLearningLanguageUseCase()
-                val learningLanguage = when (languageResult) {
-                    is Result.Success -> languageResult.data.name
-                    is Result.Failure -> Language.ENGLISH.name
-                }
-
-                // Load recent topics from preferences/cache
-                val recentTopics = getRecentTopics()
-
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        userName = user?.displayName?.split(" ")?.first() ?: "Friend",
-                        streakDays = user?.streakDays ?: 0,
-                        totalConversations = user?.totalConversations ?: 0,
-                        learningLanguage = learningLanguage,
-                        weeklyGoalProgress = calculateWeeklyProgress(user?.totalConversations ?: 0),
-                        recentTopics = recentTopics
-                    )
-                }
-
             } catch (e: Exception) {
                 logger.e(e) { "Failed to load home data" }
                 _uiState.update {
@@ -103,6 +106,7 @@ class HomeScreenViewModel(
 
 data class HomeScreenState(
     val isLoading: Boolean = false,
+    val user: AppUser? = null,
     val userName: String = "",
     val streakDays: Int = 0,
     val totalConversations: Int = 0,

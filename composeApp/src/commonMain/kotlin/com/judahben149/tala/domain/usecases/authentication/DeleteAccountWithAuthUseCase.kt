@@ -10,12 +10,11 @@ class DeleteAccountWithAuthUseCase(
 ) {
     suspend operator fun invoke(password: String): Result<Unit, Exception> {
         return try {
-            // First re-authenticate
-            firebaseService.reauthenticateFirebaseUser(password)
-            
-            // Then delete user
+            if (password.isNotEmpty()) {
+                firebaseService.reauthenticateFirebaseUser(password)
+            }
+
             userRepository.deleteAccount()
-            
             Result.Success(Unit)
         } catch (e: Exception) {
             Result.Failure(e)

@@ -1,6 +1,7 @@
 package com.judahben149.tala.domain.mappers
 
 import com.judahben149.tala.data.model.UserEntity
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.user.AppUser
 
 fun AppUser.toUserEntity(): UserEntity = UserEntity(
@@ -9,6 +10,7 @@ fun AppUser.toUserEntity(): UserEntity = UserEntity(
     isPremiumUser = isPremiumUser,
     displayName = displayName,
     photoUrl = avatarUrl,
+    signInMethod = signInMethod.name,
     isEmailVerified = emailVerified,
     firstName = firstName,
     lastName = lastName,
@@ -43,6 +45,7 @@ fun UserEntity.toAppUser(): AppUser = AppUser(
     displayName = displayName ?: "",
     email = email,
     isPremiumUser = isPremiumUser,
+    signInMethod = SignInMethod.valueOf(signInMethod),
     firstName = firstName ?: "",
     lastName = lastName ?: "",
     avatarUrl = photoUrl,

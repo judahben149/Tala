@@ -1,14 +1,58 @@
 package com.judahben149.tala.presentation.screens.settings
 
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -20,13 +64,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.session.PasswordUpdateData
-import com.judahben149.tala.domain.models.session.UserProfile
 import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.navigation.components.others.SettingsScreenComponent
-import com.judahben149.tala.ui.theme.*
+import com.judahben149.tala.presentation.screens.settings.modals.DeleteAccountDialog
+import com.judahben149.tala.presentation.screens.settings.modals.UpdateNameModal
+import com.judahben149.tala.presentation.screens.settings.modals.VoiceSelectionModal
+import com.judahben149.tala.ui.theme.TalaColors
+import com.judahben149.tala.ui.theme.getTalaColors
 import org.koin.compose.viewmodel.koinViewModel
-import tala.composeapp.generated.resources.Res
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,23 +113,25 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.Person,
                 title = "Update Profile",
-                subtitle = "Change your name and email",
+                subtitle = "Change your name",
                 colors = colors,
-                onClick = { /* TODO: Open profile editor */ }
+                onClick = { viewModel.showUpdateNameModal() }
             )
 
-            SettingsItem(
-                icon = Icons.Default.Lock,
-                title = "Update Password",
-                subtitle = "Keep your account secure",
-                colors = colors,
-                onClick = { viewModel.showPasswordDialog() }
-            )
+            if (uiState.user?.signInMethod == SignInMethod.EMAIL_PASSWORD) {
+                SettingsItem(
+                    icon = Icons.Default.Lock,
+                    title = "Update Password",
+                    subtitle = "Keep your account secure",
+                    colors = colors,
+                    onClick = { viewModel.showPasswordDialog() }
+                )
+            }
 
             SettingsItem(
                 icon = Icons.Default.RecordVoiceOver,
                 title = "Change AI Voice",
-                subtitle = uiState.user?.selectedVoiceId ?: "Select your preferred voice",
+                subtitle = uiState.selectedVoice?.name ?: "Select your preferred voice",
                 colors = colors,
                 onClick = { viewModel.showVoiceSelector() }
             )
@@ -210,6 +259,7 @@ fun SettingsScreen(
     // Dialogs
     if (uiState.showDeleteConfirmation) {
         DeleteAccountDialog(
+            user = uiState.user,
             onConfirm = { password ->
                 viewModel.hideDeleteConfirmation()
                 viewModel.deleteAccount(password)
@@ -228,6 +278,36 @@ fun SettingsScreen(
                 viewModel.updatePassword(passwordData)
             },
             onDismiss = { viewModel.hidePasswordDialog() },
+            colors = colors
+        )
+    }
+
+    if (uiState.showVoiceSelector) {
+        VoiceSelectionModal(
+            voices = uiState.availableVoices,
+            selectedVoiceId = uiState.selectedVoice?.voiceId,
+            isPlayingSample = uiState.isPlayingSample,
+            playingVoiceId = uiState.playingVoiceId,
+            onVoiceSelected = { voiceId ->
+                viewModel.selectVoice(voiceId)
+                viewModel.hideVoiceSelector()
+            },
+            onPlayVoiceSample = { voiceId ->
+                viewModel.playVoiceSample(voiceId)
+            },
+            onDismissRequest = { viewModel.hideVoiceSelector() },
+            colors = colors
+        )
+    }
+
+    if (uiState.showUpdateNameModal) {
+        UpdateNameModal(
+            currentName = uiState.user?.displayName ?: "",
+            isLoading = uiState.isUpdatingProfile,
+            onConfirm = { newName ->
+                viewModel.updateUserName(newName)
+            },
+            onDismiss = { viewModel.hideUpdateNameModal() },
             colors = colors
         )
     }
@@ -470,101 +550,6 @@ private fun SettingsToggleItem(
             )
         )
     }
-}
-
-@Composable
-private fun DeleteAccountDialog(
-    onConfirm: (String) -> Unit,
-    onDismiss: () -> Unit,
-    colors: TalaColors,
-    isLoading: Boolean = false
-) {
-    var password by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = if (isLoading) { {} } else onDismiss,
-        title = {
-            Text(
-                text = "Delete Account?",
-                color = colors.primaryText,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column {
-                Text(
-                    text = "This action cannot be undone. All your progress, conversations, and data will be permanently deleted.",
-                    color = colors.secondaryText
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = {
-                        Text(
-                            "Enter your password to confirm",
-                            color = colors.secondaryText
-                        )
-                    },
-                    visualTransformation = PasswordVisualTransformation(),
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.textFieldBorder,
-                        focusedTextColor = colors.primaryText,
-                        unfocusedTextColor = colors.primaryText,
-                        focusedContainerColor = colors.textFieldBackground,
-                        unfocusedContainerColor = colors.textFieldBackground
-                    )
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(password) },
-                enabled = password.isNotBlank() && !isLoading
-            ) {
-                if (isLoading) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = colors.errorText,
-                            strokeWidth = 2.dp
-                        )
-                        Text(
-                            text = "Deleting...",
-                            color = colors.errorText,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                } else {
-                    Text(
-                        text = "Delete",
-                        color = colors.errorText,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                enabled = !isLoading
-            ) {
-                Text(
-                    text = "Cancel",
-                    color = colors.secondaryText
-                )
-            }
-        },
-        containerColor = colors.cardBackground
-    )
 }
 
 @Composable

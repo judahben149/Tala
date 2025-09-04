@@ -56,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
@@ -248,6 +249,7 @@ private fun LoginScreenContent(
 
                                 viewModel.handleFederatedSignUp(
                                     user = user,
+                                    signInMethod = SignInMethod.APPLE,
                                     signUpCompleted = { userId, isNewUser ->
 
                                         // Check if user actually completed onboarding

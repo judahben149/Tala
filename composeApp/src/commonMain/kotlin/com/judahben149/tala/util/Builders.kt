@@ -1,6 +1,7 @@
 package com.judahben149.tala.util
 
 import com.judahben149.tala.data.local.getCurrentTimeMillis
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.user.AppUser
 
 fun buildProfileDataFromAppUser(user: AppUser): Map<String, Any> {
@@ -8,6 +9,7 @@ fun buildProfileDataFromAppUser(user: AppUser): Map<String, Any> {
         // Basic User Info
         put("displayName", user.displayName)
         put("email", user.email)
+        put("signInMethod", user.signInMethod.name)
         put("firstName", user.firstName)
         put("lastName", user.lastName)
         put("isPremiumUser", user.isPremiumUser)
@@ -59,6 +61,7 @@ fun buildAppUserFromProfileData(
         email = profileData["email"] as? String ?: "",
         firstName = profileData["firstName"] as? String ?: "",
         lastName = profileData["lastName"] as? String ?: "",
+        signInMethod = SignInMethod.valueOf(profileData["signInMethod"] as? String ?: "EMAIL_PASSWORD"),
         isPremiumUser = profileData["isPremiumUser"] as? Boolean ?: false,
         avatarUrl = profileData["profileImageUrl"] as? String,
         emailVerified = profileData["emailVerified"] as? Boolean ?: false,

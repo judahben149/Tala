@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.mappers.toAppUser
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
@@ -27,6 +28,10 @@ class SignUpViewModel(
     private val sessionManager: SessionManager,
     private val logger: Logger
 ) : ViewModel() {
+
+    // Unified loading state
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _uiState = MutableStateFlow<UiState<AppUser, FirebaseAuthException>?>(null)
     val uiState: StateFlow<UiState<AppUser, FirebaseAuthException>?> = _uiState.asStateFlow()
@@ -60,8 +65,8 @@ class SignUpViewModel(
             logger.w { "Form validation failed" }
             return
         }
-
         viewModelScope.launch {
+            _isLoading.value = true
             _uiState.value = UiState.Loading
 
             val fullDisplayName = "${currentState.firstName} ${currentState.lastName}".trim()
@@ -74,7 +79,6 @@ class SignUpViewModel(
             when (result) {
                 is Result.Success -> {
                     logger.d { "User created successfully: ${result.data.email}" }
-
                     // Send verification email immediately after user creation
                     when (sendEmailVerificationUseCase()) {
                         is Result.Success -> {
@@ -94,23 +98,27 @@ class SignUpViewModel(
                     _uiState.value = UiState.Loaded(result)
                 }
             }
+            _isLoading.value = false
         }
     }
 
     fun handleFederatedSignUp(
         user: FirebaseUser,
-        signUpCompleted:(userId: String, isNewUser: Boolean) -> Unit,
-        signUpFailed:(errorMessage: String) -> Unit
-        ) {
+        signInMethod: SignInMethod,
+        signUpCompleted: (userId: String, isNewUser: Boolean) -> Unit,
+        signUpFailed: (errorMessage: String) -> Unit
+    ) {
         viewModelScope.launch {
-            _uiState.value = UiState.Loading
+            _isLoading.value = true
 
             val userData = getUserDataUseCase(user.uid)
+            val appUser = user.toAppUser().copy(signInMethod = signInMethod)
+            logger.d { "AppUser here: $appUser" }
 
             when (userData) {
                 is Result.Success -> {
                     if (userData.data.isEmpty()) {
-                        when(val result = createDefaultUserDataUseCase(user.toAppUser(), true)) {
+                        when (val result = createDefaultUserDataUseCase(appUser, true)) {
                             is Result.Success -> {
                                 logger.d { "User data created successfully: ${result.data}" }
                                 signUpCompleted(user.uid, true)
@@ -127,7 +135,7 @@ class SignUpViewModel(
                 }
                 is Result.Failure -> {
                     if (userData.error.message == "User data not found") {
-                        when(val result = createDefaultUserDataUseCase(user.toAppUser(), true)) {
+                        when (val result = createDefaultUserDataUseCase(appUser, true)) {
                             is Result.Success -> {
                                 logger.d { "User data created successfully: ${result.data}" }
                                 signUpCompleted(user.uid, true)
@@ -143,18 +151,25 @@ class SignUpViewModel(
                     }
                 }
             }
+            _isLoading.value = false
         }
+    }
+
+    fun triggerLoading() {
+        _isLoading.value = true
     }
 
     fun clearState() {
         _uiState.value = null
         _formState.value = SignUpFormState()
+        _isLoading.value = false
     }
 
     fun logStuff(any: Any) {
         logger.d { "Stuff: $any" }
     }
 }
+
 
 // Keep SignUpFormState unchanged
 data class SignUpFormState(

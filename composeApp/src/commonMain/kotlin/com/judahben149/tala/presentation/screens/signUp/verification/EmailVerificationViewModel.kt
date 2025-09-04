@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.local.getCurrentTimeMillis
 import com.judahben149.tala.data.service.firebase.FirebaseService
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.usecases.authentication.verification.CheckEmailVerificationUseCase
 import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 import kotlinx.coroutines.launch
@@ -97,7 +98,7 @@ class EmailVerificationViewModel(
             val currentUser = firebaseService.getCurrentUser()
 
             if (currentUser != null) {
-                val profileData = createDefaultUserDataUseCase(currentUser)
+                val profileData = createDefaultUserDataUseCase(currentUser.copy(signInMethod = SignInMethod.EMAIL_PASSWORD))
 
                 when (profileData) {
                     is Result.Success -> {

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.mappers.toAppUser
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
@@ -85,6 +86,7 @@ class AuthViewModel(
 
     fun handleFederatedSignUp(
         user: FirebaseUser,
+        signInMethod: SignInMethod,
         signUpCompleted:(userId: String, isNewUser: Boolean) -> Unit,
         signUpFailed:(errorMessage: String) -> Unit
     ) {
@@ -96,7 +98,7 @@ class AuthViewModel(
             when (userData) {
                 is Result.Success -> {
                     if (userData.data.isEmpty()) {
-                        when(val result = createDefaultUserDataUseCase(user.toAppUser(), true)) {
+                        when(val result = createDefaultUserDataUseCase(user.toAppUser().copy(signInMethod = signInMethod), true)) {
                             is Result.Success -> {
                                 logger.d { "User data created successfully: ${result.data}" }
                                 signUpCompleted(user.uid, true)

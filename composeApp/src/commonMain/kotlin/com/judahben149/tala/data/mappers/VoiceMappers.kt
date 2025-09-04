@@ -15,7 +15,8 @@ fun SimpleVoice.toEntity(): VoiceEntity = VoiceEntity(
     isFeatured = isFeatured,
     likedCount = likedCount,
     createdAt = getCurrentTimeMillis(),
-    updatedAt = getCurrentTimeMillis()
+    updatedAt = getCurrentTimeMillis(),
+    isSelected = isSelected
 )
 
 fun com.judahben149.tala.Voices.toDomain(): SimpleVoice = SimpleVoice(
@@ -27,5 +28,6 @@ fun com.judahben149.tala.Voices.toDomain(): SimpleVoice = SimpleVoice(
     previewUrl = preview_url,
     isOwner = is_owner == 1L,
     isFeatured = is_featured == 1L,
-    likedCount = liked_count.toInt()
+    likedCount = liked_count.toInt(),
+    isSelected = is_selected == 1L
 )

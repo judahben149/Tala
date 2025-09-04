@@ -71,6 +71,7 @@ private fun HomeScreenContent(
     ) {
         TopSection(
             userName = uiState.userName,
+            user = uiState.user,
             streakDays = uiState.streakDays,
             colors = colors,
             onProfileClick = onProfileClick,

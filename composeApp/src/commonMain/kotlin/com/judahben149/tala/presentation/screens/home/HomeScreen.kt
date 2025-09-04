@@ -44,6 +44,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.navigation.components.top.HomeScreenComponent
 import com.judahben149.tala.ui.theme.*
 import kotlinx.datetime.TimeZone
@@ -73,9 +75,10 @@ fun HomeScreen(
         // Top Section with greeting and profile
         TopSection(
             userName = uiState.userName,
+            user = uiState.user,
             streakDays = uiState.streakDays,
             colors = colors,
-            onProfileClick = { component.navigateToProfile() },
+            onProfileClick = { component.navigateToSettings() },
             onSettingsClick = { component.navigateToSettings() }
         )
 
@@ -119,6 +122,7 @@ fun HomeScreen(
 @Composable
 fun TopSection(
     userName: String,
+    user: AppUser?,
     streakDays: Int,
     colors: TalaColors,
     onProfileClick: () -> Unit,
@@ -159,29 +163,39 @@ fun TopSection(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    imageVector = Icons.Default.Settings,
-                    contentDescription = "Settings",
-                    tint = colors.iconTint,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+//            IconButton(onClick = onSettingsClick) {
+//                Icon(
+//                    imageVector = Icons.Default.Settings,
+//                    contentDescription = "Settings",
+//                    tint = colors.iconTint,
+//                    modifier = Modifier.size(24.dp)
+//                )
+//            }
 
+            // Avatar
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(60.dp)
                     .clip(CircleShape)
-                    .background(colors.primary)
-                    .clickable { onProfileClick() },
+                    .background(colors.appBackground)
+                    .clickable{ onSettingsClick() },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = userName.firstOrNull()?.toString()?.uppercase() ?: "U",
-                    color = colors.primaryButtonText,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                user?.avatarUrl?.let {
+                    AsyncImage(
+                        model = user.avatarUrl,
+                        contentDescription = "User Avatar",
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } ?: run {
+                    Text(
+                        text = userName.firstOrNull()?.toString()?.uppercase() ?: "U",
+                        textAlign = TextAlign.Center,
+                        color = colors.primaryText,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

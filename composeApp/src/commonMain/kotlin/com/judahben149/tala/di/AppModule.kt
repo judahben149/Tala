@@ -71,7 +71,8 @@ import com.judahben149.tala.domain.usecases.speech.GetFeaturedVoicesUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceIdUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.GetVoicesByGenderUseCase
-import com.judahben149.tala.domain.usecases.speech.SetSelectedVoiceUseCase
+import com.judahben149.tala.domain.usecases.speech.ObserveSelectedVoiceUseCase
+import com.judahben149.tala.domain.usecases.speech.SaveSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.SetVoiceSelectionCompleteUseCase
 import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
@@ -240,7 +241,7 @@ val appModule = module {
     singleOf(::TrackConversationTimeUseCase)
     singleOf(::UpdateConversationStatsUseCase)
     singleOf(::GetSelectedVoiceUseCase)
-    singleOf(::SetSelectedVoiceUseCase)
+    singleOf(::SaveSelectedVoiceUseCase)
     singleOf(::SetVoiceSelectionCompleteUseCase)
     singleOf(::GetUserProfileUseCase)
     singleOf(::UpdateUserProfileUseCase)
@@ -262,6 +263,7 @@ val appModule = module {
     singleOf(::ObservePersistedUserDataUseCase)
     singleOf(::UpdateOnboardingFlagUseCase)
     singleOf(::ClearPersistedUserUseCase)
+    singleOf(::ObserveSelectedVoiceUseCase)
 
 
     // ViewModels

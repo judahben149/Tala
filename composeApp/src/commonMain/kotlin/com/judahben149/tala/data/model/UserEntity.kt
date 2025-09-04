@@ -10,6 +10,7 @@ data class UserEntity(
     val displayName: String? = null,
     val photoUrl: String? = null,
     val isEmailVerified: Boolean = false,
+    val signInMethod: String = "EMAIL_PASSWORD",
 
     // Additional Basic Info
     val firstName: String? = null,

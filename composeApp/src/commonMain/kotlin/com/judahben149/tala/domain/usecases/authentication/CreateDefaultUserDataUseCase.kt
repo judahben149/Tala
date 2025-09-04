@@ -28,6 +28,7 @@ class CreateDefaultUserDataUseCase(
                     put("userId", user.userId)
                     put("displayName", user.displayName)
                     put("email", user.email)
+                    put("signInMethod", user.signInMethod.name)
                     put("firstName", user.displayName.split(" ").firstOrNull() ?: "")
                     put(
                         "lastName",
@@ -38,6 +39,7 @@ class CreateDefaultUserDataUseCase(
                     put("avatarUrl", AvatarUrlGenerator.generate(Gender.entries.random()))
                     put("isPremiumUser", user.isPremiumUser)
                     put("emailVerified", if (isFederatedSignIn) true else user.emailVerified)
+                    put("isFederatedSignIn", isFederatedSignIn)
                     put("createdAt", user.createdAt)
                     put("updatedAt", user.updatedAt)
 

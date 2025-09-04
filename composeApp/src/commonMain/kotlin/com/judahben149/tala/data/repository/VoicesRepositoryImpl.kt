@@ -111,5 +111,14 @@ class VoicesRepositoryImpl(
     override suspend fun getVoiceById(voiceId: String): SimpleVoice? {
         return databaseHelper.getVoiceById(voiceId)
     }
+
+    override fun getSelectedVoiceFlow(): Flow<SimpleVoice?> {
+        return databaseHelper.getSelectedVoiceFlow()
+    }
+
+    override suspend fun saveSelectedVoice(voiceId: String) {
+        databaseHelper.saveSelectedVoice(voiceId)
+        logger.d { "Selected voice saved: $voiceId" }
+    }
 }
 
