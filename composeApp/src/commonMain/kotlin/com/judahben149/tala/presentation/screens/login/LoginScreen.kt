@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -53,6 +54,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
@@ -63,8 +65,10 @@ import com.judahben149.tala.presentation.screens.signUp.ErrorCard
 import com.judahben149.tala.ui.theme.TalaColors
 import com.judahben149.tala.ui.theme.getTalaColors
 import com.judahben149.tala.util.isIos
+import com.mmk.kmpauth.firebase.google.GoogleButtonUiContainerFirebase
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import tala.composeapp.generated.resources.Res
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,7 +91,7 @@ fun LoginScreen(
                         viewModel.clearFormState()
 
                         // Check if user actually completed onboarding
-                        val hasCompletedOnboarding = sessionManager.checkUserOnboardingStatus(user.userId)
+                        val hasCompletedOnboarding = sessionManager.hasCompletedOnboarding()
 
                         if (hasCompletedOnboarding) {
                             sessionManager.markSignedIn(
@@ -117,6 +121,9 @@ fun LoginScreen(
         formState = formState,
         signInState = signInState,
         colors = colors,
+        viewModel = viewModel,
+        component = component,
+        sessionManager = sessionManager,
         onEmailChange = viewModel::updateEmail,
         onPasswordChange = viewModel::updatePassword,
         onSignInClick = { viewModel.signIn() },
@@ -131,6 +138,9 @@ private fun LoginScreenContent(
     formState: LoginFormState,
     signInState: UiState<AppUser, FirebaseAuthException>?,
     colors: TalaColors,
+    viewModel: AuthViewModel,
+    component: LoginScreenComponent,
+    sessionManager: SessionManager,
     onEmailChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onSignInClick: () -> Unit,
@@ -227,12 +237,85 @@ private fun LoginScreenContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Social Login Buttons
-            SocialLoginButtons(
-                colors = colors,
-                onGoogleClick = onSignInWithGoogleClick,
-                onAppleClick = onSignInWithAppleClick
-            )
+            GoogleButtonUiContainerFirebase(
+                linkAccount = false,
+                filterByAuthorizedAccounts = true,
+                onResult = { result ->
+                    result.fold(
+                        onSuccess = { firebaseUser ->
+                            firebaseUser?.let { user ->
+                                viewModel.logStuff(user.displayName.toString())
+
+                                viewModel.handleFederatedSignUp(
+                                    user = user,
+                                    signUpCompleted = { userId, isNewUser ->
+
+                                        // Check if user actually completed onboarding
+                                        val hasCompletedOnboarding = sessionManager.hasCompletedOnboarding()
+
+                                        if (isNewUser) {
+                                            sessionManager.markSignedIn(
+                                                userId = user.uid,
+                                                isNewUser = true
+                                            )
+                                            component.handleLoginSuccess()
+                                        } else {
+                                            sessionManager.markSignedIn(
+                                                userId = user.uid,
+                                                isNewUser = false
+                                            )
+                                            component.handleLoginSuccess()
+                                        }
+                                    },
+                                    signUpFailed = { errorMessage ->
+                                        viewModel.logStuff("Error yoo$errorMessage")
+                                    }
+                                )
+                            }
+                        },
+                        onFailure = { error ->
+                            viewModel.logStuff(error.toString())
+                        }
+                    )
+                }
+            ) {
+
+                // Google Sign Up Button
+                OutlinedButton(
+                    onClick = { this@GoogleButtonUiContainerFirebase.onClick() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = colors.primaryText
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = colors.textFieldBorder
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    AsyncImage(
+                        model = Res.getUri("drawable/google_logo.png"),
+                        contentDescription = "Google logo",
+                        modifier = Modifier
+                            .size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Sign in with Google",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+//            // Social Login Buttons
+//            SocialLoginButtons(
+//                colors = colors,
+//                onGoogleClick = onSignInWithGoogleClick,
+//                onAppleClick = onSignInWithAppleClick
+//            )
 
             // Navigate to Sign Up
             Row(

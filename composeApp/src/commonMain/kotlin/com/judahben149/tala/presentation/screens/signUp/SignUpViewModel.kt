@@ -3,20 +3,28 @@ package com.judahben149.tala.presentation.screens.signUp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.mappers.toAppUser
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
+import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
+import com.judahben149.tala.domain.usecases.authentication.CreateDefaultUserDataUseCase
+import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
+import com.judahben149.tala.domain.usecases.authentication.GetUserDataUseCase
+import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 import com.judahben149.tala.presentation.UiState
+import dev.gitlive.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
-import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 
 class SignUpViewModel(
     private val createUserUseCase: CreateUserUseCase,
+    private val getUserDataUseCase: GetUserDataUseCase,
+    private val createDefaultUserDataUseCase: CreateDefaultUserDataUseCase,
     private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
+    private val sessionManager: SessionManager,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -89,9 +97,62 @@ class SignUpViewModel(
         }
     }
 
+    fun handleFederatedSignUp(
+        user: FirebaseUser,
+        signUpCompleted:(userId: String, isNewUser: Boolean) -> Unit,
+        signUpFailed:(errorMessage: String) -> Unit
+        ) {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+
+            val userData = getUserDataUseCase(user.uid)
+
+            when (userData) {
+                is Result.Success -> {
+                    if (userData.data.isEmpty()) {
+                        when(val result = createDefaultUserDataUseCase(user.toAppUser(), true)) {
+                            is Result.Success -> {
+                                logger.d { "User data created successfully: ${result.data}" }
+                                signUpCompleted(user.uid, true)
+                            }
+                            is Result.Failure -> {
+                                logger.e { "User data creation failed: ${result.error}" }
+                                signUpFailed(result.error.message ?: "Unknown error")
+                            }
+                        }
+                    } else {
+                        logger.d { "User data already exists: ${userData.data}" }
+                        signUpCompleted(user.uid, false)
+                    }
+                }
+                is Result.Failure -> {
+                    if (userData.error.message == "User data not found") {
+                        when(val result = createDefaultUserDataUseCase(user.toAppUser(), true)) {
+                            is Result.Success -> {
+                                logger.d { "User data created successfully: ${result.data}" }
+                                signUpCompleted(user.uid, true)
+                            }
+                            is Result.Failure -> {
+                                logger.e { "User data creation failed: ${result.error}" }
+                                signUpFailed(result.error.message ?: "Unknown error")
+                            }
+                        }
+                    } else {
+                        logger.e { "User data retrieval failed: ${userData.error}" }
+                        signUpFailed(userData.error.message ?: "Unknown error")
+                    }
+                }
+            }
+        }
+    }
+
     fun clearState() {
         _uiState.value = null
         _formState.value = SignUpFormState()
+    }
+
+    fun logStuff(any: Any) {
+        logger.d { "Stuff: $any" }
     }
 }
 

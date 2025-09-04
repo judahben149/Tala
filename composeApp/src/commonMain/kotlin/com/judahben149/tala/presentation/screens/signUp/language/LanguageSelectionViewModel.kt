@@ -23,6 +23,8 @@ class LanguageSelectionViewModel(
     fun loadLanguages() {
         val languages = listOf(
             Language.SPANISH,
+            Language.SWEDISH,
+            Language.ENGLISH,
             Language.FRENCH,
             Language.GERMAN,
             Language.ITALIAN,
@@ -34,7 +36,7 @@ class LanguageSelectionViewModel(
         _uiState.update {
             it.copy(
                 availableLanguages = languages,
-                selectedLanguage = Language.SPANISH // Default selection
+                selectedLanguage = Language.ENGLISH // Default selection
             )
         }
     }

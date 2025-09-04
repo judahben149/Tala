@@ -1,22 +1,39 @@
 package com.judahben149.tala.data.service.firebase
 
+import androidx.activity.ComponentActivity
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.judahben149.tala.R
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthInvalidUserException
+import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
-import com.judahben149.tala.domain.models.common.Result
+import java.security.MessageDigest
+import java.util.UUID
+
+private var credentialManager: CredentialManager? = null
+private var currentActivity: ComponentActivity? = null
+private var webClientId: String? = null
 
 actual fun getCurrentFirebaseApp(): FirebaseAppInfo {
     return FirebaseAppInfo(
@@ -203,3 +220,116 @@ actual suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>,
         Result.Failure(e)
     }
 }
+
+//actual fun initializeGoogleSignIn() {
+//    // Initialization happens when context is set
+//}
+//
+//fun setCredentialManagerContext(activity: ComponentActivity) {
+//    currentActivity = activity
+//    credentialManager = CredentialManager.create(activity)
+////    webClientId = activity.getString(R.string.default_web_client_id)
+//}
+//
+//private fun generateNonce(): String {
+//    val rawNonce = UUID.randomUUID().toString()
+//    val bytes = rawNonce.toByteArray()
+//    val md = MessageDigest.getInstance("SHA-256")
+//    val digest = md.digest(bytes)
+//    return digest.fold("") { str, it -> str + "%02x".format(it) }
+//}
+//
+//actual suspend fun signInWithGoogleFirebase(): AppUser {
+//    val activity = currentActivity
+//    val manager = credentialManager
+//    val clientId = webClientId
+//
+//    if (activity == null || manager == null || clientId == null) {
+//        throw FirebaseAuthException(
+//            "Google Sign-In not initialized. Ensure setCredentialManagerContext is called."
+//        )
+//    }
+//
+//    return try {
+//        val hashedNonce = generateNonce()
+//
+//        val googleIdOption = GetGoogleIdOption.Builder()
+//            .setFilterByAuthorizedAccounts(false)
+//            .setServerClientId(clientId)
+//            .setAutoSelectEnabled(true)
+//            .setNonce(hashedNonce)
+//            .build()
+//
+//        val request = GetCredentialRequest.Builder()
+//            .addCredentialOption(googleIdOption)
+//            .build()
+//
+//        val result = manager.getCredential(
+//            context = activity,
+//            request = request
+//        )
+//
+//        when (val credential = result.credential) {
+//            is GoogleIdTokenCredential -> {
+//                val firebaseCredential = GoogleAuthProvider.getCredential(
+//                    credential.idToken,
+//                    null
+//                )
+//
+//                val authResult = FirebaseAuth.getInstance()
+//                    .signInWithCredential(firebaseCredential)
+//                    .await()
+//
+//                val user = authResult.user
+//                    ?: throw FirebaseAuthException("Firebase authentication failed")
+//
+//                // Save user profile to Firebase Database if new user
+//                if (authResult.additionalUserInfo?.isNewUser == true) {
+//                    saveInitialUserProfile(user)
+//                }
+//
+//                user.toAppUser()
+//            }
+//
+//            else -> {
+//                throw FirebaseAuthException("Unexpected credential type received")
+//            }
+//        }
+//
+//    } catch (e: GetCredentialCancellationException) {
+//        throw FirebaseAuthException("Google Sign-In was cancelled")
+//    } catch (e: NoCredentialException) {
+//        throw FirebaseAuthException("No Google accounts available")
+//    } catch (e: GetCredentialException) {
+//        throw FirebaseAuthException("Google Sign-In failed: ${e.message}")
+//    } catch (e: GoogleIdTokenParsingException) {
+//        throw FirebaseAuthException("Failed to parse Google ID token: ${e.message}")
+//    } catch (e: Exception) {
+//        throw FirebaseAuthException("Authentication error: ${e.message}")
+//    }
+//}
+//
+//private suspend fun saveInitialUserProfile(user: FirebaseUser) {
+//    try {
+//        val database = FirebaseDatabase.getInstance()
+//        val userRef = database.getReference("users").child(user.uid)
+//
+//        val profileData = mapOf(
+//            "name" to (user.displayName ?: "Unknown"),
+//            "email" to (user.email ?: "Unknown"),
+//            "avatarUrl" to user.photoUrl?.toString(),
+//            "createdAt" to System.currentTimeMillis(),
+//            "streakDays" to 0,
+//            "totalConversations" to 0,
+//            "notificationsEnabled" to true,
+//            "practiceRemindersEnabled" to true,
+//            "learningLanguage" to "English",
+//            "interests" to emptyList<String>()
+//        )
+//
+//        userRef.setValue(profileData).await()
+//    } catch (e: Exception) {
+//        // Don't fail the sign-in process if profile saving fails
+//        android.util.Log.w("GoogleSignIn", "Failed to save initial profile: ${e.message}")
+//    }
+//}

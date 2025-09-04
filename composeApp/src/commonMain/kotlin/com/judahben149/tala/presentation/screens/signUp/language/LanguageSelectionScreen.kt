@@ -163,14 +163,14 @@ private fun LanguageItem(
 ) {
     val displayNames = mapOf(
         Language.SPANISH to "🇪🇸 Spanish",
+        Language.SWEDISH to "🇸🇪 Swedish",
         Language.FRENCH to "🇫🇷 French",
         Language.GERMAN to "🇩🇪 German",
         Language.ITALIAN to "🇮🇹 Italian",
         Language.JAPANESE to "🇯🇵 Japanese",
         Language.KOREAN to "🇰🇷 Korean",
         Language.MANDARIN to "🇨🇳 Mandarin",
-        Language.ENGLISH to "🇺🇸 English",
-        Language.SWEDISH to "🇸🇪 Swedish"
+        Language.ENGLISH to "🇺🇸 English"
     )
 
     Card(

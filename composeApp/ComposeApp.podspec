@@ -8,10 +8,11 @@ Pod::Spec.new do |spec|
     spec.summary                  = 'Tala'
     spec.vendored_frameworks      = 'build/cocoapods/framework/ComposeApp.framework'
     spec.libraries                = 'c++'
-    spec.ios.deployment_target    = '16.0'
+    spec.ios.deployment_target    = '16.6'
     spec.dependency 'FirebaseAuth', '~> 11.13'
     spec.dependency 'FirebaseCore', '~> 11.13'
     spec.dependency 'FirebaseDatabase', '~> 11.13'
+    spec.dependency 'GoogleSignIn', '~> 8.0.0'
     spec.dependency 'sqlite3'
                 
     if !Dir.exist?('build/cocoapods/framework/ComposeApp.framework') || Dir.empty?('build/cocoapods/framework/ComposeApp.framework')

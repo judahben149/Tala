@@ -6,6 +6,7 @@ class SignUpScreenComponent(
     componentContext: ComponentContext,
     private val onNavigateToLogin: () -> Unit,
     private val onNavigateToEmailVerification: (email: String) -> Unit,
+    private val onSignUpSuccess: () -> Unit,
 ) : ComponentContext by componentContext {
 
     fun navigateToLogin() {
@@ -14,5 +15,9 @@ class SignUpScreenComponent(
 
     fun navigateToEmailVerification(email: String) {
         onNavigateToEmailVerification(email)
+    }
+
+    fun handleSignUpSuccess() {
+        onSignUpSuccess()
     }
 }

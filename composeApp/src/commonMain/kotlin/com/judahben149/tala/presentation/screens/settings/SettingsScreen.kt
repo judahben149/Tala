@@ -19,11 +19,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
 import com.judahben149.tala.domain.models.session.PasswordUpdateData
 import com.judahben149.tala.domain.models.session.UserProfile
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.navigation.components.others.SettingsScreenComponent
 import com.judahben149.tala.ui.theme.*
 import org.koin.compose.viewmodel.koinViewModel
+import tala.composeapp.generated.resources.Res
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,7 +82,7 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.RecordVoiceOver,
                 title = "Change AI Voice",
-                subtitle = uiState.selectedVoice?.name ?: "Select your preferred voice",
+                subtitle = uiState.user?.selectedVoiceId ?: "Select your preferred voice",
                 colors = colors,
                 onClick = { viewModel.showVoiceSelector() }
             )
@@ -87,7 +90,7 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.Language,
                 title = "Learning Language",
-                subtitle = uiState.selectedLanguage,
+                subtitle = uiState.user?.learningLanguage ?: "Select your preferred language",
                 colors = colors,
                 onClick = { viewModel.showLanguageSelector() }
             )
@@ -263,7 +266,7 @@ private fun TopBar(
 
 @Composable
 private fun ProfileSection(
-    user: UserProfile,
+    user: AppUser,
     colors: TalaColors,
     onEditProfileClick: () -> Unit
 ) {
@@ -286,14 +289,14 @@ private fun ProfileSection(
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(colors.primary),
+                    .background(colors.appBackground),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = user.name.firstOrNull()?.toString()?.uppercase() ?: "?",
-                    color = colors.primaryButtonText,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                AsyncImage(
+                    model = user.avatarUrl,
+                    contentDescription = "User Avatar",
+                    modifier = Modifier
+                        .size(64.dp)
                 )
             }
 
@@ -302,7 +305,7 @@ private fun ProfileSection(
             // User Info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = user.name,
+                    text = user.displayName,
                     color = colors.primaryText,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold

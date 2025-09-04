@@ -8,7 +8,6 @@ class GetUserProfileUseCase(
     private val repository: UserRepository
 ) {
     suspend operator fun invoke(): Result<UserProfile, Exception> {
-        // Implementation will fetch user profile
         return repository.getUserProfile()
     }
 }

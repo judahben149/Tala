@@ -1,42 +1,121 @@
 package com.judahben149.tala.data.local
 
+import com.judahben149.tala.data.model.UserEntity
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
 import com.judahben149.tala.TalaDatabase
 import com.judahben149.tala.Users
-import com.judahben149.tala.data.model.UserEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.json.Json
 
 class UserDatabaseHelper(driverFactory: DatabaseDriverFactory) {
     private val database: TalaDatabase = TalaDatabase(driverFactory.createDriver())
     private val userQueries = database.usersQueries
 
-    fun getUserById(userId: String): Flow<UserEntity?> {
-        return userQueries.getUserById(userId)
+    // Get current user as Flow (reactive)
+    fun getCurrentUser(): Flow<UserEntity?> {
+        return userQueries.selectCurrentUser()
             .asFlow()
             .mapToOneOrNull(Dispatchers.IO)
             .map { it?.toUserEntity() }
     }
 
-    suspend fun insertUser(user: UserEntity) {
-        userQueries.insertUser(
+    // Get current user as one-shot value
+    suspend fun getCurrentUserSnapshot(): UserEntity? {
+        return userQueries.selectCurrentUser().executeAsOneOrNull()?.toUserEntity()
+    }
+
+
+    suspend fun saveCurrentUser(user: UserEntity) {
+        val interestsJson = Json.encodeToString(user.interests)
+        val achievementBadgesJson = Json.encodeToString(user.achievementBadges)
+        val favoriteTopicsJson = Json.encodeToString(user.favoriteTopics)
+
+        userQueries.insertOrReplaceUser(
             id = user.id,
             email = user.email,
+            isPremiumUser = if (user.isPremiumUser) 1L else 0L,
             displayName = user.displayName,
             photoUrl = user.photoUrl,
-            isEmailVerified = if (user.isEmailVerified) 1L else 0L
+            isEmailVerified = if (user.isEmailVerified) 1L else 0L,
+            firstName = user.firstName,
+            lastName = user.lastName,
+            phoneNumber = user.phoneNumber,
+            createdAt = user.createdAt,
+            updatedAt = user.updatedAt,
+            streakDays = user.streakDays.toLong(),
+            totalConversations = user.totalConversations.toLong(),
+            learningLanguage = user.learningLanguage,
+            interests = interestsJson,
+            currentLevel = user.currentLevel,
+            totalPoints = user.totalPoints.toLong(),
+            weeklyGoal = user.weeklyGoal.toLong(),
+            achievementBadges = achievementBadgesJson,
+            notificationsEnabled = if (user.notificationsEnabled) 1L else 0L,
+            practiceRemindersEnabled = if (user.practiceRemindersEnabled) 1L else 0L,
+            selectedVoiceId = user.selectedVoiceId,
+            preferredDifficulty = user.preferredDifficulty,
+            dailyGoalMinutes = user.dailyGoalMinutes.toLong(),
+            friendsCount = user.friendsCount.toLong(),
+            isPrivateProfile = if (user.isPrivateProfile) 1L else 0L,
+            bio = user.bio,
+            location = user.location,
+            timezone = user.timezone,
+            totalStudyTimeMinutes = user.totalStudyTimeMinutes,
+            favoriteTopics = favoriteTopicsJson,
+            lastActiveAt = user.lastActiveAt,
+            loginCount = user.loginCount.toLong()
         )
+    }
+
+    // Clear current user data (logout)
+    suspend fun clearCurrentUser() {
+        userQueries.deleteAllUsers()
     }
 }
 
-// Mapping extension
+// Mapping extension function (same as before)
 private fun Users.toUserEntity() = UserEntity(
     id = id,
     email = email,
     displayName = displayName,
+    isPremiumUser = isPremiumUser == 1L,
     photoUrl = photoUrl,
-    isEmailVerified = isEmailVerified == 1L
+    isEmailVerified = isEmailVerified == 1L,
+    firstName = firstName,
+    lastName = lastName,
+    phoneNumber = phoneNumber,
+    createdAt = createdAt,
+    updatedAt = updatedAt,
+    streakDays = streakDays.toInt(),
+    totalConversations = totalConversations.toInt(),
+    learningLanguage = learningLanguage,
+    interests = interests.let {
+        try { Json.decodeFromString<List<String>>(it) } catch (_: Exception) { emptyList() }
+    },
+    currentLevel = currentLevel,
+    totalPoints = totalPoints.toInt(),
+    weeklyGoal = weeklyGoal.toInt(),
+    achievementBadges = achievementBadges.let {
+        try { Json.decodeFromString<List<String>>(it) } catch (_: Exception) { emptyList() }
+    },
+    notificationsEnabled = notificationsEnabled == 1L,
+    practiceRemindersEnabled = practiceRemindersEnabled == 1L,
+    selectedVoiceId = selectedVoiceId,
+    preferredDifficulty = preferredDifficulty,
+    dailyGoalMinutes = dailyGoalMinutes.toInt(),
+    friendsCount = friendsCount.toInt(),
+    isPrivateProfile = isPrivateProfile == 1L,
+    bio = bio,
+    location = location,
+    timezone = timezone,
+    totalStudyTimeMinutes = totalStudyTimeMinutes,
+    favoriteTopics = favoriteTopics.let {
+        try { Json.decodeFromString<List<String>>(it) } catch (_: Exception) { emptyList() }
+    },
+    lastActiveAt = lastActiveAt,
+    loginCount = loginCount.toInt()
 )

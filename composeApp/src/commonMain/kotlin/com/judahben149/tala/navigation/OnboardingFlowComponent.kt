@@ -1,5 +1,6 @@
 package com.judahben149.tala.navigation
 
+import co.touchlab.kermit.Logger
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -25,6 +26,7 @@ class OnboardingFlowComponent(
 ) : ComponentContext by componentContext, KoinComponent {
 
     private val sessionManager: SessionManager by inject()
+    private val logger: Logger by inject()
     private val navigation = StackNavigation<OnboardingConfiguration>()
 
     val childStack: Value<ChildStack<*, OnboardingChild>> = childStack(
@@ -51,6 +53,7 @@ class OnboardingFlowComponent(
         is OnboardingConfiguration.SignUp -> OnboardingChild.SignUp(
             SignUpScreenComponent(
                 componentContext = componentContext,
+                onSignUpSuccess = ::handleLoginSuccess,
                 onNavigateToLogin = { navigation.bringToFront(OnboardingConfiguration.Login) },
                 onNavigateToEmailVerification = ::navigateToEmailVerification
             )
@@ -69,7 +72,7 @@ class OnboardingFlowComponent(
             EmailVerificationComponent(
                 componentContext = componentContext,
                 userEmail = configuration.userEmail,
-                onNavigateToWelcome = ::handleEmailVerificationSuccess,
+                onNavigateToWelcome = ::navigateToOnboarding,
                 onBackPressed = ::handleEmailVerificationBackPressed,
                 sessionManager = sessionManager
             )
@@ -114,7 +117,7 @@ class OnboardingFlowComponent(
     /**
      * Handle successful email verification - proceed to Language selection screen for new users
      */
-    private fun handleEmailVerificationSuccess() {
+    private fun navigateToOnboarding() {
         navigation.pushNew(OnboardingConfiguration.LanguageSelection)
     }
 
@@ -133,10 +136,12 @@ class OnboardingFlowComponent(
 
         when (currentState) {
             SessionManager.AppState.LoggedIn -> {
+                logger.d { "App state - Logged in" }
                 completeOnboarding()
             }
 
             SessionManager.AppState.NeedsOnboarding -> {
+                logger.d { "App state - Needs onboarding" }
                 navigation.pushNew(OnboardingConfiguration.LanguageSelection)
             }
 

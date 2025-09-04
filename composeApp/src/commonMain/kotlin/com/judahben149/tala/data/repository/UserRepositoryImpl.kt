@@ -1,18 +1,27 @@
 package com.judahben149.tala.data.repository
 
 import co.touchlab.kermit.Logger
+import com.judahben149.tala.data.local.UserDatabaseHelper
 import com.judahben149.tala.data.local.getCurrentTimeMillis
 import com.judahben149.tala.data.service.firebase.FirebaseService
+import com.judahben149.tala.data.service.firebase.getCurrentFirebaseUser
 import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.mappers.toAppUser
+import com.judahben149.tala.domain.mappers.toUserEntity
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.session.NotificationSettings
 import com.judahben149.tala.domain.models.user.Language
 import com.judahben149.tala.domain.models.session.UserProfile
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.domain.repository.UserRepository
+import com.judahben149.tala.util.buildProfileDataFromAppUser
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class UserRepositoryImpl(
     private val firebaseService: FirebaseService,
     private val sessionManager: SessionManager,
+    private val userDatabaseHelper: UserDatabaseHelper,
     private val logger: Logger
 ): UserRepository {
     override suspend fun getUserProfile(): Result<UserProfile, Exception> {
@@ -43,24 +52,18 @@ class UserRepositoryImpl(
     }
 
     override suspend fun updateUserProfile(
-        name: String,
-        email: String
+        appUser: AppUser
     ): Result<Unit, Exception> {
         return try {
             val currentUser = firebaseService.getCurrentUser()
                 ?: return Result.Failure(Exception("No authenticated user"))
 
-            // Update display name in Firebase Auth
-            firebaseService.setDisplayName(name)
+            if (appUser.displayName != currentUser.displayName) {
+                firebaseService.setDisplayName(appUser.displayName)
+            }
 
-            // Update profile data in Firebase Database
-            val profileData = mapOf(
-                "name" to name,
-                "email" to email,
-                "updatedAt" to getCurrentTimeMillis()
-            )
-
-            firebaseService.updateUserStats(currentUser.userId, profileData)
+            val profileData = buildProfileDataFromAppUser(appUser)
+            firebaseService.updateUserStats(appUser.userId, profileData)
 
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -169,13 +172,54 @@ class UserRepositoryImpl(
         }
     }
 
+    override suspend fun updateOnboardingFlag(hasOnboarded: Boolean): Result<Unit, Exception> {
+        return try {
+            val currentUser = firebaseService.getCurrentUser()
+                ?: return Result.Failure(Exception("No authenticated user"))
+
+            val updates = mapOf("onboardingCompleted" to hasOnboarded)
+            firebaseService.updateUserStats(currentUser.userId, updates)
+
+//            getPersistedUser()?.let {
+//                val updatedUser = it.copy(onboardingCompleted = hasOnboarded)
+//                persistUserData(updatedUser)
+//            }
+
+            sessionManager.markOnboardingCompleted()
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            logger.e(e) { "Failed to update onboarding flag" }
+            Result.Failure(e)
+        }
+    }
+
+    override suspend fun getOnboardingStatusFlag(): Result<Boolean, Exception> {
+        return try {
+            val persistedUser = getPersistedUser()
+
+            persistedUser?.let { Result.Success(it.hasCompletedOnboarding()) }
+                ?: Result.Failure(Exception("No authenticated user"))
+        } catch (ex: Exception) {
+            logger.e(ex) { "Failed to get onboarding status flag" }
+            Result.Failure(ex)
+        }
+    }
+
     override suspend fun saveLearningLanguage(language: String): Result<Unit, Exception> {
         return try {
             val userId = firebaseService.getCurrentUser()?.userId
                 ?: return Result.Failure(Exception("User not authenticated"))
 
+            val persistedUser = getPersistedUser()
+
             val updates = mapOf("learningLanguage" to language)
             firebaseService.updateUserStats(userId, updates)
+
+            persistedUser?.let {
+                val updatedUser = it.copy(learningLanguage = language)
+                persistUserData(updatedUser)
+            }
 
             // Also save locally
             sessionManager.saveUserLanguagePreference(Language.valueOf(language.uppercase()))
@@ -193,8 +237,15 @@ class UserRepositoryImpl(
             val userId = firebaseService.getCurrentUser()?.userId
                 ?: return Result.Failure(Exception("User not authenticated"))
 
+            val persistedUser = getPersistedUser()
+
             val updates = mapOf("interests" to interests)
             firebaseService.updateUserStats(userId, updates)
+
+            persistedUser?.let {
+                val updatedUser = it.copy(interests = interests)
+                persistUserData(updatedUser)
+            }
 
             logger.d { "User interests saved: $interests" }
             Result.Success(Unit)
@@ -227,6 +278,38 @@ class UserRepositoryImpl(
         } catch (e: Exception) {
             logger.e(e) { "Failed to get notification settings" }
             Result.Failure(e)
+        }
+    }
+
+    override suspend fun getUserData(userId: String): Result<Map<String, Any>, Exception> {
+        return firebaseService.getUserData(userId)
+    }
+
+    override suspend fun persistUserData(user: AppUser): Result<Unit, Exception> {
+        try {
+            userDatabaseHelper.saveCurrentUser(user.toUserEntity())
+            return Result.Success(Unit)
+        } catch (e: Exception) {
+            logger.e(e) { "Failed to persist user data" }
+            return Result.Failure(e)
+        }
+    }
+
+    override fun observePersistedUser(): Flow<AppUser> {
+        return userDatabaseHelper.getCurrentUser().map { it!!.toAppUser() }
+    }
+
+    override suspend fun getPersistedUser(): AppUser? {
+        return userDatabaseHelper.getCurrentUserSnapshot()?.toAppUser()
+    }
+
+    override suspend fun clearPersistedUser(): Result<Unit, Exception> {
+        try {
+            userDatabaseHelper.clearCurrentUser()
+            return Result.Success(Unit)
+        } catch (e: Exception) {
+            logger.e(e) { "Failed to clear persisted user" }
+            return Result.Failure(e)
         }
     }
 }

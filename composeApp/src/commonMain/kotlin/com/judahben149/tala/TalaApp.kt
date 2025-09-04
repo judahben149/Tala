@@ -22,11 +22,17 @@ import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.navigation.RootComponent
 import com.judahben149.tala.navigation.flow.MainFlow
 import com.judahben149.tala.navigation.flow.OnboardingFlow
+import com.mmk.kmpauth.google.GoogleAuthCredentials
+import com.mmk.kmpauth.google.GoogleAuthProvider
 import org.koin.compose.koinInject
 
 @Composable
 fun TalaApp(rootComponent: RootComponent) {
     val sessionManager: SessionManager = koinInject()
+
+    LaunchedEffect(Unit) {
+        GoogleAuthProvider.create(credentials = GoogleAuthCredentials(serverId = BuildKonfig.FIREBASE_WEB_CLIENT))
+    }
 
     LaunchedEffect(Unit) {
         sessionManager.checkAppState()

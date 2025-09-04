@@ -30,13 +30,14 @@ class SessionManager(
         val userId = getUserId()
         val hasSignedInBefore = persister.fetchBoolean(KEY_HAS_SIGNED_IN_BEFORE, false)
         val onboardingCompleted = persister.fetchBoolean(KEY_ONBOARDING_COMPLETED, false)
+        val isSignedIn = isSignedIn()
 
-        logger.d { "checkAppState: userId=$userId, hasSignedInBefore=$hasSignedInBefore, onboardingCompleted=$onboardingCompleted" }
+        logger.d { "checkAppState: userId=$userId, hasSignedInBefore=$hasSignedInBefore, isSignedIn=$isSignedIn, onboardingCompleted=$onboardingCompleted" }
 
         val newState = when {
             userId.isEmpty() -> AppState.LoggedOut
             !onboardingCompleted -> AppState.NeedsOnboarding
-            hasSignedInBefore -> AppState.LoggedIn
+            isSignedIn -> AppState.LoggedIn
             else -> AppState.LoggedOut
         }
 
@@ -75,10 +76,15 @@ class SessionManager(
         logger.d { "Onboarding completed - transitioning to LoggedIn state" }
     }
 
+    fun updateOnboardingFlag(value: Boolean) {
+        persister.saveBoolean(KEY_ONBOARDING_COMPLETED, value)
+        logger.d { "Onboarding flag updated" }
+    }
+
     fun markSignedOut() {
         persister.removeKey(KEY_USER_ID)
         persister.removeKey(KEY_ONBOARDING_COMPLETED)
-        // Keep hasSignedInBefore for UX purposes
+        clearUserInterests()
 
         _appState.value = AppState.LoggedOut
         logger.d { "User signed out" }
@@ -127,6 +133,10 @@ class SessionManager(
         return persister.fetchBoolean(KEY_HAS_SIGNED_IN_BEFORE, false)
     }
 
+    fun isSignedIn(): Boolean {
+        return getUserId().isNotEmpty()
+    }
+
     fun hasCompletedOnboarding(): Boolean {
         return persister.fetchBoolean(KEY_ONBOARDING_COMPLETED, false)
     }
@@ -138,7 +148,7 @@ class SessionManager(
         persister.removeKey(IS_VOICE_SELECTION_COMPLETED)
     }
 
-    suspend fun checkUserOnboardingStatus(userId: String): Boolean {
+    fun checkUserOnboardingStatus(userId: String): Boolean {
         // Check if user has required onboarding data
         val hasLanguage = getUserLanguagePreference() != Language.ENGLISH ||
                 persister.fetchString(USER_LANGUAGE_LEARNING_CHOICE, "").isNotEmpty()

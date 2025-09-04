@@ -1,5 +1,7 @@
 package com.judahben149.tala.domain.models.user
 
+import com.judahben149.tala.domain.models.speech.Gender
+import com.judahben149.tala.util.AvatarUrlGenerator
 import kotlin.time.ExperimentalTime
 
 @OptIn(ExperimentalTime::class)
@@ -7,9 +9,10 @@ data class AppUser(
     val userId: String,
     val displayName: String,
     val email: String,
+    val isPremiumUser: Boolean = false,
     val firstName: String = "",
     val lastName: String = "",
-    val profileImageUrl: String? = null,
+    val avatarUrl: String? = AvatarUrlGenerator.generate(Gender.entries.random()),
     val emailVerified: Boolean = false,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
@@ -39,7 +42,7 @@ data class AppUser(
     val timezone: String? = null,
     
     // App Statistics
-    val totalStudyTimeMinutes: Int = 0,
+    val totalStudyTimeMinutes: Long = 0L,
     val favoriteTopics: List<String> = emptyList(),
     val lastActiveAt: Long = 0L,
     val loginCount: Int = 0,

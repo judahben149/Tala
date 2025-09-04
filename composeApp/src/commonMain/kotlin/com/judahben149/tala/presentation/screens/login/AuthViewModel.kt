@@ -2,16 +2,23 @@ package com.judahben149.tala.presentation.screens.login
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-
+import co.touchlab.kermit.Logger
+import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.mappers.toAppUser
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
+import com.judahben149.tala.domain.usecases.authentication.CreateDefaultUserDataUseCase
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
+import com.judahben149.tala.domain.usecases.authentication.GetUserDataUseCase
 import com.judahben149.tala.domain.usecases.authentication.IsUserSignedInUseCase
 import com.judahben149.tala.domain.usecases.authentication.SendPasswordResetEmailUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignInUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignOutUseCase
+import com.judahben149.tala.domain.usecases.user.PersistUserDataUseCase
 import com.judahben149.tala.presentation.UiState
+import com.judahben149.tala.util.buildAppUserFromProfileData
+import dev.gitlive.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,6 +27,11 @@ import kotlinx.coroutines.launch
 class AuthViewModel(
     private val signInUseCase: SignInUseCase,
     private val signOutUseCase: SignOutUseCase,
+    private val getUserDataUseCase: GetUserDataUseCase,
+    private val logger: Logger,
+    private val sessionManager: SessionManager,
+    private val persistUserDataUseCase: PersistUserDataUseCase,
+    private val createDefaultUserDataUseCase: CreateDefaultUserDataUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val isUserSignedInUseCase: IsUserSignedInUseCase,
     private val sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase
@@ -70,6 +82,65 @@ class AuthViewModel(
             }
         }
     }
+
+    fun handleFederatedSignUp(
+        user: FirebaseUser,
+        signUpCompleted:(userId: String, isNewUser: Boolean) -> Unit,
+        signUpFailed:(errorMessage: String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+
+            val userData = getUserDataUseCase(user.uid)
+
+            when (userData) {
+                is Result.Success -> {
+                    if (userData.data.isEmpty()) {
+                        when(val result = createDefaultUserDataUseCase(user.toAppUser(), true)) {
+                            is Result.Success -> {
+                                logger.d { "User data created successfully: ${result.data}" }
+                                signUpCompleted(user.uid, true)
+                            }
+                            is Result.Failure -> {
+                                logger.e { "User data creation failed: ${result.error}" }
+                                signUpFailed(result.error.message ?: "Unknown error")
+                            }
+                        }
+                    } else {
+                        sessionManager.updateOnboardingFlag(true)
+                        logger.d { "User data already exists: ${userData.data}" }
+
+                        val data = buildAppUserFromProfileData(user.uid, userData.data)
+                        persistUserDataUseCase(data)
+                        signUpCompleted(user.uid, false)
+                    }
+                }
+                is Result.Failure -> {
+                    if (userData.error.message == "User data not found") {
+                        when(val result = createDefaultUserDataUseCase(user.toAppUser(), true)) {
+                            is Result.Success -> {
+                                logger.d { "User data created successfully: ${result.data}" }
+                                signUpCompleted(user.uid, true)
+                            }
+                            is Result.Failure -> {
+                                logger.e { "User data creation failed: ${result.error}" }
+                                signUpFailed(result.error.message ?: "Unknown error")
+                            }
+                        }
+                    } else {
+                        logger.e { "User data retrieval failed: ${userData.error}" }
+                        signUpFailed(userData.error.message ?: "Unknown error")
+                    }
+                }
+            }
+        }
+    }
+
+
+    fun logStuff(any: Any) {
+        logger.d { "Stuff: $any" }
+    }
+
 
     fun signOut() {
         viewModelScope.launch {

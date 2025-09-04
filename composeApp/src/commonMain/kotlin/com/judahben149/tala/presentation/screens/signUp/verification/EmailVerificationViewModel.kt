@@ -10,6 +10,7 @@ import com.judahben149.tala.domain.usecases.authentication.verification.SendEmai
 import kotlinx.coroutines.launch
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.speech.Gender
+import com.judahben149.tala.domain.usecases.authentication.CreateDefaultUserDataUseCase
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
 import com.judahben149.tala.domain.usecases.settings.UpdateUserProfileUseCase
 import com.judahben149.tala.util.AvatarUrlGenerator
@@ -25,6 +26,7 @@ class EmailVerificationViewModel(
     private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val firebaseService: FirebaseService,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val createDefaultUserDataUseCase: CreateDefaultUserDataUseCase,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -95,21 +97,17 @@ class EmailVerificationViewModel(
             val currentUser = firebaseService.getCurrentUser()
 
             if (currentUser != null) {
-                val profileData = mapOf(
-                    "name" to currentUser.displayName,
-                    "email" to currentUser.email,
-                    "avatarUrl" to AvatarUrlGenerator.generate(Gender.entries.random()),
-                    "emailVerified" to true,
-                    "createdAt" to getCurrentTimeMillis(),
-                    "updatedAt" to getCurrentTimeMillis(),
-                    "streakDays" to 0,
-                    "totalConversations" to 0,
-                    "notificationsEnabled" to true,
-                    "practiceRemindersEnabled" to true,
-                    "learningLanguage" to "Spanish"
-                )
+                val profileData = createDefaultUserDataUseCase(currentUser)
 
-                updateUserProfileUseCase.saveUserProfile(currentUser.userId, profileData)
+                when (profileData) {
+                    is Result.Success -> {
+                        logger.d { "User profile saved successfully" }
+                        updateUserProfileUseCase.saveUserProfile(currentUser.userId, profileData.data)
+                    }
+                    is Result.Failure -> {
+                        logger.e(profileData.error) { "Failed to save user profile" }
+                    }
+                }
             }
         } catch (e: Exception) {
             logger.e(e) { "Failed to save user profile after verification" }

@@ -68,7 +68,7 @@ kotlin {
 
         podfile = project.file("../iosApp/Podfile")
 
-        ios.deploymentTarget = "16.0"
+        ios.deploymentTarget = "16.6"
 
         framework {
             baseName = "ComposeApp"
@@ -100,9 +100,14 @@ kotlin {
         }
 
         pod("GoogleSignIn") {
-            version = "~> 8.0"
+            version = "~> 8.0.0"
             extraOpts += listOf("-compiler-option", "-fmodules")
         }
+
+//        pod("GTMSessionFetcher") {
+//            version = "~> 3.3"
+//            extraOpts += listOf("-compiler-option", "-fmodules")
+//        }
     }
     
     sourceSets {
@@ -122,9 +127,9 @@ kotlin {
             implementation(libs.coroutines.play.services)
 
             // Google sign-in
-//            implementation(libs.androidx.credentials)
-//            implementation(libs.androidx.credentials.play.services.auth)
-//            implementation(libs.google.id)
+            implementation(libs.androidx.credentials)
+            implementation(libs.androidx.credentials.play.services.auth)
+            implementation(libs.google.id)
 
             // Stream-Chat
             implementation(libs.stream.chat.compose)
@@ -141,6 +146,8 @@ kotlin {
 
             // Accompanist
             implementation(libs.accompanist.permissions)
+
+            implementation(libs.ktor.client.android)
         }
         commonMain.dependencies {
             implementation(compose.runtime)
@@ -193,9 +200,19 @@ kotlin {
 
             // Coil SVG
             implementation(libs.coil.svg)
+
+            // KmpAuth
+            implementation(libs.kmpAuth.google)
+            implementation(libs.kmpAuth.firebase)
+            implementation(libs.kmpAuth.uihelper)
+
+            // Coil
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native)
+            implementation(libs.ktor.client.darwin)
 //            implementation(libs.ktor.logging.ios)
         }
         commonTest.dependencies {
@@ -283,5 +300,9 @@ buildkonfig {
         buildConfigField(STRING, "STREAM_CLIENT_SECRET", secretsProperties["STREAM_CLIENT_SECRET"]?.toString() ?: "")
         buildConfigField(STRING, "GEMINI_API_KEY", secretsProperties["GEMINI_API_KEY"]?.toString() ?: "")
         buildConfigField(STRING, "ELEVEN_LABS_API_KEY", secretsProperties["ELEVEN_LABS_API_KEY"]?.toString() ?: "")
+
+        buildConfigField(STRING, "FIREBASE_WEB_CLIENT", secretsProperties["FIREBASE_WEB_CLIENT_DEV"]?.toString() ?: "")
+//        buildConfigField(STRING, "FIREBASE_WEB_CLIENT", secretsProperties["FIREBASE_WEB_CLIENT_PROD"]?.toString() ?: "")
+
     }
 }

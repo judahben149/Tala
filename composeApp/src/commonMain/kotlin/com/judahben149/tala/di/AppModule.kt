@@ -32,10 +32,12 @@ import com.judahben149.tala.domain.usecases.analytics.GetLearningStatsUseCase
 import com.judahben149.tala.domain.usecases.analytics.GetWeeklyProgressUseCase
 import com.judahben149.tala.domain.usecases.analytics.TrackConversationTimeUseCase
 import com.judahben149.tala.domain.usecases.analytics.UpdateConversationStatsUseCase
+import com.judahben149.tala.domain.usecases.authentication.CreateDefaultUserDataUseCase
 import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
 import com.judahben149.tala.domain.usecases.authentication.DeleteAccountWithAuthUseCase
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentAppUseCase
 import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
+import com.judahben149.tala.domain.usecases.authentication.GetUserDataUseCase
 import com.judahben149.tala.domain.usecases.authentication.IsUserSignedInUseCase
 import com.judahben149.tala.domain.usecases.authentication.RefreshUserTokenUseCase
 import com.judahben149.tala.domain.usecases.authentication.SendPasswordResetEmailUseCase
@@ -76,6 +78,10 @@ import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseC
 import com.judahben149.tala.domain.usecases.speech.recording.ObserveRecordingStatusUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.StartRecordingUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.StopRecordingUseCase
+import com.judahben149.tala.domain.usecases.user.ClearPersistedUserUseCase
+import com.judahben149.tala.domain.usecases.user.ObservePersistedUserDataUseCase
+import com.judahben149.tala.domain.usecases.user.PersistUserDataUseCase
+import com.judahben149.tala.domain.usecases.user.UpdateOnboardingFlagUseCase
 import com.judahben149.tala.domain.usecases.vocabulary.AddVocabularyItemUseCase
 import com.judahben149.tala.domain.usecases.vocabulary.GetRecentVocabularyUseCase
 import com.judahben149.tala.domain.usecases.vocabulary.GetUserVocabularyUseCase
@@ -250,6 +256,12 @@ val appModule = module {
     singleOf(::SaveLearningLanguageUseCase)
     singleOf(::SaveUserInterestsUseCase)
     singleOf(::GetNotificationSettingsUseCase)
+    singleOf(::GetUserDataUseCase)
+    singleOf(::CreateDefaultUserDataUseCase)
+    singleOf(::PersistUserDataUseCase)
+    singleOf(::ObservePersistedUserDataUseCase)
+    singleOf(::UpdateOnboardingFlagUseCase)
+    singleOf(::ClearPersistedUserUseCase)
 
 
     // ViewModels
