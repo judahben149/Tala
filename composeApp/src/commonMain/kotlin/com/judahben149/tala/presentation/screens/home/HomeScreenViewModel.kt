@@ -4,11 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.domain.managers.SessionManager
-import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.AppUser
-import com.judahben149.tala.domain.models.user.Language
-import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
-import com.judahben149.tala.domain.usecases.settings.GetLearningLanguageUseCase
 import com.judahben149.tala.domain.usecases.user.ObservePersistedUserDataUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,9 +14,7 @@ import kotlinx.coroutines.launch
 
 class HomeScreenViewModel(
     private val sessionManager: SessionManager,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val observePersistedUser: ObservePersistedUserDataUseCase,
-    private val getLearningLanguageUseCase: GetLearningLanguageUseCase,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -39,11 +33,7 @@ class HomeScreenViewModel(
                     val user = observePersistedUser.getCurrentUser()
 
                     // Load learning language
-                    val languageResult = getLearningLanguageUseCase()
-                    val learningLanguage = when (languageResult) {
-                        is Result.Success -> languageResult.data.name
-                        is Result.Failure -> Language.ENGLISH.name
-                    }
+                    val learningLanguage = user.learningLanguage
 
                     // Load recent topics from preferences/cache
                     val recentTopics = getRecentTopics()

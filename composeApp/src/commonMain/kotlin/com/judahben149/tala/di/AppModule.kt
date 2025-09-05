@@ -55,6 +55,7 @@ import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
 import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.AddUserMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.GetConversationMessagesUseCase
+import com.judahben149.tala.domain.usecases.preferences.GetSavedUserInterestsUseCase
 import com.judahben149.tala.domain.usecases.preferences.SaveLearningLanguageUseCase
 import com.judahben149.tala.domain.usecases.preferences.SaveUserInterestsUseCase
 import com.judahben149.tala.domain.usecases.settings.GetLearningLanguageUseCase
@@ -264,6 +265,7 @@ val appModule = module {
     singleOf(::UpdateOnboardingFlagUseCase)
     singleOf(::ClearPersistedUserUseCase)
     singleOf(::ObserveSelectedVoiceUseCase)
+    singleOf(::GetSavedUserInterestsUseCase)
 
 
     // ViewModels

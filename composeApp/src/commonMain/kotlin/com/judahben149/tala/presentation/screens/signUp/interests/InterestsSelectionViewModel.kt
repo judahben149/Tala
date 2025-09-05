@@ -5,9 +5,9 @@ import androidx.compose.material.icons.filled.*
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
-import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.user.Interest
+import com.judahben149.tala.domain.usecases.preferences.GetSavedUserInterestsUseCase
 import com.judahben149.tala.domain.usecases.preferences.SaveUserInterestsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 class InterestsSelectionViewModel(
     private val saveUserInterestsUseCase: SaveUserInterestsUseCase,
-    private val sessionManager: SessionManager,
+    private val getSavedUserInterestsUseCase: GetSavedUserInterestsUseCase,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -67,12 +67,7 @@ class InterestsSelectionViewModel(
 
             val interestNames = selectedInterests.map { it.name }
 
-            // Save both locally and remotely
             try {
-                // Save locally first (always succeeds)
-                sessionManager.saveUserInterests(interestNames)
-
-                // Then save remotely
                 when (val result = saveUserInterestsUseCase(interestNames)) {
                     is Result.Success -> {
                         _uiState.update { it.copy(isLoading = false) }
@@ -103,16 +98,24 @@ class InterestsSelectionViewModel(
     fun loadSavedInterests() {
         viewModelScope.launch {
             // Load from local preferences for immediate display
-            val savedInterests = sessionManager.getUserInterests()
+            val savedInterests = getSavedUserInterestsUseCase()
 
-            if (savedInterests.isNotEmpty()) {
-                val availableInterests = _uiState.value.availableInterests
-                val selectedInterestObjects = availableInterests.filter {
-                    savedInterests.contains(it.name)
-                }.toSet()
+            when(val result = savedInterests) {
+                is Result.Success -> {
+                    if (result.data.isNotEmpty()) {
+                        val availableInterests = _uiState.value.availableInterests
+                        val selectedInterestObjects = availableInterests.filter {
+                            result.data.contains(it.name)
+                        }.toSet()
 
-                _uiState.update {
-                    it.copy(selectedInterests = selectedInterestObjects)
+                        _uiState.update {
+                            it.copy(selectedInterests = selectedInterestObjects)
+                        }
+                    }
+                }
+
+                is Result.Failure -> {
+                    logger.e(result.error) { "Failed to load saved interests" }
                 }
             }
         }

@@ -22,6 +22,7 @@ interface UserRepository {
     suspend fun getOnboardingStatusFlag(): Result<Boolean, Exception>
     suspend fun saveLearningLanguage(language: String): Result<Unit, Exception>
     suspend fun saveUserInterests(interests: List<String>): Result<Unit, Exception>
+    suspend fun getUserInterests(): Result<List<String>, Exception>
     suspend fun getNotificationSettings(): Result<NotificationSettings, Exception>
     suspend fun getUserData(userId: String): Result<Map<String, Any>, Exception>
 

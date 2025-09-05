@@ -45,7 +45,7 @@ import com.judahben149.tala.ui.theme.Black
 import com.judahben149.tala.ui.theme.TalaColors
 import com.judahben149.tala.ui.theme.White
 import com.judahben149.tala.ui.theme.getTalaColors
-import com.judahben149.tala.ui.theme.latoTypography
+//import com.judahben149.tala.ui.theme.latoTypography
 import org.koin.compose.viewmodel.koinViewModel
 
 @Composable
@@ -96,7 +96,7 @@ fun SpeakScreen(
                 text = uiState.buttonLabel,
                 color = textColor,
                 fontSize = 13.sp,
-                fontStyle = latoTypography().bodySmall.fontStyle,
+//                fontStyle = latoTypography().bodySmall.fontStyle,
                 fontWeight = FontWeight.Normal,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
@@ -299,7 +299,7 @@ private fun ErrorDisplay(
             modifier = Modifier.padding(16.dp),
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Normal,
-            fontStyle = latoTypography().bodySmall.fontStyle
+//            fontStyle = latoTypography().bodySmall.fontStyle
         )
     }
 }
