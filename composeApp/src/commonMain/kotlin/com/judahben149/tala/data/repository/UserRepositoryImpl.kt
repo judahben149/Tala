@@ -110,6 +110,7 @@ class UserRepositoryImpl(
 
             // Delete Firebase Auth account
             firebaseService.doDeleteUser()
+            firebaseService.signOutFromGoogle()
 
             Result.Success(Unit)
         } catch (e: Exception) {
@@ -252,6 +253,17 @@ class UserRepositoryImpl(
         } catch (e: Exception) {
             logger.e(e) { "Failed to save user interests" }
             Result.Failure(e)
+        }
+    }
+
+    override suspend fun getUserInterests(): Result<List<String>, Exception> {
+        return try {
+            val persistedUser = getPersistedUser()
+
+            persistedUser?.let { Result.Success(it.interests) }
+                ?: Result.Failure(Exception("No authenticated user"))
+        } catch (e: Exception) {
+            Result.Failure(Exception("Unable to fetch user interests"))
         }
     }
 

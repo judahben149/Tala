@@ -58,6 +58,7 @@ fun InterestsSelectionScreen(
 
     LaunchedEffect(Unit) {
         viewModel.loadInterests()
+        viewModel.loadSavedInterests()
     }
 
     Column(

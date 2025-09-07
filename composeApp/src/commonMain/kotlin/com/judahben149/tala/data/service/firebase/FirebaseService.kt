@@ -27,8 +27,7 @@ interface FirebaseService {
     suspend fun reauthenticateFirebaseUser(password: String)
     suspend fun refreshUserToken(): Boolean
     suspend fun deleteUserData(userId: String)
-//    suspend fun signInWithGoogle(): AppUser
-//    suspend fun linkGoogleAccount(): AppUser
+    suspend fun signOutFromGoogle()
 }
 
 data class FirebaseAppInfo(
@@ -129,6 +128,10 @@ class FirebaseServiceImpl : FirebaseService {
         deleteFirebaseUserData(userId)
     }
 
+    override suspend fun signOutFromGoogle() {
+        signOutFromGoogleImpl()
+    }
+
 //    override suspend fun signInWithGoogle(): AppUser =
 //        signInWithGoogleFirebase()
 //
@@ -159,6 +162,7 @@ expect suspend fun reauthenticateUser(password: String)
 expect suspend fun refreshFirebaseUserToken(): Boolean
 expect suspend fun deleteFirebaseUserData(userId: String)
 expect suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>, Exception>
+expect suspend fun signOutFromGoogleImpl()
 
 //expect suspend fun signInWithGoogleFirebase(): AppUser
 //expect suspend fun linkGoogleAccountFirebase(): AppUser

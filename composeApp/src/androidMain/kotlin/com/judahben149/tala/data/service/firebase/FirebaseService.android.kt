@@ -1,11 +1,14 @@
 package com.judahben149.tala.data.service.firebase
 
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -19,6 +22,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.judahben149.tala.BuildKonfig
 import com.judahben149.tala.R
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthInvalidUserException
@@ -27,9 +31,12 @@ import com.judahben149.tala.domain.models.user.AppUser
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import java.security.MessageDigest
 import java.util.UUID
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 private var credentialManager: CredentialManager? = null
 private var currentActivity: ComponentActivity? = null
@@ -173,14 +180,16 @@ actual fun isFirebaseEmailVerified(): Boolean {
 }
 
 actual suspend fun reauthenticateUser(password: String) {
-    val user = FirebaseAuth.getInstance().currentUser
-        ?: throw Exception("No authenticated user")
+    if (password.isNotEmpty()) {
+        val user = FirebaseAuth.getInstance().currentUser
+            ?: throw Exception("No authenticated user")
 
-    val email = user.email
-        ?: throw Exception("No email associated with user")
+        val email = user.email
+            ?: throw Exception("No email associated with user")
 
-    val credential = EmailAuthProvider.getCredential(email, password)
-    user.reauthenticate(credential).await()
+        val credential = EmailAuthProvider.getCredential(email, password)
+        user.reauthenticate(credential).await()
+    }
 }
 
 actual suspend fun refreshFirebaseUserToken(): Boolean {
@@ -333,3 +342,31 @@ actual suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>,
 //        android.util.Log.w("GoogleSignIn", "Failed to save initial profile: ${e.message}")
 //    }
 //}
+actual suspend fun signOutFromGoogleImpl() {
+    val activity = currentActivity ?: return
+
+    val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+        .requestIdToken(BuildKonfig.FIREBASE_WEB_CLIENT)
+        .requestEmail()
+        .build()
+
+    val googleSignInClient = GoogleSignIn.getClient(activity, gso)
+
+    suspendCancellableCoroutine { continuation ->
+        googleSignInClient.signOut()
+            .addOnCompleteListener(activity) { task ->
+                if (task.isSuccessful) {
+                    Log.d("GoogleSignIn", "Google sign out successful")
+                    continuation.resume(Unit)
+                } else {
+                    continuation.resumeWithException(
+                        Exception("Google sign out failed: ${task.exception?.message}")
+                    )
+                }
+            }
+
+        continuation.invokeOnCancellation {
+            // Handle cancellation if needed
+        }
+    }
+}

@@ -63,6 +63,7 @@ class SettingsScreenViewModel(
                     logger.e(exception) { "Error observing user data" }
                 }
                 .collect { appUser ->
+                    logger.d { "User data just now: $appUser" }
                     _uiState.update {
                         it.copy(
                             user = appUser,
@@ -412,6 +413,7 @@ class SettingsScreenViewModel(
                 is Result.Success -> {
                     _uiState.update { it.copy(isDeletingAccount = false) }
                     logger.d { "Account deleted successfully" }
+                    clearPersistedUserUseCase()
                     sessionManager.markSignedOut()
                 }
                 is Result.Failure -> {

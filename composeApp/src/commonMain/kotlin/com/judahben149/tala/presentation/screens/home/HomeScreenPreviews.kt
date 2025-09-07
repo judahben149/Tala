@@ -69,38 +69,38 @@ private fun HomeScreenContent(
             .background(colors.appBackground)
             .verticalScroll(rememberScrollState())
     ) {
-        TopSection(
-            userName = uiState.userName,
-            user = uiState.user,
-            streakDays = uiState.streakDays,
-            colors = colors,
-            onProfileClick = onProfileClick,
-            onSettingsClick = onSettingsClick
-        )
+//        TopSection(
+//            userName = uiState.userName,
+//            user = uiState.user,
+//            streakDays = uiState.streakDays,
+//            colors = colors,
+//            onProfileClick = onProfileClick,
+//            onSettingsClick = onSettingsClick
+//        )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        QuickActionsSection(
-            colors = colors,
-            onSpeakClick = onSpeakClick,
-            onVoicesClick = onVoicesClick
-        )
+//        QuickActionsSection(
+//            colors = colors,
+//            onSpeakClick = onSpeakClick,
+//            onVoicesClick = onVoicesClick
+//        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        LearningProgressSection(
-            learningLanguage = uiState.learningLanguage,
-            totalConversations = uiState.totalConversations,
-            weeklyGoalProgress = uiState.weeklyGoalProgress,
-            colors = colors
-        )
+//        LearningProgressSection(
+//            learningLanguage = uiState.learningLanguage,
+//            totalConversations = uiState.totalConversations,
+//            weeklyGoalProgress = uiState.weeklyGoalProgress,
+//            colors = colors
+//        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        RecentActivitySection(
-            recentTopics = uiState.recentTopics,
-            colors = colors
-        )
+//        RecentActivitySection(
+//            recentTopics = uiState.recentTopics,
+//            colors = colors
+//        )
 
         Spacer(modifier = Modifier.height(24.dp))
     }

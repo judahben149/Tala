@@ -568,3 +568,7 @@ actual suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>,
 //        else -> viewController
 //    }
 //}
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun signOutFromGoogleImpl() {
+    GIDSignIn.sharedInstance.signOut()
+}

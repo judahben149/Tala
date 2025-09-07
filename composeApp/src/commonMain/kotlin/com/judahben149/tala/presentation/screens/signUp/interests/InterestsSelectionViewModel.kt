@@ -43,7 +43,8 @@ class InterestsSelectionViewModel(
             Interest("Environment", Icons.Default.Nature),
             Interest("Gaming", Icons.Default.SportsEsports)
         )
-        
+
+        logger.d { "Available interests ----> $interests" }
         _uiState.update { it.copy(availableInterests = interests) }
     }
 
@@ -99,6 +100,8 @@ class InterestsSelectionViewModel(
         viewModelScope.launch {
             // Load from local preferences for immediate display
             val savedInterests = getSavedUserInterestsUseCase()
+
+            logger.d { "Saved interests ----> $savedInterests" }
 
             when(val result = savedInterests) {
                 is Result.Success -> {

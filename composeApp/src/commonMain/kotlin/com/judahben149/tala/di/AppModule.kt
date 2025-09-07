@@ -77,6 +77,7 @@ import com.judahben149.tala.domain.usecases.speech.SaveSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.SetVoiceSelectionCompleteUseCase
 import com.judahben149.tala.domain.usecases.speech.StreamTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.CancelRecordingUseCase
+import com.judahben149.tala.domain.usecases.speech.recording.ObserveAudioLevelsUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.ObserveRecordingStatusUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.StartRecordingUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.StopRecordingUseCase
@@ -266,6 +267,7 @@ val appModule = module {
     singleOf(::ClearPersistedUserUseCase)
     singleOf(::ObserveSelectedVoiceUseCase)
     singleOf(::GetSavedUserInterestsUseCase)
+    singleOf(::ObserveAudioLevelsUseCase)
 
 
     // ViewModels

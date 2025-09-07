@@ -1,12 +1,16 @@
 package com.judahben149.tala.domain.usecases.speech
 
 import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.repository.UserRepository
 
 class GetSelectedVoiceIdUseCase(
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val userRepository: UserRepository
 ) {
-    operator fun invoke(): String {
-        val voiceId = sessionManager.getSelectedVoiceId()
-        return voiceId
+    suspend operator fun invoke(): String {
+        return when(val result = userRepository.getPersistedUser()) {
+            null -> sessionManager.getSelectedVoiceId()
+            else -> result.selectedVoiceId ?: sessionManager.getSelectedVoiceId()
+        }
     }
 }

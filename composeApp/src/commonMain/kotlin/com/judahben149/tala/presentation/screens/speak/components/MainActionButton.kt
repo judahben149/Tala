@@ -85,7 +85,7 @@ fun MainActionButton(
             modifier = Modifier
                 .size(96.dp)
                 .border(
-                    width = 6.dp,
+                    width = 8.dp,
                     color = getOutlineColor(uiState.conversationState, colors).copy(alpha = outlineAlpha),
                     shape = CircleShape
                 )

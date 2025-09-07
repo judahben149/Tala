@@ -9,7 +9,9 @@ data class SpeakScreenUiState(
     val error: String? = null,
     val isLoading: Boolean = false,
     val recordedAudio: ByteArray? = null,
-    val permissionRequired: Boolean = false
+    val permissionRequired: Boolean = false,
+    val audioLevel: Float = 0f,
+    val isSpeaking: Boolean = false
 ) {
     val buttonLabel: String
         get() = when (conversationState) {
@@ -50,6 +52,13 @@ data class SpeakScreenUiState(
     val canInterrupt: Boolean
         get() = conversationState == ConversationState.Speaking
 
+    val voiceLevelForAnimation: Float
+        get() = if (conversationState == ConversationState.Recording) {
+            0.1f + (audioLevel * 0.65f)
+        } else {
+            0.1f
+        }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other == null || this::class != other::class) return false
@@ -65,6 +74,8 @@ data class SpeakScreenUiState(
         if (buttonLabel != other.buttonLabel) return false
         if (buttonAction != other.buttonAction) return false
         if (buttonIcon != other.buttonIcon) return false
+        if (audioLevel != other.audioLevel) return false
+        if (isSpeaking != other.isSpeaking) return false
 
         return true
     }
@@ -79,6 +90,8 @@ data class SpeakScreenUiState(
         result = 31 * result + buttonLabel.hashCode()
         result = 31 * result + buttonAction.hashCode()
         result = 31 * result + buttonIcon.hashCode()
+        result = 31 * result + audioLevel.hashCode()
+        result = 31 * result + isSpeaking.hashCode()
         return result
     }
 }

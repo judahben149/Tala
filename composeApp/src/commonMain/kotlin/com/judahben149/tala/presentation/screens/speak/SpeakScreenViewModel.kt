@@ -38,6 +38,7 @@ class SpeakScreenViewModel(
     private val addUserMessageUseCase: AddUserMessageUseCase,
     private val startConversationUseCase: StartConversationUseCase,
     private val getSelectedVoiceIdUseCase: GetSelectedVoiceIdUseCase,
+    private val observeAudioLevelsUseCase: ObserveAudioLevelsUseCase,
     private val messageManager: MessageManager,
     private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
@@ -54,6 +55,7 @@ class SpeakScreenViewModel(
 
     init {
         observeRecordingStatus()
+        observeAudioLevels()
     }
 
     private fun observeRecordingStatus() {
@@ -63,6 +65,25 @@ class SpeakScreenViewModel(
                 logger.d { "Recording status changed: $status" }
             }
             .launchIn(viewModelScope)
+    }
+
+    private fun observeAudioLevels() {
+        combine(
+            observeAudioLevelsUseCase.observeAudioLevel(),
+            observeAudioLevelsUseCase.observeAudioLevel().map { level ->
+                observeAudioLevelsUseCase.isSpeaking(level, threshold = 0.15f)
+            }
+        ) { audioLevel, isSpeaking ->
+            audioLevel to isSpeaking
+        }.onEach { (audioLevel, isSpeaking) ->
+            logger.d { "Audio level updated: $audioLevel" }
+            _uiState.update { currentState ->
+                currentState.copy(
+                    audioLevel = audioLevel,
+                    isSpeaking = isSpeaking
+                )
+            }
+        }.launchIn(viewModelScope)
     }
 
     fun onPermissionGranted() {
