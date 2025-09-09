@@ -4,11 +4,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class UserEntity(
-    val id: String,
+    val userId: String,
     val email: String,
     val isPremiumUser: Boolean = false,
     val displayName: String? = null,
-    val photoUrl: String? = null,
+    val avatarUrl: String? = null,
     val isEmailVerified: Boolean = false,
     val signInMethod: String = "EMAIL_PASSWORD",
 

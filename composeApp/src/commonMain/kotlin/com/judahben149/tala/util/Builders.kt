@@ -13,8 +13,8 @@ fun buildProfileDataFromAppUser(user: AppUser): Map<String, Any> {
         put("firstName", user.firstName)
         put("lastName", user.lastName)
         put("isPremiumUser", user.isPremiumUser)
-        user.avatarUrl?.let { put("profileImageUrl", it) }
-        put("emailVerified", user.emailVerified)
+        user.avatarUrl?.let { put("avatarUrl", it) }
+        put("isEmailVerified", user.isEmailVerified)
         put("updatedAt", getCurrentTimeMillis())
         put("createdAt", user.createdAt)
 
@@ -63,8 +63,8 @@ fun buildAppUserFromProfileData(
         lastName = profileData["lastName"] as? String ?: "",
         signInMethod = SignInMethod.valueOf(profileData["signInMethod"] as? String ?: "EMAIL_PASSWORD"),
         isPremiumUser = profileData["isPremiumUser"] as? Boolean ?: false,
-        avatarUrl = profileData["profileImageUrl"] as? String,
-        emailVerified = profileData["emailVerified"] as? Boolean ?: false,
+        avatarUrl = profileData["avatarUrl"] as? String,
+        isEmailVerified = profileData["isEmailVerified"] as? Boolean ?: false,
         updatedAt = profileData["updatedAt"] as? Long ?: 0L,
         createdAt = profileData["createdAt"] as? Long ?: 0L,
 

@@ -3,10 +3,8 @@ package com.judahben149.tala.domain.usecases.authentication
 import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.service.firebase.FirebaseService
 import com.judahben149.tala.domain.models.common.Result
-import com.judahben149.tala.domain.models.speech.Gender
 import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.domain.usecases.user.PersistUserDataUseCase
-import com.judahben149.tala.util.AvatarUrlGenerator
 import com.judahben149.tala.util.buildAppUserFromProfileData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -35,10 +33,13 @@ class CreateDefaultUserDataUseCase(
                         user.displayName.split(" ").drop(1).joinToString(" ")
                             .ifEmpty { user.lastName }
                     )
-                    user.avatarUrl?.let { put("profileImageUrl", it) }
-                    put("avatarUrl", AvatarUrlGenerator.generate(Gender.entries.random()))
+
+                    user.avatarUrl?.let {
+                        put("avatarUrl", it)
+                    }
+
                     put("isPremiumUser", user.isPremiumUser)
-                    put("emailVerified", if (isFederatedSignIn) true else user.emailVerified)
+                    put("isEmailVerified", if (isFederatedSignIn) true else user.isEmailVerified)
                     put("isFederatedSignIn", isFederatedSignIn)
                     put("createdAt", user.createdAt)
                     put("updatedAt", user.updatedAt)

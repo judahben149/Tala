@@ -3,15 +3,18 @@ package com.judahben149.tala.domain.mappers
 import com.judahben149.tala.data.model.UserEntity
 import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.user.AppUser
+import com.judahben149.tala.util.diffJson
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 
 fun AppUser.toUserEntity(): UserEntity = UserEntity(
-    id = userId,
+    userId = userId,
     email = email,
     isPremiumUser = isPremiumUser,
     displayName = displayName,
-    photoUrl = avatarUrl,
+    avatarUrl = avatarUrl,
     signInMethod = signInMethod.name,
-    isEmailVerified = emailVerified,
+    isEmailVerified = isEmailVerified,
     firstName = firstName,
     lastName = lastName,
     createdAt = createdAt,
@@ -38,18 +41,24 @@ fun AppUser.toUserEntity(): UserEntity = UserEntity(
     favoriteTopics = favoriteTopics,
     lastActiveAt = lastActiveAt,
     loginCount = loginCount
-)
+).also {
+    val json = Json { encodeDefaults = true }
+    val userEntityJson = json.encodeToJsonElement(UserEntity.serializer(), it).jsonObject
+    val appUserJson = json.encodeToJsonElement(AppUser.serializer(), this).jsonObject
+
+    diffJson("AppUser", appUserJson, "UserEntity", userEntityJson)
+}
 
 fun UserEntity.toAppUser(): AppUser = AppUser(
-    userId = id,
+    userId = userId,
     displayName = displayName ?: "",
     email = email,
     isPremiumUser = isPremiumUser,
     signInMethod = SignInMethod.valueOf(signInMethod),
     firstName = firstName ?: "",
     lastName = lastName ?: "",
-    avatarUrl = photoUrl,
-    emailVerified = isEmailVerified,
+    avatarUrl = avatarUrl,
+    isEmailVerified = isEmailVerified,
     createdAt = createdAt,
     updatedAt = updatedAt,
     streakDays = streakDays,
@@ -74,4 +83,10 @@ fun UserEntity.toAppUser(): AppUser = AppUser(
     favoriteTopics = favoriteTopics,
     lastActiveAt = lastActiveAt,
     loginCount = loginCount
-)
+).also {
+    val json = Json { encodeDefaults = true }
+    val userEntityJson = json.encodeToJsonElement(UserEntity.serializer(), this).jsonObject
+    val appUserJson = json.encodeToJsonElement(AppUser.serializer(), it).jsonObject
+
+    diffJson("AppUser", appUserJson, "UserEntity", userEntityJson)
+}

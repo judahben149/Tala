@@ -3,6 +3,7 @@ package com.judahben149.tala.data.local
 import com.judahben149.tala.data.model.UserEntity
 import app.cash.sqldelight.coroutines.asFlow
 import app.cash.sqldelight.coroutines.mapToOneOrNull
+import co.touchlab.kermit.Logger
 import com.judahben149.tala.TalaDatabase
 import com.judahben149.tala.Users
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +12,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.json.Json
 
-class UserDatabaseHelper(driverFactory: DatabaseDriverFactory) {
+class UserDatabaseHelper(
+    driverFactory: DatabaseDriverFactory,
+    private val logger: Logger
+) {
     private val database: TalaDatabase = TalaDatabase(driverFactory.createDriver())
     private val userQueries = database.usersQueries
 
@@ -30,17 +34,18 @@ class UserDatabaseHelper(driverFactory: DatabaseDriverFactory) {
 
 
     suspend fun saveCurrentUser(user: UserEntity) {
+        logger.d { "See the user Entity I'm saving oo --> $user" }
         val interestsJson = Json.encodeToString(user.interests)
         val achievementBadgesJson = Json.encodeToString(user.achievementBadges)
         val favoriteTopicsJson = Json.encodeToString(user.favoriteTopics)
 
         userQueries.insertOrReplaceUser(
-            id = user.id,
+            id = user.userId,
             email = user.email,
             isPremiumUser = if (user.isPremiumUser) 1L else 0L,
             signInMethod = user.signInMethod,
             displayName = user.displayName,
-            photoUrl = user.photoUrl,
+            photoUrl = user.avatarUrl,
             isEmailVerified = if (user.isEmailVerified) 1L else 0L,
             firstName = user.firstName,
             lastName = user.lastName,
@@ -80,12 +85,12 @@ class UserDatabaseHelper(driverFactory: DatabaseDriverFactory) {
 
 // Mapping extension function (same as before)
 private fun Users.toUserEntity() = UserEntity(
-    id = id,
+    userId = id,
     email = email,
     displayName = displayName,
     isPremiumUser = isPremiumUser == 1L,
     signInMethod = signInMethod,
-    photoUrl = photoUrl,
+    avatarUrl = photoUrl,
     isEmailVerified = isEmailVerified == 1L,
     firstName = firstName,
     lastName = lastName,
@@ -120,4 +125,7 @@ private fun Users.toUserEntity() = UserEntity(
     },
     lastActiveAt = lastActiveAt,
     loginCount = loginCount.toInt()
-)
+).also {
+    println("PRINTING----> Users: $this")
+    println("PRINTING----> UserEntity: $it")
+}

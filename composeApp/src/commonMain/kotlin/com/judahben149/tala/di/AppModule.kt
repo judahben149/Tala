@@ -19,6 +19,7 @@ import com.judahben149.tala.data.service.gemini.createGeminiService
 import com.judahben149.tala.data.service.permission.AudioPermissionManager
 import com.judahben149.tala.data.service.speechSynthesis.ElevenLabsService
 import com.judahben149.tala.data.service.speechSynthesis.createElevenLabsService
+import com.judahben149.tala.domain.managers.FirebaseSyncManager
 import com.judahben149.tala.domain.managers.MessageManager
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.repository.AudioRepository
@@ -130,6 +131,16 @@ val appModule = module {
     single { PrefsPersister(get()) }
     single { SessionManager(get(), get()) }
     singleOf(::MessageManager)
+
+    single {
+        FirebaseSyncManager(
+            firebaseService = get(),
+            persistUserDataUseCase = get(),
+            observePersistedUserDataUseCase = get(),
+            sessionManager = get(),
+            logger = get()
+        )
+    }
 
     // Network Clients
     single {
@@ -283,7 +294,7 @@ val appModule = module {
     viewModelOf(::WelcomeScreenViewModel)
 
     // Database
-    single { UserDatabaseHelper(get()) }
+    single { UserDatabaseHelper(get(), get()) }
     single { ConversationDatabaseHelper(get()) }
     single { VoicesDatabaseHelper(get()) }
 

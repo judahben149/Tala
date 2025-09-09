@@ -9,8 +9,11 @@ import com.judahben149.tala.domain.usecases.user.ObservePersistedUserDataUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.collections.first
 
 class HomeScreenViewModel(
     private val sessionManager: SessionManager,
@@ -22,6 +25,34 @@ class HomeScreenViewModel(
     val uiState: StateFlow<HomeScreenState> = _uiState.asStateFlow()
 
     fun isVoicesSelectionComplete(): Boolean = sessionManager.isVoiceSelectionCompleted()
+
+    init {
+        observeUserData()
+    }
+
+    private fun observeUserData() {
+        viewModelScope.launch {
+            observePersistedUser()
+                .filterNotNull()
+                .catch { exception ->
+                    logger.e(exception) { "Error observing user data" }
+                }
+                .collect { appUser ->
+                    logger.d { "User data just now: $appUser" }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            user = appUser,
+                            userName = appUser.displayName.split(" ").first(),
+                            streakDays = appUser.streakDays,
+                            totalConversations = appUser.totalConversations,
+                            learningLanguage = appUser.learningLanguage,
+                            weeklyGoalProgress = calculateWeeklyProgress(appUser.totalConversations),
+                        )
+                    }
+                }
+        }
+    }
 
     fun loadHomeData() {
         viewModelScope.launch {

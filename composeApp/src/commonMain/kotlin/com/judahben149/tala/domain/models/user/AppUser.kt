@@ -3,8 +3,10 @@ package com.judahben149.tala.domain.models.user
 import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.speech.Gender
 import com.judahben149.tala.util.AvatarUrlGenerator
+import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime
 
+@Serializable
 @OptIn(ExperimentalTime::class)
 data class AppUser(
     val userId: String,
@@ -14,8 +16,10 @@ data class AppUser(
     val signInMethod: SignInMethod = SignInMethod.EMAIL_PASSWORD,
     val firstName: String = "",
     val lastName: String = "",
-    val avatarUrl: String? = AvatarUrlGenerator.generate(Gender.entries.random()),
-    val emailVerified: Boolean = false,
+    val avatarUrl: String? = AvatarUrlGenerator.generate(Gender.entries.random()).also {
+        println("Generated avatar URL now: $it")
+    },
+    val isEmailVerified: Boolean = false,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L,
     
@@ -109,7 +113,7 @@ data class AppUser(
     }
     
     fun canReceiveNotifications(): Boolean {
-        return notificationsEnabled && emailVerified
+        return notificationsEnabled && isEmailVerified
     }
     
     fun getExperienceLevel(): String {
