@@ -40,6 +40,7 @@ accompanist-permissions = "0.37.3"
 google-credentials = "1.3.0"
 google-id = "1.1.1"
 kmp-auth = "2.3.1"
+haze = "1.6.10"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -125,6 +126,8 @@ kmpAuth-uihelper = { module = "io.github.mirzemehdi:kmpauth-uihelper", version.r
 ktor-client-android = { module = "io.ktor:ktor-client-android", version.ref = "ktor" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-java = { group = "io.ktor", name = "ktor-client-java", version.ref = "ktor" }
+
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 
 
 [plugins]

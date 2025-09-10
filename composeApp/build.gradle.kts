@@ -209,6 +209,9 @@ kotlin {
             // Coil
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
+
+            // Haze
+            implementation(libs.haze)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native)

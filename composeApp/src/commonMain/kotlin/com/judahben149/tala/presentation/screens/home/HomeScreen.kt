@@ -54,6 +54,7 @@ import com.judahben149.tala.ui.theme.getTalaColors
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.koin.compose.viewmodel.koinViewModel
+import kotlin.math.floor
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 
@@ -272,7 +273,7 @@ fun StatsOverviewSection(
                 )
                 2 -> StatCard(
                     icon = Icons.Default.Schedule,
-                    value = "${(totalConversations * 8)}m",
+                    value = "${floor(totalConversations * 0.4).toInt()}m",
                     label = "Time Practiced",
                     colors = colors,
                     accentColor = colors.accentText
