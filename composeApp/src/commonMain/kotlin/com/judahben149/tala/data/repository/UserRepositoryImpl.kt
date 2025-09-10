@@ -207,6 +207,27 @@ class UserRepositoryImpl(
         }
     }
 
+    override suspend fun incrementConversationCount(): Result<Unit, Exception> {
+        return try {
+            val userId = firebaseService.getCurrentUser()?.userId
+                ?: return Result.Failure(Exception("User not authenticated"))
+
+            val persistedUser = getPersistedUser()
+
+            logger.d { "Incrementing conversation count for user: ${persistedUser?.totalConversations}" }
+
+            val updates = mapOf("totalConversations" to (persistedUser?.totalConversations!!.plus(1)))
+            logger.d { "Updating total conversations to ${persistedUser.totalConversations.plus(1)}" }
+
+            firebaseService.updateUserStats(userId, updates)
+
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            logger.e(e) { "Failed to increment conversation count" }
+            Result.Failure(e)
+        }
+    }
+
     override suspend fun saveLearningLanguage(language: String): Result<Unit, Exception> {
         return try {
             val userId = firebaseService.getCurrentUser()?.userId

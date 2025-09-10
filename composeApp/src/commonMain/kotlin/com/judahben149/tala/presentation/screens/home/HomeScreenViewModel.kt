@@ -119,10 +119,6 @@ class HomeScreenViewModel(
         val thisWeekConversations = minOf(totalConversations % 10, weeklyGoal)
         return thisWeekConversations.toFloat() / weeklyGoal.toFloat()
     }
-
-    fun refreshData() {
-        loadHomeData()
-    }
 }
 
 data class HomeScreenState(

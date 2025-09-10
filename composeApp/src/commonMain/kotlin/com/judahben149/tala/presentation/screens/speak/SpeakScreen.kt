@@ -19,12 +19,8 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +28,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.dropShadow
@@ -47,10 +42,27 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.judahben149.tala.navigation.components.others.SpeakScreenComponent
 import com.judahben149.tala.presentation.RequestAudioPermission
 import com.judahben149.tala.presentation.screens.speak.components.MainActionButton
-import com.judahben149.tala.ui.theme.*
+import com.judahben149.tala.presentation.shared_components.buttons.BackButton
+import com.judahben149.tala.ui.theme.Black
+import com.judahben149.tala.ui.theme.Green300
+import com.judahben149.tala.ui.theme.Green400
+import com.judahben149.tala.ui.theme.Green500
+import com.judahben149.tala.ui.theme.Green600
+import com.judahben149.tala.ui.theme.Green700
+import com.judahben149.tala.ui.theme.Red400
+import com.judahben149.tala.ui.theme.Red500
+import com.judahben149.tala.ui.theme.Red600
+import com.judahben149.tala.ui.theme.Red700
+import com.judahben149.tala.ui.theme.Sky400
+import com.judahben149.tala.ui.theme.Sky500
+import com.judahben149.tala.ui.theme.Sky600
+import com.judahben149.tala.ui.theme.TalaColors
+import com.judahben149.tala.ui.theme.White
+import com.judahben149.tala.ui.theme.Yellow200
+import com.judahben149.tala.ui.theme.Yellow300
+import com.judahben149.tala.ui.theme.getTalaColors
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.math.min
-import kotlin.random.Random
 
 @Composable
 fun SpeakScreen(
@@ -65,6 +77,10 @@ fun SpeakScreen(
     val backgroundColor = if (isSystemInDarkTheme()) Black else White
     val textColor = if (isSystemInDarkTheme()) White else Black
     val colors = getTalaColors()
+
+    LaunchedEffect(Unit) {
+        viewModel.updateSpeakingModes(component.speakingMode, component.scenario)
+    }
 
     // Color schemes based on conversation state
     val (shadowColors, borderColors, innerShadowColors) = getColorsForState(uiState.conversationState)
@@ -147,7 +163,7 @@ fun SpeakScreen(
         // Calculate responsive dimensions (use smaller dimension to ensure it fits)
         val baseSize = min(availableWidth.value, availableHeight.value).dp
         val squircleWidth = baseSize * 0.8f
-        val squircleHeight = baseSize * 1f
+        val squircleHeight = baseSize * 1.2f
         val cornerRadius = squircleWidth * 0.25f
 
         val squircleShape = RoundedCornerShape(cornerRadius)
@@ -159,7 +175,7 @@ fun SpeakScreen(
             targetValue = squircleWidth * targetSizeMultiplier,
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
+                stiffness = Spring.StiffnessMediumLow
             ),
             label = "squircleWidthAnimation"
         )
@@ -168,7 +184,7 @@ fun SpeakScreen(
             targetValue = squircleHeight * targetSizeMultiplier,
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
+                stiffness = Spring.StiffnessMediumLow
             ),
             label = "squircleHeightAnimation"
         )
@@ -176,7 +192,7 @@ fun SpeakScreen(
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = (-50).dp)
+//                .offset(y = (-50).dp)
                 .dropShadow(shape = squircleShape) {
                     radius = 60f
                     color = Red500
@@ -191,7 +207,7 @@ fun SpeakScreen(
                         colors = listOf(animatedBorderColor1, animatedBorderColor2)
                     ),
                 )
-                .size(width = animatedWidth, height = animatedHeight)
+                .size(width = animatedWidth * 1.1f, height = animatedHeight * 1.1f)
                 .background(
                     color = backgroundColor,
                     shape = squircleShape,
@@ -219,7 +235,7 @@ fun SpeakScreen(
                 colors = colors,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 64.dp)
+                    .padding(bottom = 48.dp)
             )
 
             Text(
@@ -230,7 +246,7 @@ fun SpeakScreen(
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 36.dp)
+                    .padding(bottom = 24.dp)
             )
         }
 
@@ -293,19 +309,10 @@ private fun TopBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 48.dp, start = 24.dp, end = 24.dp),
-        horizontalArrangement = Arrangement.End
+            .padding(top = 8.dp, start = 16.dp, end = 16.dp),
+        horizontalArrangement = Arrangement.Start
     ) {
-        IconButton(
-            onClick = onCloseClick
-        ) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Close",
-                tint = textColor,
-                modifier = Modifier.size(24.dp)
-            )
-        }
+        BackButton(onClick = onCloseClick)
     }
 }
 

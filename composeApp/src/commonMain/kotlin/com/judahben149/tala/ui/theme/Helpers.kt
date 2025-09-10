@@ -61,7 +61,7 @@ fun getTalaColors(): TalaColors {
         accentText = Amber500 or Amber600,
         errorText = Red500 or Red600,
         successText = Green500 or Green600,
-        appBackground = Black or White,
+        appBackground = Black or Gray100,
         cardBackground = Gray900 or White,
         progressBarFilled = primary,
         progressBarEmpty = Gray700 or Gray200,

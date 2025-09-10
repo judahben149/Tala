@@ -9,15 +9,17 @@ import com.judahben149.tala.domain.managers.MessageManager
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.conversation.GuidedPracticeScenario
+import com.judahben149.tala.domain.models.conversation.SpeakingMode
 import com.judahben149.tala.domain.models.speech.RecorderConfig
 import com.judahben149.tala.domain.models.speech.RecorderStatus
+import com.judahben149.tala.domain.usecases.conversations.IncrementConversationCountUseCase
 import com.judahben149.tala.domain.usecases.conversations.StartConversationUseCase
 import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.AddUserMessageUseCase
 import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceIdUseCase
-import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.*
 import com.judahben149.tala.util.decodeBase64Audio
 import com.judahben149.tala.util.mimeTypeForOutputFormat
@@ -39,6 +41,7 @@ class SpeakScreenViewModel(
     private val startConversationUseCase: StartConversationUseCase,
     private val getSelectedVoiceIdUseCase: GetSelectedVoiceIdUseCase,
     private val observeAudioLevelsUseCase: ObserveAudioLevelsUseCase,
+    private val incrementConversationCount: IncrementConversationCountUseCase,
     private val messageManager: MessageManager,
     private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
@@ -56,6 +59,20 @@ class SpeakScreenViewModel(
     init {
         observeRecordingStatus()
         observeAudioLevels()
+    }
+
+    fun updateSpeakingModes(
+        speakingMode: SpeakingMode,
+        scenario: GuidedPracticeScenario? = null
+    ) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    speakingMode = speakingMode,
+                    scenario = scenario
+                )
+            }
+        }
     }
 
     private fun observeRecordingStatus() {
@@ -76,7 +93,7 @@ class SpeakScreenViewModel(
         ) { audioLevel, isSpeaking ->
             audioLevel to isSpeaking
         }.onEach { (audioLevel, isSpeaking) ->
-            logger.d { "Audio level updated: $audioLevel" }
+//            logger.d { "Audio level updated: $audioLevel" }
             _uiState.update { currentState ->
                 currentState.copy(
                     audioLevel = audioLevel,
@@ -242,12 +259,19 @@ class SpeakScreenViewModel(
             updateState(conversationState = ConversationState.Thinking)
             logger.d { "Generating AI response for: $userText" }
 
-            when (val result = messageManager.generateResponse(convId, userText)) {
+            when (
+                val result = messageManager.generateResponse(
+                    conversationId = convId,
+                    userInput = userText,
+                    guidedPracticeScenario = uiState.value.scenario
+                )
+            ) {
                 is Result.Success -> {
                     val aiResponse = result.data
                     logger.d { "AI response generated successfully: $aiResponse" }
 
                     addUserMessageUseCase(convId, userText, userAudioBase64)
+                    incrementConversationCount()
                     convertTextToSpeech(aiResponse, convId)
                 }
                 is Result.Failure -> {

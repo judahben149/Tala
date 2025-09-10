@@ -10,6 +10,8 @@ import com.judahben149.tala.navigation.MainFlowComponent
 import com.judahben149.tala.presentation.screens.home.HomeScreen
 import com.judahben149.tala.presentation.screens.settings.SettingsScreen
 import com.judahben149.tala.presentation.screens.speak.SpeakScreen
+import com.judahben149.tala.presentation.screens.speak.guidedPractice.GuidedPracticeScreen
+import com.judahben149.tala.presentation.screens.speak.speakingModeSelection.SpeakingModeSelectionScreen
 import com.judahben149.tala.presentation.screens.voices.VoicesScreen
 
 @Composable
@@ -35,6 +37,12 @@ fun MainFlow(component: MainFlowComponent) {
 
             is MainFlowComponent.MainChild.Settings ->
                 SettingsScreen(instance.component)
+
+            is MainFlowComponent.MainChild.GuidedPractice ->
+                GuidedPracticeScreen(instance.component)
+
+            is MainFlowComponent.MainChild.SpeakingModeSelection ->
+                SpeakingModeSelectionScreen(instance.component)
         }
     }
 }

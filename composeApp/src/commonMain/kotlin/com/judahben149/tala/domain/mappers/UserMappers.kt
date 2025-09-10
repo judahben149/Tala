@@ -1,7 +1,10 @@
 package com.judahben149.tala.domain.mappers
 
+import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.text.toUpperCase
 import com.judahben149.tala.data.model.UserEntity
 import com.judahben149.tala.domain.models.authentication.SignInMethod
+import com.judahben149.tala.domain.models.conversation.MasteryLevel
 import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.util.diffJson
 import kotlinx.serialization.json.Json
@@ -90,3 +93,5 @@ fun UserEntity.toAppUser(): AppUser = AppUser(
 
     diffJson("AppUser", appUserJson, "UserEntity", userEntityJson)
 }
+
+fun String.toMasteryLevel(): MasteryLevel = MasteryLevel.valueOf(this.uppercase())

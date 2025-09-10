@@ -1,19 +1,20 @@
 package com.judahben149.tala.navigation.components.others
 
 import com.arkivanov.decompose.ComponentContext
-import com.judahben149.tala.domain.models.conversation.GuidedPracticeScenario
 import com.judahben149.tala.domain.models.conversation.SpeakingMode
 
-class SpeakScreenComponent(
+class SpeakingModeSelectionComponent(
     componentContext: ComponentContext,
-    val speakingMode: SpeakingMode = SpeakingMode.FREE_SPEAK,
-    val scenario: GuidedPracticeScenario? = null,
-    private val onViewConversationList: () -> Unit,
+    private val onFreeSpeak: () -> Unit,
+    private val onGuidedPractice: () -> Unit,
     private val onBackPressed: () -> Unit
 ) : ComponentContext by componentContext {
 
-    fun viewConversationList() {
-        onViewConversationList()
+    fun onModeSelected(mode: SpeakingMode) {
+        when (mode) {
+            SpeakingMode.FREE_SPEAK -> onFreeSpeak()
+            SpeakingMode.GUIDED_PRACTICE -> onGuidedPractice()
+        }
     }
 
     fun goBack() {

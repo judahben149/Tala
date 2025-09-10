@@ -19,6 +19,7 @@ import com.judahben149.tala.data.service.gemini.createGeminiService
 import com.judahben149.tala.data.service.permission.AudioPermissionManager
 import com.judahben149.tala.data.service.speechSynthesis.ElevenLabsService
 import com.judahben149.tala.data.service.speechSynthesis.createElevenLabsService
+import com.judahben149.tala.domain.managers.AdvancedPromptBuilder
 import com.judahben149.tala.domain.managers.FirebaseSyncManager
 import com.judahben149.tala.domain.managers.MessageManager
 import com.judahben149.tala.domain.managers.SessionManager
@@ -51,6 +52,8 @@ import com.judahben149.tala.domain.usecases.conversations.CompleteConversationUs
 import com.judahben149.tala.domain.usecases.conversations.GetActiveConversationUseCase
 import com.judahben149.tala.domain.usecases.conversations.GetConversationByIdUseCase
 import com.judahben149.tala.domain.usecases.conversations.GetConversationHistoryUseCase
+import com.judahben149.tala.domain.usecases.conversations.GetMasteryLevelUseCase
+import com.judahben149.tala.domain.usecases.conversations.IncrementConversationCountUseCase
 import com.judahben149.tala.domain.usecases.conversations.StartConversationUseCase
 import com.judahben149.tala.domain.usecases.gemini.GenerateContentUseCase
 import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
@@ -98,6 +101,8 @@ import com.judahben149.tala.presentation.screens.signUp.language.LanguageSelecti
 import com.judahben149.tala.presentation.screens.signUp.verification.EmailVerificationViewModel
 import com.judahben149.tala.presentation.screens.signUp.welcome.WelcomeScreenViewModel
 import com.judahben149.tala.presentation.screens.speak.SpeakScreenViewModel
+import com.judahben149.tala.presentation.screens.speak.guidedPractice.GuidedPracticeViewModel
+import com.judahben149.tala.presentation.screens.speak.speakingModeSelection.SpeakingModeSelectionViewModel
 import com.judahben149.tala.presentation.screens.voices.VoicesScreenViewModel
 import com.judahben149.tala.util.ELEVEN_LABS_BASE_URL
 import com.judahben149.tala.util.GEMINI_BASE_URL
@@ -131,6 +136,7 @@ val appModule = module {
     single { PrefsPersister(get()) }
     single { SessionManager(get(), get()) }
     singleOf(::MessageManager)
+    singleOf(::AdvancedPromptBuilder)
 
     single {
         FirebaseSyncManager(
@@ -279,6 +285,8 @@ val appModule = module {
     singleOf(::ObserveSelectedVoiceUseCase)
     singleOf(::GetSavedUserInterestsUseCase)
     singleOf(::ObserveAudioLevelsUseCase)
+    singleOf(::GetMasteryLevelUseCase)
+    singleOf(::IncrementConversationCountUseCase)
 
 
     // ViewModels
@@ -292,6 +300,8 @@ val appModule = module {
     viewModelOf(::LanguageSelectionViewModel)
     viewModelOf(::InterestsSelectionViewModel)
     viewModelOf(::WelcomeScreenViewModel)
+    viewModelOf(::SpeakingModeSelectionViewModel)
+    viewModelOf(::GuidedPracticeViewModel)
 
     // Database
     single { UserDatabaseHelper(get(), get()) }

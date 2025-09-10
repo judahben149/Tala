@@ -355,7 +355,6 @@ private fun ProfileSection(
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(
@@ -441,7 +440,6 @@ private fun SettingsSection(
 
         Card(
             colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
             Column {
