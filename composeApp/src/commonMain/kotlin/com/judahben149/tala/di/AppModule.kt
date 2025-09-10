@@ -50,6 +50,7 @@ import com.judahben149.tala.domain.usecases.authentication.verification.CheckEma
 import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 import com.judahben149.tala.domain.usecases.conversations.CompleteConversationUseCase
 import com.judahben149.tala.domain.usecases.conversations.GetActiveConversationUseCase
+import com.judahben149.tala.domain.usecases.conversations.GetAudioFileUseCase
 import com.judahben149.tala.domain.usecases.conversations.GetConversationByIdUseCase
 import com.judahben149.tala.domain.usecases.conversations.GetConversationHistoryUseCase
 import com.judahben149.tala.domain.usecases.conversations.GetMasteryLevelUseCase
@@ -92,6 +93,8 @@ import com.judahben149.tala.domain.usecases.user.UpdateOnboardingFlagUseCase
 import com.judahben149.tala.domain.usecases.vocabulary.AddVocabularyItemUseCase
 import com.judahben149.tala.domain.usecases.vocabulary.GetRecentVocabularyUseCase
 import com.judahben149.tala.domain.usecases.vocabulary.GetUserVocabularyUseCase
+import com.judahben149.tala.presentation.screens.history.ConversationHistoryViewModel
+import com.judahben149.tala.presentation.screens.history.detail.ConversationDetailViewModel
 import com.judahben149.tala.presentation.screens.home.HomeScreenViewModel
 import com.judahben149.tala.presentation.screens.login.AuthViewModel
 import com.judahben149.tala.presentation.screens.settings.SettingsScreenViewModel
@@ -287,6 +290,7 @@ val appModule = module {
     singleOf(::ObserveAudioLevelsUseCase)
     singleOf(::GetMasteryLevelUseCase)
     singleOf(::IncrementConversationCountUseCase)
+    singleOf(::GetAudioFileUseCase)
 
 
     // ViewModels
@@ -302,6 +306,8 @@ val appModule = module {
     viewModelOf(::WelcomeScreenViewModel)
     viewModelOf(::SpeakingModeSelectionViewModel)
     viewModelOf(::GuidedPracticeViewModel)
+    viewModelOf(::ConversationHistoryViewModel)
+    viewModelOf(::ConversationDetailViewModel)
 
     // Database
     single { UserDatabaseHelper(get(), get()) }

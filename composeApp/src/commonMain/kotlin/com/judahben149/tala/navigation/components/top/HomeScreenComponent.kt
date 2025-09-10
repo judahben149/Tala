@@ -7,6 +7,7 @@ class HomeScreenComponent(
     private val onNavigateToProfile: () -> Unit,
 //    private val onNavigateToSpeak: () -> Unit,
     private val onNavigateToVoices: () -> Unit,
+    private val onNavigateToConversationHistory: () -> Unit,
     private val onNavigateToSettings: () -> Unit,
     private val onNavigateToSpeakingModeSelection: () -> Unit,
 ) : ComponentContext by componentContext {
@@ -19,9 +20,9 @@ class HomeScreenComponent(
         onNavigateToSpeakingModeSelection()
     }
 
-//    fun navigateToSpeak() {
-//        onNavigateToSpeak()
-//    }
+    fun navigateToConversationHistory() {
+        onNavigateToConversationHistory()
+    }
 
     fun navigateToVoices() {
         onNavigateToVoices()

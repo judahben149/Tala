@@ -98,7 +98,7 @@ fun HomeScreen(
                     component.navigateToVoices()
                 }
             },
-            onVoicesClick = { component.navigateToVoices() }
+            onHistoryClick = { component.navigateToConversationHistory() }
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -334,7 +334,7 @@ private fun StatCard(
 fun QuickActionsSection(
     colors: TalaColors,
     onSpeakClick: () -> Unit,
-    onVoicesClick: () -> Unit
+    onHistoryClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 24.dp)
@@ -351,26 +351,25 @@ fun QuickActionsSection(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Start Conversation Card with gradient
+
             QuickActionCard(
                 title = "Start Conversation",
                 subtitle = "Practice speaking",
-                icon = Icons.Default.Chat,
+                icon = Icons.Default.RecordVoiceOver,
                 isHighlighted = true,
                 colors = colors,
                 modifier = Modifier.weight(1f),
                 onClick = onSpeakClick
             )
 
-            // Change Voice Card
             QuickActionCard(
-                title = "AI Voices",
-                subtitle = "Choose your tutor",
-                icon = Icons.Default.RecordVoiceOver,
+                title = "View History",
+                subtitle = "View conversation history",
+                icon = Icons.Default.Chat,
                 isHighlighted = false,
                 colors = colors,
                 modifier = Modifier.weight(1f),
-                onClick = onVoicesClick
+                onClick = onHistoryClick
             )
         }
     }

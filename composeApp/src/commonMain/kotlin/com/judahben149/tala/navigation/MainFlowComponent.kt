@@ -9,7 +9,9 @@ import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import com.judahben149.tala.domain.models.conversation.GuidedPracticeScenario
 import com.judahben149.tala.domain.models.conversation.SpeakingMode
+import com.judahben149.tala.navigation.components.others.ConversationDetailScreenComponent
 import com.judahben149.tala.navigation.components.others.GuidedPracticeScreenComponent
+import com.judahben149.tala.navigation.components.others.ConversationListScreenComponent
 import com.judahben149.tala.navigation.components.top.HomeScreenComponent
 import com.judahben149.tala.navigation.components.others.ProfileScreenComponent
 import com.judahben149.tala.navigation.components.others.SettingsScreenComponent
@@ -49,6 +51,9 @@ class MainFlowComponent(
 //                },
                 onNavigateToVoices = {
                     navigation.pushNew(MainConfiguration.Voices)
+                },
+                onNavigateToConversationHistory = {
+                    navigation.pushNew(MainConfiguration.ConversationList)
                 },
                 onNavigateToSettings = {
                     navigation.pushNew(MainConfiguration.Settings)
@@ -97,10 +102,12 @@ class MainFlowComponent(
                 componentContext = componentContext,
                 onBeginSpeech = { scenario ->
                     navigation.pop()
-                    navigation.pushNew(MainConfiguration.Speak(
+                    navigation.pushNew(
+                        MainConfiguration.Speak(
                         mode = SpeakingMode.GUIDED_PRACTICE,
                         scenarioId = scenario.id
-                    ))
+                    )
+                    )
                 },
                 onBackPressed = { navigation.pop() }
             )
@@ -124,10 +131,12 @@ class MainFlowComponent(
             SpeakingModeSelectionComponent(
                 componentContext = componentContext,
                 onFreeSpeak = {
-                    navigation.pushNew(MainConfiguration.Speak(
-                        mode = SpeakingMode.FREE_SPEAK,
-                        scenarioId = null
-                    ))
+                    navigation.pushNew(
+                        MainConfiguration.Speak(
+                            mode = SpeakingMode.FREE_SPEAK,
+                            scenarioId = null
+                        )
+                    )
                 },
                 onGuidedPractice = {
                     navigation.pushNew(MainConfiguration.GuidedPractice)
@@ -135,42 +144,70 @@ class MainFlowComponent(
                 onBackPressed = { navigation.pop() }
             )
         )
+
+        is MainConfiguration.ConversationList -> MainChild.ConversationList(
+            ConversationListScreenComponent(
+                componentContext = componentContext,
+                onConversationSelected = { conversationId ->
+                    navigation.pushNew(MainConfiguration.ConversationDetail(conversationId))
+                },
+                onBackPressed = { navigation.pop() }
+            )
+        )
+
+        is MainConfiguration.ConversationDetail -> MainChild.ConversationDetail(
+            ConversationDetailScreenComponent(
+                componentContext = componentContext,
+                conversationId = configuration.conversationId,
+                onBackPressed = { navigation.pop() }
+            )
+        )
     }
+}
+
+@Serializable
+sealed class MainConfiguration {
+    @Serializable
+    data object Home : MainConfiguration()
 
     @Serializable
-    sealed class MainConfiguration {
-        @Serializable
-        data object Home : MainConfiguration()
-        
-        @Serializable
-        data object Profile : MainConfiguration()
+    data object Profile : MainConfiguration()
 
-        @Serializable
-        data object Settings : MainConfiguration()
+    @Serializable
+    data object Settings : MainConfiguration()
 
-        @Serializable
-        data class Speak(
-            val mode: SpeakingMode,
-            val scenarioId: String? = null
-        ) : MainConfiguration()
+    @Serializable
+    data class Speak(
+        val mode: SpeakingMode,
+        val scenarioId: String? = null
+    ) : MainConfiguration()
 
-        @Serializable
-        data object SpeakingModeSelection : MainConfiguration()
+    @Serializable
+    data object SpeakingModeSelection : MainConfiguration()
 
-        @Serializable
-        data object GuidedPractice : MainConfiguration()
+    @Serializable
+    data object GuidedPractice : MainConfiguration()
 
-        @Serializable
-        data object Voices : MainConfiguration()
-    }
+    @Serializable
+    data object Voices : MainConfiguration()
 
-    sealed class MainChild {
-        data class Home(val component: HomeScreenComponent) : MainChild()
-        data class Profile(val component: ProfileScreenComponent) : MainChild()
-        data class Settings(val component: SettingsScreenComponent) : MainChild()
-        data class Speak(val component: SpeakScreenComponent) : MainChild()
-        data class SpeakingModeSelection(val component: SpeakingModeSelectionComponent) : MainChild()
-        data class Voices(val component: VoicesScreenComponent) : MainChild()
-        data class GuidedPractice(val component: GuidedPracticeScreenComponent) : MainChild()
-    }
+    @Serializable
+    data object ConversationList : MainConfiguration()
+
+    @Serializable
+    data class ConversationDetail(
+        val conversationId: String
+    ) : MainConfiguration()
+}
+
+sealed class MainChild {
+    data class Home(val component: HomeScreenComponent) : MainChild()
+    data class Profile(val component: ProfileScreenComponent) : MainChild()
+    data class Settings(val component: SettingsScreenComponent) : MainChild()
+    data class Speak(val component: SpeakScreenComponent) : MainChild()
+    data class SpeakingModeSelection(val component: SpeakingModeSelectionComponent) : MainChild()
+    data class Voices(val component: VoicesScreenComponent) : MainChild()
+    data class GuidedPractice(val component: GuidedPracticeScreenComponent) : MainChild()
+    data class ConversationList(val component: ConversationListScreenComponent) : MainChild()
+    data class ConversationDetail(val component: ConversationDetailScreenComponent) : MainChild()
 }
