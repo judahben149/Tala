@@ -28,12 +28,25 @@ class UserDatabaseHelper(
     }
 
     // Get current user as one-shot value
-    suspend fun getCurrentUserSnapshot(): UserEntity? {
+    fun getCurrentUserSnapshot(): UserEntity? {
         return userQueries.selectCurrentUser().executeAsOneOrNull()?.toUserEntity()
     }
 
+    suspend fun updateConversationStats(
+        userId: String,
+        messageQuotaCount: Long,
+        totalConversations: Long,
+        lastResetDate: String
+    ) {
+        userQueries.updateConversationStats(
+            messageQuotaCount = messageQuotaCount,
+            totalConversations = totalConversations,
+            messageDailyQuotaCountLastResetDate = lastResetDate,
+            id = userId
+        )
+    }
 
-    suspend fun saveCurrentUser(user: UserEntity) {
+    fun saveCurrentUser(user: UserEntity) {
         logger.d { "See the user Entity I'm saving oo --> $user" }
         val interestsJson = Json.encodeToString(user.interests)
         val achievementBadgesJson = Json.encodeToString(user.achievementBadges)
@@ -73,12 +86,14 @@ class UserDatabaseHelper(
             totalStudyTimeMinutes = user.totalStudyTimeMinutes,
             favoriteTopics = favoriteTopicsJson,
             lastActiveAt = user.lastActiveAt,
-            loginCount = user.loginCount.toLong()
+            loginCount = user.loginCount.toLong(),
+            messageDailyQuotaCountLastResetDate = user.messageDailyQuotaCountLastResetDate,
+            messageQuotaCount = user.messageQuotaCount
         )
     }
 
     // Clear current user data (logout)
-    suspend fun clearCurrentUser() {
+    fun clearCurrentUser() {
         userQueries.deleteAllUsers()
     }
 }
@@ -124,7 +139,9 @@ private fun Users.toUserEntity() = UserEntity(
         try { Json.decodeFromString<List<String>>(it) } catch (_: Exception) { emptyList() }
     },
     lastActiveAt = lastActiveAt,
-    loginCount = loginCount.toInt()
+    loginCount = loginCount.toInt(),
+    messageDailyQuotaCountLastResetDate = messageDailyQuotaCountLastResetDate,
+    messageQuotaCount = messageQuotaCount
 ).also {
     println("PRINTING----> Users: $this")
     println("PRINTING----> UserEntity: $it")

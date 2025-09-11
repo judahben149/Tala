@@ -1,7 +1,5 @@
 package com.judahben149.tala.domain.mappers
 
-import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.toUpperCase
 import com.judahben149.tala.data.model.UserEntity
 import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.conversation.MasteryLevel
@@ -43,7 +41,9 @@ fun AppUser.toUserEntity(): UserEntity = UserEntity(
     totalStudyTimeMinutes = totalStudyTimeMinutes,
     favoriteTopics = favoriteTopics,
     lastActiveAt = lastActiveAt,
-    loginCount = loginCount
+    loginCount = loginCount,
+    messageDailyQuotaCountLastResetDate = messageDailyQuotaCountLastResetDate,
+    messageQuotaCount = messageQuotaCount
 ).also {
     val json = Json { encodeDefaults = true }
     val userEntityJson = json.encodeToJsonElement(UserEntity.serializer(), it).jsonObject
@@ -85,13 +85,18 @@ fun UserEntity.toAppUser(): AppUser = AppUser(
     totalStudyTimeMinutes = totalStudyTimeMinutes,
     favoriteTopics = favoriteTopics,
     lastActiveAt = lastActiveAt,
-    loginCount = loginCount
+    loginCount = loginCount,
+    messageDailyQuotaCountLastResetDate = messageDailyQuotaCountLastResetDate,
+    messageQuotaCount = messageQuotaCount
 ).also {
     val json = Json { encodeDefaults = true }
     val userEntityJson = json.encodeToJsonElement(UserEntity.serializer(), this).jsonObject
     val appUserJson = json.encodeToJsonElement(AppUser.serializer(), it).jsonObject
 
     diffJson("AppUser", appUserJson, "UserEntity", userEntityJson)
+
+    println("AppUser ----> : $it")
+    println("UserEntity ----> : $this")
 }
 
 fun String.toMasteryLevel(): MasteryLevel = MasteryLevel.valueOf(this.uppercase())

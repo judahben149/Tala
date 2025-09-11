@@ -15,6 +15,7 @@ import com.judahben149.tala.domain.models.session.UserProfile
 import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.domain.repository.UserRepository
 import com.judahben149.tala.util.buildProfileDataFromAppUser
+import com.judahben149.tala.util.getCurrentDateString
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -101,6 +102,8 @@ class UserRepositoryImpl(
         return try {
             val currentUser = firebaseService.getCurrentUser()
                 ?: return Result.Failure(Exception("No authenticated user"))
+
+            clearPersistedUser()
 
             // Delete user data from database first
             firebaseService.saveUserProfile(currentUser.userId, emptyMap())
@@ -216,10 +219,33 @@ class UserRepositoryImpl(
 
             logger.d { "Incrementing conversation count for user: ${persistedUser?.totalConversations}" }
 
-            val updates = mapOf("totalConversations" to (persistedUser?.totalConversations!!.plus(1)))
-            logger.d { "Updating total conversations to ${persistedUser.totalConversations.plus(1)}" }
+            // Check and reset quota if needed
+            val today = getCurrentDateString()
+            val shouldReset = persistedUser?.messageDailyQuotaCountLastResetDate != today
+
+            val newMessageQuotaCount = if (shouldReset) {
+                1L
+            } else {
+                persistedUser.messageQuotaCount + 1
+            }
+
+            val newTotalConversations = persistedUser?.totalConversations?.plus(1)?.toLong() ?: 0L
+
+            val updates = mapOf(
+                "messageDailyQuotaCountLastResetDate" to today,
+                "messageQuotaCount" to newMessageQuotaCount,
+                "totalConversations" to newTotalConversations
+            )
 
             firebaseService.updateUserStats(userId, updates)
+
+            userDatabaseHelper.updateConversationStats(
+                userId = userId,
+                messageQuotaCount = newMessageQuotaCount,
+                totalConversations = newTotalConversations,
+                lastResetDate = today
+            )
+
 
             Result.Success(Unit)
         } catch (e: Exception) {

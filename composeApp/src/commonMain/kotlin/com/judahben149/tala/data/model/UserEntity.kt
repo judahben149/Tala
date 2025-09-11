@@ -47,5 +47,9 @@ data class UserEntity(
     val totalStudyTimeMinutes: Long = 0L,
     val favoriteTopics: List<String> = emptyList(),
     val lastActiveAt: Long = 0L,
-    val loginCount: Int = 0
+    val loginCount: Int = 0,
+
+    // Tier Quotas
+    val messageDailyQuotaCountLastResetDate: String? = null,
+    val messageQuotaCount: Long = 0L
 )

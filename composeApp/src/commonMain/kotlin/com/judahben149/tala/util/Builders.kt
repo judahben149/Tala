@@ -48,6 +48,12 @@ fun buildProfileDataFromAppUser(user: AppUser): Map<String, Any> {
         put("lastActiveAt", user.lastActiveAt)
         put("loginCount", user.loginCount)
         put("onboardingCompleted", user.onboardingCompleted)
+
+        // Tier Quotas
+        user.messageDailyQuotaCountLastResetDate?.let { put("messageDailyQuotaCountLastResetDate", it) }
+        put("messageQuotaCount", user.messageQuotaCount)
+    }.also {
+        println("Profile Data: $it")
     }
 }
 
@@ -99,6 +105,12 @@ fun buildAppUserFromProfileData(
         loginCount = profileData["loginCount"] as? Int ?: 0,
         onboardingCompleted = profileData["onboardingCompleted"] as? Boolean ?: false,
 
+        // Tier Quotas
+        messageDailyQuotaCountLastResetDate = profileData["messageDailyQuotaCountLastResetDate"] as? String,
+        messageQuotaCount = profileData["messageQuotaCount"] as Long,
+
         userId = userId,
-    )
+    ).also {
+        println("App User here iooooooo --> : $it")
+    }
 }

@@ -6,5 +6,6 @@ enum class ConversationState {
     Converting,
     Thinking,
     Speaking,
-    Stopped
+    Stopped,
+    Disallowed
 }

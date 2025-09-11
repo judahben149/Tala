@@ -297,6 +297,12 @@ private fun getColorsForState(state: ConversationState): Triple<List<Color>, Lis
             listOf(Red400, Yellow200),
             listOf(Red600, Yellow300)
         )
+
+        ConversationState.Disallowed -> Triple(
+            listOf(Red500, Red600), // Red for quota exceeded
+            listOf(Red400, Red500),
+            listOf(Red600, Red700)
+        )
     }
 }
 

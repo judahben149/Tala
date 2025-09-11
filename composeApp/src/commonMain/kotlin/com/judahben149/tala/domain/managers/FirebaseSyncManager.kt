@@ -246,7 +246,12 @@ class FirebaseSyncManager(
                 currentUser.favoriteTopics != newUser.favoriteTopics ||
                 currentUser.lastActiveAt != newUser.lastActiveAt ||
                 currentUser.loginCount != newUser.loginCount ||
-                currentUser.onboardingCompleted != newUser.onboardingCompleted
+                currentUser.onboardingCompleted != newUser.onboardingCompleted ||
+
+                // Tier Quotas
+                currentUser.messageDailyQuotaCountLastResetDate != newUser.messageDailyQuotaCountLastResetDate ||
+                currentUser.messageQuotaCount != newUser.messageQuotaCount
+
     }
 
     fun stopSyncing() {

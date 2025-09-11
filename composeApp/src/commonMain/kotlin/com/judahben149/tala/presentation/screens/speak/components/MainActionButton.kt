@@ -23,6 +23,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.VolumeOff
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -241,6 +242,7 @@ private fun getCurrentIcon(conversationState: ConversationState): ImageVector {
         ConversationState.Thinking -> Icons.Default.Psychology
         ConversationState.Speaking -> Icons.Default.VolumeOff
         ConversationState.Stopped -> Icons.Default.Refresh
+        ConversationState.Disallowed -> Icons.Default.Warning
     }
 }
 
@@ -274,5 +276,6 @@ private fun getContentDescription(conversationState: ConversationState): String 
         ConversationState.Thinking -> "Processing"
         ConversationState.Speaking -> "Stop Speaking"
         ConversationState.Stopped -> "Restart"
+        ConversationState.Disallowed -> "Conversation Disallowed"
     }
 }

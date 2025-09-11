@@ -25,6 +25,7 @@ data class SpeakScreenUiState(
             ConversationState.Thinking -> "Thinking..."
             ConversationState.Speaking -> "Replying..."
             ConversationState.Stopped -> "Stopped"
+            ConversationState.Disallowed -> "Daily quota exceeded"
         }
 
     val buttonAction: String
@@ -35,6 +36,7 @@ data class SpeakScreenUiState(
             ConversationState.Thinking -> "Please wait"
             ConversationState.Speaking -> "⏹Stop reply"
             ConversationState.Stopped -> "Start over"
+            ConversationState.Disallowed -> "Daily quota exceeded"
         }
 
     val buttonIcon: ImageVector
@@ -45,6 +47,7 @@ data class SpeakScreenUiState(
             ConversationState.Thinking -> Icons.Outlined.Psychology
             ConversationState.Speaking -> Icons.Outlined.Stop
             ConversationState.Stopped -> Icons.Outlined.Refresh
+            ConversationState.Disallowed -> Icons.Outlined.Warning
         }
 
     val isButtonEnabled: Boolean

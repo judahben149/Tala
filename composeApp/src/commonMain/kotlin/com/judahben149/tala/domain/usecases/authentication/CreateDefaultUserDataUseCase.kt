@@ -74,6 +74,12 @@ class CreateDefaultUserDataUseCase(
                     put("lastActiveAt", user.lastActiveAt)
                     put("loginCount", user.loginCount)
                     put("onboardingCompleted", user.onboardingCompleted)
+
+                    // Tier Quotas
+                    user.messageDailyQuotaCountLastResetDate?.let {
+                        put("messageDailyQuotaCountLastResetDate", it)
+                    }
+                    put("messageQuotaCount", user.messageQuotaCount)
                 }
 
                 logger.d { "Profile Data: $profileData" }

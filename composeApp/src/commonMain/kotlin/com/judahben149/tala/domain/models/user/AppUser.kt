@@ -3,6 +3,7 @@ package com.judahben149.tala.domain.models.user
 import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.speech.Gender
 import com.judahben149.tala.util.AvatarUrlGenerator
+import com.judahben149.tala.util.getCurrentDateString
 import kotlinx.serialization.Serializable
 import kotlin.time.ExperimentalTime
 
@@ -52,7 +53,11 @@ data class AppUser(
     val favoriteTopics: List<String> = emptyList(),
     val lastActiveAt: Long = 0L,
     val loginCount: Int = 0,
-    val onboardingCompleted: Boolean = false
+    val onboardingCompleted: Boolean = false,
+
+    // Tier Quotas
+    val messageDailyQuotaCountLastResetDate: String? = getCurrentDateString(),
+    val messageQuotaCount: Long = 0L
 ) {
     fun greeting(): String {
         val name = firstName.takeIf { it.isNotEmpty() } ?: displayName
@@ -153,4 +158,11 @@ data class AppUser(
         return daysSinceActive <= 7 // Active if used within last week
     }
 
+    fun isAllowedToConverse(): Boolean {
+        return if (isPremiumUser) {
+            true
+        } else {
+            messageQuotaCount <= 10L
+        }
+    }
 }

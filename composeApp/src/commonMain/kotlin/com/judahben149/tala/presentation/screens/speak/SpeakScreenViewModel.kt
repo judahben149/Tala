@@ -13,6 +13,7 @@ import com.judahben149.tala.domain.models.conversation.GuidedPracticeScenario
 import com.judahben149.tala.domain.models.conversation.SpeakingMode
 import com.judahben149.tala.domain.models.speech.RecorderConfig
 import com.judahben149.tala.domain.models.speech.RecorderStatus
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.domain.usecases.conversations.IncrementConversationCountUseCase
 import com.judahben149.tala.domain.usecases.conversations.StartConversationUseCase
 import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
@@ -21,7 +22,9 @@ import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceIdUseCase
 import com.judahben149.tala.domain.usecases.speech.recording.*
+import com.judahben149.tala.domain.usecases.user.ObservePersistedUserDataUseCase
 import com.judahben149.tala.util.decodeBase64Audio
+import com.judahben149.tala.util.getCurrentDateString
 import com.judahben149.tala.util.mimeTypeForOutputFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -42,6 +45,7 @@ class SpeakScreenViewModel(
     private val getSelectedVoiceIdUseCase: GetSelectedVoiceIdUseCase,
     private val observeAudioLevelsUseCase: ObserveAudioLevelsUseCase,
     private val incrementConversationCount: IncrementConversationCountUseCase,
+    private val observePersistedUserDataUseCase: ObservePersistedUserDataUseCase,
     private val messageManager: MessageManager,
     private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
@@ -55,10 +59,12 @@ class SpeakScreenViewModel(
     private var conversationId: String? = null
     private var recordingStatus: RecorderStatus = RecorderStatus.Idle
     private var hasPermission = false
+    private var currentUser: AppUser? = null
 
     init {
         observeRecordingStatus()
         observeAudioLevels()
+        observeUserData()
     }
 
     fun updateSpeakingModes(
@@ -101,6 +107,45 @@ class SpeakScreenViewModel(
                 )
             }
         }.launchIn(viewModelScope)
+    }
+
+    private fun observeUserData() {
+        viewModelScope.launch {
+            observePersistedUserDataUseCase()
+                .filterNotNull()
+                .catch { exception ->
+                    logger.e(exception) { "Error observing user data in SpeakScreen" }
+                }
+                .collect { appUser ->
+                    currentUser = appUser
+                    logger.d { "User data updated in SpeakScreen: ${appUser.displayName}" }
+
+                    // Check quota status and update conversation state if needed
+                    checkQuotaStatus(appUser)
+                }
+        }
+    }
+
+    private fun checkQuotaStatus(user: AppUser) {
+        if (user.isPremiumUser) {
+            return
+        }
+
+        val today = getCurrentDateString()
+        val shouldReset = user.messageDailyQuotaCountLastResetDate != today
+        val currentQuota = if (shouldReset) 0 else user.messageQuotaCount
+
+        if (currentQuota >= 10) {
+            // User has exceeded quota
+            _uiState.update { currentState ->
+                if (currentState.conversationState != ConversationState.Disallowed) {
+                    currentState.copy(conversationState = ConversationState.Disallowed)
+                } else {
+                    currentState
+                }
+            }
+            logger.w { "User quota exceeded: $currentQuota/10" }
+        }
     }
 
     fun onPermissionGranted() {
@@ -255,6 +300,21 @@ class SpeakScreenViewModel(
             return
         }
 
+        // Check quota before processing
+        val user = currentUser
+        if (user != null && !user.isPremiumUser) {
+            val today = getCurrentDateString()
+            val shouldReset = user.messageDailyQuotaCountLastResetDate != today
+            val currentQuota = if (shouldReset) 0 else user.messageQuotaCount
+
+            if (currentQuota >= 10) {
+                logger.w { "Quota exceeded, blocking message" }
+                updateError("Daily message limit reached. Upgrade to Premium for unlimited messages.")
+                updateState(conversationState = ConversationState.Disallowed)
+                return
+            }
+        }
+
         try {
             updateState(conversationState = ConversationState.Thinking)
             logger.d { "Generating AI response for: $userText" }
@@ -271,13 +331,20 @@ class SpeakScreenViewModel(
                     logger.d { "AI response generated successfully: $aiResponse" }
 
                     addUserMessageUseCase(convId, userText, userAudioBase64)
-                    incrementConversationCount()
+                    incrementConversationCount()  // This will now be checked server-side
                     convertTextToSpeech(aiResponse, convId)
                 }
                 is Result.Failure -> {
                     logger.e { "AI response generation failed: ${result.error}" }
+
+                    // Check if it's a quota error
+                    if (result.error.message?.contains("quota") == true ||
+                        result.error.message?.contains("limit") == true) {
+                        updateState(conversationState = ConversationState.Disallowed)
+                    } else {
+                        updateState(conversationState = ConversationState.Stopped)
+                    }
                     updateError("Failed to generate response: ${result.error.message}")
-                    updateState(conversationState = ConversationState.Stopped)
                 }
             }
         } catch (e: Exception) {

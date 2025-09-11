@@ -42,7 +42,11 @@ CREATE TABLE users (
     totalStudyTimeMinutes INTEGER NOT NULL DEFAULT 0,
     favoriteTopics TEXT NOT NULL DEFAULT '[]',
     lastActiveAt INTEGER NOT NULL DEFAULT 0,
-    loginCount INTEGER NOT NULL DEFAULT 0
+    loginCount INTEGER NOT NULL DEFAULT 0,
+
+    -- Tier Quotas
+    messageDailyQuotaCountLastResetDate TEXT,
+    messageQuotaCount INTEGER NOT NULL DEFAULT 0
 );
 
 -- Simplified Queries
@@ -56,10 +60,18 @@ INSERT OR REPLACE INTO users(
     currentLevel, totalPoints, weeklyGoal, achievementBadges, notificationsEnabled,
     practiceRemindersEnabled, selectedVoiceId, preferredDifficulty, dailyGoalMinutes,
     friendsCount, isPrivateProfile, bio, location, timezone, totalStudyTimeMinutes,
-    favoriteTopics, lastActiveAt, loginCount
+    favoriteTopics, lastActiveAt, loginCount, messageDailyQuotaCountLastResetDate, messageQuotaCount
 ) VALUES (
-    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 );
+
+updateConversationStats:
+UPDATE users
+SET messageQuotaCount = ?,
+    totalConversations = ?,
+    messageDailyQuotaCountLastResetDate = ?
+WHERE id = ?;
+
 
 deleteAllUsers:
 DELETE FROM users;
