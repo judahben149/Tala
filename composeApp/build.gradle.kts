@@ -1,5 +1,3 @@
-import com.android.build.api.dsl.Lint
-import com.android.build.api.dsl.LintOptions
 import com.codingfeline.buildkonfig.compiler.FieldSpec.Type.STRING
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -35,16 +33,16 @@ kotlin {
         }
     }
     
-//    listOf(
-//        iosX64(),
-//        iosArm64(),
-//        iosSimulatorArm64()
-//    ).forEach { iosTarget ->
-//        iosTarget.binaries.framework {
-//            baseName = "ComposeApp"
-//            isStatic = true
-//        }
-//    }
+    listOf(
+        iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach { iosTarget ->
+        iosTarget.binaries.framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+    }
 
 
     iosX64()
@@ -101,6 +99,12 @@ kotlin {
 
         pod("GoogleSignIn") {
             version = "~> 8.0.0"
+            extraOpts += listOf("-compiler-option", "-fmodules")
+        }
+
+        // Revenue Cat
+        pod("PurchasesHybridCommon") {
+            version = libs.versions.purchases.common.get()
             extraOpts += listOf("-compiler-option", "-fmodules")
         }
 
@@ -212,6 +216,10 @@ kotlin {
 
             // Haze
             implementation(libs.haze)
+
+            // RevenueCat Purchases
+            implementation(libs.purchases.core)
+            implementation(libs.purchases.ui)
         }
         iosMain.dependencies {
             implementation(libs.sqldelight.native)
@@ -221,15 +229,22 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+
+        // Needed for Revenue Cat KMP SDK
+        named { it.lowercase().startsWith("ios") }.configureEach {
+            languageSettings {
+                optIn("kotlinx.cinterop.ExperimentalForeignApi")
+            }
+        }
     }
 }
 
 android {
-    namespace = "com.judahben149.tala"
+    namespace = "com.judahben149.tala_app"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
-        applicationId = "com.judahben149.tala"
+        applicationId = "com.judahben149.tala_app"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
@@ -248,13 +263,22 @@ android {
             keyAlias = secretsProperties["key_alias"]?.toString() ?: ""
             keyPassword = secretsProperties["key_password"]?.toString() ?: ""
         }
+
+        getByName("debug") {
+            storeFile = file(secretsProperties["store_path"]?.toString() ?: "")
+            storePassword = secretsProperties["store_password"]?.toString() ?: ""
+            keyAlias = secretsProperties["key_alias"]?.toString() ?: ""
+            keyPassword = secretsProperties["key_password"]?.toString() ?: ""
+        }
     }
 
     buildTypes {
         getByName("debug") {
             isMinifyEnabled = false
-            applicationIdSuffix = ".dev"
-            versionNameSuffix = "-DEBUG"
+            signingConfig = signingConfigs.getByName("debug")
+
+//            applicationIdSuffix = ".dev"
+//            versionNameSuffix = "-DEBUG"
         }
 
         getByName("release") {
@@ -307,5 +331,7 @@ buildkonfig {
         buildConfigField(STRING, "FIREBASE_WEB_CLIENT", secretsProperties["FIREBASE_WEB_CLIENT_DEV"]?.toString() ?: "")
 //        buildConfigField(STRING, "FIREBASE_WEB_CLIENT", secretsProperties["FIREBASE_WEB_CLIENT_PROD"]?.toString() ?: "")
 
+        buildConfigField(STRING, "REVENUE_CAT_PLAY_STORE_API_KEY", secretsProperties["REVENUE_CAT_PLAY_STORE_API_KEY"]?.toString() ?: "")
+        buildConfigField(STRING, "REVENUE_CAT_APP_STORE_API_KEY", secretsProperties["REVENUE_CAT_APP_STORE_API_KEY"]?.toString() ?: "")
     }
 }

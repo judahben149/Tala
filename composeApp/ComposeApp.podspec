@@ -13,6 +13,7 @@ Pod::Spec.new do |spec|
     spec.dependency 'FirebaseCore', '~> 11.13'
     spec.dependency 'FirebaseDatabase', '~> 11.13'
     spec.dependency 'GoogleSignIn', '~> 8.0.0'
+    spec.dependency 'PurchasesHybridCommon', '13.37.0'
     spec.dependency 'sqlite3'
                 
     if !Dir.exist?('build/cocoapods/framework/ComposeApp.framework') || Dir.empty?('build/cocoapods/framework/ComposeApp.framework')

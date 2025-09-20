@@ -9,7 +9,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:name=".AndroidApplication"
+        android:name="com.judahben149.tala.AndroidApplication"
+        android:launchMode="standard"
         android:allowBackup="false"
         android:fullBackupContent="false"
         android:icon="@mipmap/ic_launcher"
@@ -19,7 +20,7 @@
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity
             android:exported="true"
-            android:name=".MainActivity">
+            android:name="com.judahben149.tala.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

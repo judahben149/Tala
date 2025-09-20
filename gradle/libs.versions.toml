@@ -42,6 +42,11 @@ google-id = "1.1.1"
 kmp-auth = "2.3.1"
 haze = "1.6.10"
 
+# RevenueCat Purchases
+#noinspection GradleDependency
+purchases-kmp = "1.8.4+13.37.0"
+purchases-common="13.37.0"
+
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-testJunit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
@@ -128,6 +133,10 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-java = { group = "io.ktor", name = "ktor-client-java", version.ref = "ktor" }
 
 haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
+
+# RevenueCat Purchases
+purchases-ui = { module = "com.revenuecat.purchases:purchases-kmp-ui", version.ref = "purchases-kmp" }
+purchases-core = { module = "com.revenuecat.purchases:purchases-kmp-core", version.ref = "purchases-kmp" }
 
 
 [plugins]
