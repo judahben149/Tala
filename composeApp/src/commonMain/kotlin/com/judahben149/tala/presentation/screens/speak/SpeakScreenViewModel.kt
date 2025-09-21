@@ -6,6 +6,7 @@ import co.touchlab.kermit.Logger
 import com.judahben149.tala.data.service.audio.SpeechPlayer
 import com.judahben149.tala.data.service.permission.AudioPermissionManager
 import com.judahben149.tala.domain.managers.MessageManager
+import com.judahben149.tala.domain.managers.RemoteConfigManager
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
@@ -50,6 +51,7 @@ class SpeakScreenViewModel(
     private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
     private val audioPermissionManager: AudioPermissionManager,
+    private val remoteConfigManager: RemoteConfigManager,
     private val logger: Logger
 ) : ViewModel() {
 
@@ -309,7 +311,8 @@ class SpeakScreenViewModel(
 
             if (currentQuota >= 10) {
                 logger.w { "Quota exceeded, blocking message" }
-                updateError("Daily message limit reached. Upgrade to Premium for unlimited messages.")
+//                updateError("Daily message limit reached. Upgrade to Premium for unlimited messages.")
+                updateError("Daily message limit reached. Please check back tomorrow for renewed access.")
                 updateState(conversationState = ConversationState.Disallowed)
                 return
             }
