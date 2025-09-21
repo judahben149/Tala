@@ -362,8 +362,16 @@ class SpeakScreenViewModel(
             when (val result = downloadTextToSpeechUseCase(text, getSelectedVoiceIdUseCase())) {
                 is Result.Success -> {
                     logger.d { "Text-to-speech conversion successful" }
-                    addAiMessageUseCase(convId, text, result.data.audioBase64)
-                    playAISpeech(result.data.audioBase64)
+                    val audioBase64 = result.data.audioBase64
+                    if (audioBase64 != null) {
+                        addAiMessageUseCase(convId, text, audioBase64)
+                        playAISpeech(audioBase64)
+                    } else {
+                        logger.e { "Text-to-speech conversion returned null audio data" }
+                        addAiMessageUseCase(convId, text, null)
+                        updateError("Failed to generate speech: Audio data is missing")
+                        updateState(conversationState = ConversationState.Stopped)
+                    }
                 }
                 is Result.Failure -> {
                     logger.e { "Text-to-speech conversion failed: ${result.error}" }

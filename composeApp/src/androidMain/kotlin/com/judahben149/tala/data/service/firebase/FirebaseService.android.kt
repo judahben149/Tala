@@ -25,6 +25,9 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resume
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
+import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resumeWithException
 
 private var credentialManager: CredentialManager? = null
@@ -331,6 +334,52 @@ actual suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>,
 //        android.util.Log.w("GoogleSignIn", "Failed to save initial profile: ${e.message}")
 //    }
 //}
+
+
+actual suspend fun fetchFirebaseRemoteConfig(): Map<String, Any> {
+    val remoteConfig = FirebaseRemoteConfig.getInstance()
+
+    // Configure Remote Config settings
+    val configSettings = FirebaseRemoteConfigSettings.Builder()
+        .setMinimumFetchIntervalInSeconds(3600) // 1 hour for production, use 0 for testing
+        .build()
+    remoteConfig.setConfigSettingsAsync(configSettings)
+
+    // Set default values (optional)
+    // remoteConfig.setDefaultsAsync(R.xml.remote_config_defaults)
+
+    // Fetch and activate
+    remoteConfig.fetchAndActivate().await()
+
+    // Return all values as a map
+    val allValues = mutableMapOf<String, Any>()
+    remoteConfig.all.forEach { (key, value) ->
+        allValues[key] = value.asString()
+    }
+
+    return allValues
+}
+
+actual suspend fun getFirebaseRemoteConfigString(key: String, defaultValue: String): String {
+    val remoteConfig = FirebaseRemoteConfig.getInstance()
+    return remoteConfig.getString(key).takeIf { it.isNotEmpty() } ?: defaultValue
+}
+
+actual suspend fun getFirebaseRemoteConfigBoolean(key: String, defaultValue: Boolean): Boolean {
+    val remoteConfig = FirebaseRemoteConfig.getInstance()
+    return remoteConfig.getBoolean(key)
+}
+
+actual suspend fun getFirebaseRemoteConfigLong(key: String, defaultValue: Long): Long {
+    val remoteConfig = FirebaseRemoteConfig.getInstance()
+    return remoteConfig.getLong(key)
+}
+
+actual suspend fun getFirebaseRemoteConfigDouble(key: String, defaultValue: Double): Double {
+    val remoteConfig = FirebaseRemoteConfig.getInstance()
+    return remoteConfig.getDouble(key)
+}
+
 actual suspend fun signOutFromGoogleImpl() {
     val activity = currentActivity ?: return
 

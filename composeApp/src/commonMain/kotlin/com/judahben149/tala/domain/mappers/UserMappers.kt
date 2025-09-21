@@ -95,8 +95,8 @@ fun UserEntity.toAppUser(): AppUser = AppUser(
 
     diffJson("AppUser", appUserJson, "UserEntity", userEntityJson)
 
-    println("AppUser ----> : $it")
-    println("UserEntity ----> : $this")
+//    println("AppUser ----> : $it")
+//    println("UserEntity ----> : $this")
 }
 
 fun String.toMasteryLevel(): MasteryLevel = MasteryLevel.valueOf(this.uppercase())

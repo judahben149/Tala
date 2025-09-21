@@ -2,6 +2,7 @@ package com.judahben149.tala.domain.usecases.speech
 
 import com.judahben149.tala.BuildKonfig
 import com.judahben149.tala.data.model.network.speech.VoiceSettings
+import com.judahben149.tala.domain.managers.RemoteConfigManager
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.domain.models.speech.AudioChunk
@@ -9,7 +10,8 @@ import com.judahben149.tala.domain.repository.ElevenLabsTtsRepository
 import kotlinx.coroutines.flow.Flow
 
 class StreamTextToSpeechUseCase(
-    private val repository: ElevenLabsTtsRepository
+    private val repository: ElevenLabsTtsRepository,
+    private val remoteConfigManager: RemoteConfigManager
 ) {
     
     suspend operator fun invoke(
@@ -27,7 +29,7 @@ class StreamTextToSpeechUseCase(
         return repository.streamTextToSpeech(
             text = text,
             voiceId = voiceId,
-            apiKey = BuildKonfig.ELEVEN_LABS_API_KEY,
+            apiKey = remoteConfigManager.getString("eleven_labs_api_key" , BuildKonfig.ELEVEN_LABS_API_KEY),
             voiceSettings = voiceSettings
         )
     }

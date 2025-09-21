@@ -9,7 +9,7 @@ class PersistUserDataUseCase(
     private val logger: Logger
 ) {
     suspend operator fun invoke(user: AppUser) {
-        logger.d { "Persisting user data: $user" }
+//        logger.d { "Persisting user data: $user" }
         userRepository.persistUserData(user)
     }
 }

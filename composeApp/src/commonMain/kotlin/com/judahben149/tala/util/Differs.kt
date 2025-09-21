@@ -24,12 +24,12 @@ inline fun <reified T> diffObjects(labelA: String, a: T, labelB: String, b: T, s
         }
     }
 
-    if (diffs.isEmpty()) {
-        println("✅ No differences between $labelA and $labelB (${T::class.simpleName})")
-    } else {
-        println("⚠️ Differences in ${T::class.simpleName}:")
-        diffs.forEach { println("   $it") }
-    }
+//    if (diffs.isEmpty()) {
+//        println("✅ No differences between $labelA and $labelB (${T::class.simpleName})")
+//    } else {
+//        println("⚠️ Differences in ${T::class.simpleName}:")
+//        diffs.forEach { println("   $it") }
+//    }
 }
 
 fun diffJson(labelA: String, a: JsonObject, labelB: String, b: JsonObject) {
@@ -40,11 +40,11 @@ fun diffJson(labelA: String, a: JsonObject, labelB: String, b: JsonObject) {
             if (aVal != bVal) add("$key: $labelA=$aVal | $labelB=$bVal")
         }
     }
-    if (diffs.isEmpty()) {
-        println("✅ No differences between $labelA and $labelB")
-    } else {
-        println("⚠️ Differences:")
-        diffs.forEach { println("   $it") }
-    }
+//    if (diffs.isEmpty()) {
+//        println("✅ No differences between $labelA and $labelB")
+//    } else {
+//        println("⚠️ Differences:")
+//        diffs.forEach { println("   $it") }
+//    }
 }
 

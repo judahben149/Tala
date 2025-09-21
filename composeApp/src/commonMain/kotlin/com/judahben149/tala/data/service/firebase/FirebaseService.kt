@@ -28,6 +28,11 @@ interface FirebaseService {
     suspend fun refreshUserToken(): Boolean
     suspend fun deleteUserData(userId: String)
     suspend fun signOutFromGoogle()
+    suspend fun fetchRemoteConfig(): Map<String, Any>
+    suspend fun getRemoteConfigString(key: String, defaultValue: String = ""): String
+    suspend fun getRemoteConfigBoolean(key: String, defaultValue: Boolean = false): Boolean
+    suspend fun getRemoteConfigLong(key: String, defaultValue: Long = 0L): Long
+    suspend fun getRemoteConfigDouble(key: String, defaultValue: Double = 0.0): Double
 }
 
 data class FirebaseAppInfo(
@@ -132,6 +137,26 @@ class FirebaseServiceImpl : FirebaseService {
         signOutFromGoogleImpl()
     }
 
+    override suspend fun fetchRemoteConfig(): Map<String, Any> {
+        return fetchFirebaseRemoteConfig()
+    }
+
+    override suspend fun getRemoteConfigString(key: String, defaultValue: String): String {
+        return getFirebaseRemoteConfigString(key, defaultValue)
+    }
+
+    override suspend fun getRemoteConfigBoolean(key: String, defaultValue: Boolean): Boolean {
+        return getFirebaseRemoteConfigBoolean(key, defaultValue)
+    }
+
+    override suspend fun getRemoteConfigLong(key: String, defaultValue: Long): Long {
+        return getFirebaseRemoteConfigLong(key, defaultValue)
+    }
+
+    override suspend fun getRemoteConfigDouble(key: String, defaultValue: Double): Double {
+        return getFirebaseRemoteConfigDouble(key, defaultValue)
+    }
+
 //    override suspend fun signInWithGoogle(): AppUser =
 //        signInWithGoogleFirebase()
 //
@@ -163,6 +188,12 @@ expect suspend fun refreshFirebaseUserToken(): Boolean
 expect suspend fun deleteFirebaseUserData(userId: String)
 expect suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>, Exception>
 expect suspend fun signOutFromGoogleImpl()
+
+expect suspend fun fetchFirebaseRemoteConfig(): Map<String, Any>
+expect suspend fun getFirebaseRemoteConfigString(key: String, defaultValue: String): String
+expect suspend fun getFirebaseRemoteConfigBoolean(key: String, defaultValue: Boolean): Boolean
+expect suspend fun getFirebaseRemoteConfigLong(key: String, defaultValue: Long): Long
+expect suspend fun getFirebaseRemoteConfigDouble(key: String, defaultValue: Double): Double
 
 //expect suspend fun signInWithGoogleFirebase(): AppUser
 //expect suspend fun linkGoogleAccountFirebase(): AppUser

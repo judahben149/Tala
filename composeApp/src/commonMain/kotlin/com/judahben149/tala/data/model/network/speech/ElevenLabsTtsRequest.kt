@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class ElevenLabsTtsRequest(
     val text: String,
     @SerialName("model_id")
-    val modelId: String = "eleven_multilingual_v2",
+    val modelId: String = "eleven_multilingual_v1",
     @SerialName("voice_settings")
     val voiceSettings: VoiceSettings? = null,
     @SerialName("pronunciation_dict_locators")

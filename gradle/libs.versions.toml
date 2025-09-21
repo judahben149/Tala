@@ -79,6 +79,7 @@ android-firebase-bom = { module = "com.google.firebase:firebase-bom", version.re
 android-firebase-auth = { module = "com.google.firebase:firebase-auth" }
 android-firebase-database-ktx = { module = "com.google.firebase:firebase-database-ktx" }
 android-firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+android-firebase-config = { module = "com.google.firebase:firebase-config-ktx" }
 
 play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
 

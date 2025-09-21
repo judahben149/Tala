@@ -108,6 +108,11 @@ kotlin {
             extraOpts += listOf("-compiler-option", "-fmodules")
         }
 
+        pod("FirebaseRemoteConfig") {
+            version = "~> 11.13"
+            extraOpts += listOf("-compiler-option", "-fmodules")
+        }
+
 //        pod("GTMSessionFetcher") {
 //            version = "~> 3.3"
 //            extraOpts += listOf("-compiler-option", "-fmodules")
@@ -126,6 +131,7 @@ kotlin {
             implementation(libs.android.firebase.analytics)
             implementation(libs.android.firebase.auth)
             implementation(libs.android.firebase.database.ktx)
+            implementation(libs.android.firebase.config)
             implementation(libs.play.services.auth)
             implementation(libs.sqldelight.android)
             implementation(libs.coroutines.play.services)

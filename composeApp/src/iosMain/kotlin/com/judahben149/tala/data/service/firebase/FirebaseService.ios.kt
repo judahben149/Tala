@@ -29,6 +29,12 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import platform.Foundation.NSBundle
 import platform.Foundation.NSDictionary
+import cocoapods.FirebaseRemoteConfig.FIRRemoteConfig
+import cocoapods.FirebaseRemoteConfig.FIRRemoteConfigSettings
+import cocoapods.FirebaseRemoteConfig.FIRRemoteConfigSource
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import platform.Foundation.NSError
 import platform.Foundation.NSNumber
 import platform.Foundation.dictionaryWithContentsOfFile
@@ -568,6 +574,62 @@ actual suspend fun getFirebaseUserData(userId: String): Result<Map<String, Any>,
 //        else -> viewController
 //    }
 //}
+
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun fetchFirebaseRemoteConfig(): Map<String, Any> = suspendCancellableCoroutine { continuation ->
+    val remoteConfig = FIRRemoteConfig.remoteConfig()
+
+    // Configure Remote Config settings
+    val settings = FIRRemoteConfigSettings()
+    settings.setMinimumFetchInterval(3600.0) // 1 hour for production, use 0.0 for testing
+    remoteConfig.configSettings = settings
+
+    // Fetch and activate
+    remoteConfig.fetchAndActivateWithCompletionHandler { status, error ->
+        if (error != null) {
+            continuation.resumeWithException(Exception(error.localizedDescription))
+        } else {
+            // Get all values as a map
+            val allValues = mutableMapOf<String, Any>()
+            val allKeys = remoteConfig.allKeysFromSource(FIRRemoteConfigSource.FIRRemoteConfigSourceRemote)
+
+            allKeys.forEach { key ->
+                val keyString = key as String
+                val value = remoteConfig.configValueForKey(keyString)
+                allValues[keyString] = value.stringValue()
+            }
+
+            continuation.resume(allValues)
+        }
+    }
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun getFirebaseRemoteConfigString(key: String, defaultValue: String): String {
+    val remoteConfig = FIRRemoteConfig.remoteConfig()
+    val value = remoteConfig.configValueForKey(key).stringValue()
+    return value.takeIf { it.isNotEmpty() } ?: defaultValue
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun getFirebaseRemoteConfigBoolean(key: String, defaultValue: Boolean): Boolean {
+    val remoteConfig = FIRRemoteConfig.remoteConfig()
+    return remoteConfig.configValueForKey(key).boolValue()
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun getFirebaseRemoteConfigLong(key: String, defaultValue: Long): Long {
+    val remoteConfig = FIRRemoteConfig.remoteConfig()
+    return remoteConfig.configValueForKey(key).numberValue().longLongValue()
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun getFirebaseRemoteConfigDouble(key: String, defaultValue: Double): Double {
+    val remoteConfig = FIRRemoteConfig.remoteConfig()
+    return remoteConfig.configValueForKey(key).numberValue().doubleValue()
+}
+
 @OptIn(ExperimentalForeignApi::class)
 actual suspend fun signOutFromGoogleImpl() {
     GIDSignIn.sharedInstance.signOut()

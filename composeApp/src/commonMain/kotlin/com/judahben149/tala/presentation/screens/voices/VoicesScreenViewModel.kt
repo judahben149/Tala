@@ -95,7 +95,7 @@ class VoicesScreenViewModel(
                 when (val result = downloadTextToSpeechUseCase(phrase, voice.voiceId)) {
                     is Result.Success -> {
                         val audioBytes = withContext(Dispatchers.IO) { 
-                            decodeBase64Audio(result.data.audioBase64) 
+                            decodeBase64Audio(result.data.audioBase64 ?: "")
                         }
                         val mimeType = mimeTypeForOutputFormat("mp3_44100_128")
 

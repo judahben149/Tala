@@ -22,6 +22,7 @@ import com.judahben149.tala.data.service.speechSynthesis.createElevenLabsService
 import com.judahben149.tala.domain.managers.AdvancedPromptBuilder
 import com.judahben149.tala.domain.managers.FirebaseSyncManager
 import com.judahben149.tala.domain.managers.MessageManager
+import com.judahben149.tala.domain.managers.RemoteConfigManager
 import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.repository.AudioRepository
 import com.judahben149.tala.domain.repository.AuthenticationRepository
@@ -151,8 +152,15 @@ val appModule = module {
         )
     }
 
+    single<RemoteConfigManager> {
+        RemoteConfigManager(
+            firebaseService = get(),
+            logger = get()
+        )
+    }
+
     // Network Clients
-    single {
+    single(named("DefaultHttpClient")) {
         HttpClient {
             install(ContentNegotiation) {
                 json(
@@ -185,33 +193,34 @@ val appModule = module {
         }
     }
 
-//    single(named("ElevenLabsHttpClient")) {
-//        HttpClient {
-//            install(ContentNegotiation) {
-//                json(
-//                    Json {
-//                        ignoreUnknownKeys = true
-//                        isLenient = true
-//                        encodeDefaults = true
-//                        explicitNulls = false
-//                    }
-//                )
-//            }
-//            // Specific configurations for ElevenLabs API if needed
-//        }
-//    }
+    single(named("ElevenLabsHttpClient")) {
+        HttpClient {
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                        isLenient = true
+                        encodeDefaults = true
+                        explicitNulls = false
+                    }
+                )
+            }
+            // Specific configurations for ElevenLabs API if needed
+            // For instance, if ElevenLabs requires different logging or timeout settings.
+        }
+    }
 
     single(named("GeminiKtorfit")) {
         Ktorfit.Builder()
             .baseUrl(GEMINI_BASE_URL)
-            .httpClient(get<HttpClient>())
+            .httpClient(get<HttpClient>(named("DefaultHttpClient")))
             .build()
     }
 
     single(named("ElevenLabsKtorfit")) {
         Ktorfit.Builder()
             .baseUrl(ELEVEN_LABS_BASE_URL)
-            .httpClient(get<HttpClient>())
+            .httpClient(get<HttpClient>(named("ElevenLabsHttpClient"))) // Use the specific client for ElevenLabs
             .build()
     }
     single<GeminiService> { get<Ktorfit>(named("GeminiKtorfit")).createGeminiService() }

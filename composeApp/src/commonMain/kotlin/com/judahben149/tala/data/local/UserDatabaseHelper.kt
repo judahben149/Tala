@@ -47,7 +47,7 @@ class UserDatabaseHelper(
     }
 
     fun saveCurrentUser(user: UserEntity) {
-        logger.d { "See the user Entity I'm saving oo --> $user" }
+//        logger.d { "See the user Entity I'm saving oo --> $user" }
         val interestsJson = Json.encodeToString(user.interests)
         val achievementBadgesJson = Json.encodeToString(user.achievementBadges)
         val favoriteTopicsJson = Json.encodeToString(user.favoriteTopics)
@@ -143,6 +143,6 @@ private fun Users.toUserEntity() = UserEntity(
     messageDailyQuotaCountLastResetDate = messageDailyQuotaCountLastResetDate,
     messageQuotaCount = messageQuotaCount
 ).also {
-    println("PRINTING----> Users: $this")
-    println("PRINTING----> UserEntity: $it")
+//    println("PRINTING----> Users: $this")
+//    println("PRINTING----> UserEntity: $it")
 }

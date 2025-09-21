@@ -346,7 +346,7 @@ class UserRepositoryImpl(
 
     override suspend fun persistUserData(user: AppUser): Result<Unit, Exception> {
         try {
-            logger.d { "Persisting user data yoo: $user" }
+//            logger.d { "Persisting user data yoo: $user" }
             userDatabaseHelper.saveCurrentUser(user.toUserEntity())
             return Result.Success(Unit)
         } catch (e: Exception) {
@@ -361,7 +361,7 @@ class UserRepositoryImpl(
 
     override suspend fun getPersistedUser(): AppUser? {
         val appUser = userDatabaseHelper.getCurrentUserSnapshot()?.toAppUser()
-        logger.d { "Got persisted user: $appUser" }
+//        logger.d { "Got persisted user: $appUser" }
         return appUser
     }
 
