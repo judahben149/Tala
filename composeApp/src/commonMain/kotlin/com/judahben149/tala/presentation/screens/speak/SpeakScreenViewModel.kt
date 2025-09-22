@@ -19,6 +19,7 @@ import com.judahben149.tala.domain.usecases.conversations.IncrementConversationC
 import com.judahben149.tala.domain.usecases.conversations.StartConversationUseCase
 import com.judahben149.tala.domain.usecases.messages.AddAiMessageUseCase
 import com.judahben149.tala.domain.usecases.messages.AddUserMessageUseCase
+import com.judahben149.tala.domain.usecases.messages.GetConversationMessagesUseCase
 import com.judahben149.tala.domain.usecases.speech.ConvertSpeechToTextUseCase
 import com.judahben149.tala.domain.usecases.speech.DownloadTextToSpeechUseCase
 import com.judahben149.tala.domain.usecases.speech.GetSelectedVoiceIdUseCase
@@ -47,6 +48,7 @@ class SpeakScreenViewModel(
     private val observeAudioLevelsUseCase: ObserveAudioLevelsUseCase,
     private val incrementConversationCount: IncrementConversationCountUseCase,
     private val observePersistedUserDataUseCase: ObservePersistedUserDataUseCase,
+    private val getConversationMessagesUseCase: GetConversationMessagesUseCase,
     private val messageManager: MessageManager,
     private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
@@ -67,6 +69,70 @@ class SpeakScreenViewModel(
         observeRecordingStatus()
         observeAudioLevels()
         observeUserData()
+
+        // Check if we already have a conversation ID from a previous session
+        logger.d { "SpeakScreenViewModel initialized, conversationId: $conversationId" }
+
+        // Debug: Log initial UI state
+        logger.d { "[DEBUG_LOG] Initial UI state - messages: ${_uiState.value.messages.size}, conversationId: ${_uiState.value.conversationId}" }
+
+        // If we have permission and no conversation, initialize one
+        if (hasPermission && conversationId == null) {
+            logger.d { "Auto-initializing conversation on startup" }
+            initializeConversation()
+        }
+    }
+
+    private fun observeConversationMessages() {
+        conversationId?.let { id ->
+            logger.d { "[DEBUG_LOG] Starting to observe conversation messages for conversation: $id" }
+
+            viewModelScope.launch {
+                try {
+                    logger.d { "[DEBUG_LOG] Before collecting messages flow for conversation: $id" }
+
+                    // Use the same approach as ConversationDetailViewModel
+                    getConversationMessagesUseCase(id)
+                        .catch { exception ->
+                            logger.e(exception) { "[DEBUG_LOG] Error observing conversation messages in SpeakScreen" }
+                            _uiState.update {
+                                it.copy(
+                                    error = "Failed to load messages: ${exception.message}"
+                                )
+                            }
+                        }
+                        .collect { messages ->
+                            logger.d { "[DEBUG_LOG] Received ${messages.size} messages for conversation: $id" }
+                            if (messages.isNotEmpty()) {
+                                logger.d { "[DEBUG_LOG] First message: ${messages.first().content}, isUser: ${messages.first().isUser}" }
+                                logger.d { "[DEBUG_LOG] All message IDs: ${messages.map { msg -> msg.id }}" }
+                            } else {
+                                logger.d { "[DEBUG_LOG] No messages received for conversation: $id" }
+                            }
+
+                            logger.d { "[DEBUG_LOG] Before updating UI state, current messages size: ${_uiState.value.messages.size}" }
+
+                            _uiState.update { currentState ->
+                                currentState.copy(
+                                    messages = messages,
+                                    conversationId = id
+                                )
+                            }
+
+                            logger.d { "[DEBUG_LOG] After updating UI state, new messages size: ${_uiState.value.messages.size}" }
+                        }
+
+                    logger.d { "[DEBUG_LOG] Flow collection completed for conversation: $id" }
+                } catch (e: Exception) {
+                    logger.e(e) { "[DEBUG_LOG] Failed to observe messages for conversation: $id" }
+                    _uiState.update {
+                        it.copy(
+                            error = "Failed to load messages: ${e.message}"
+                        )
+                    }
+                }
+            }
+        } ?: logger.w { "[DEBUG_LOG] Cannot observe conversation messages: conversationId is null" }
     }
 
     fun updateSpeakingModes(
@@ -152,10 +218,18 @@ class SpeakScreenViewModel(
 
     fun onPermissionGranted() {
         hasPermission = true
-        logger.d { "Microphone permission granted" }
+        logger.d { "[DEBUG_LOG] Microphone permission granted" }
         clearError()
+
         if (conversationId == null) {
+            logger.d { "[DEBUG_LOG] No existing conversation, initializing new conversation after permission granted" }
             initializeConversation()
+        } else {
+            logger.d { "[DEBUG_LOG] Using existing conversation: $conversationId" }
+            // Make sure we're observing messages for the existing conversation
+            logger.d { "[DEBUG_LOG] Current UI state before observing existing conversation - messages: ${_uiState.value.messages.size}, conversationId: ${_uiState.value.conversationId}" }
+            observeConversationMessages()
+            logger.d { "[DEBUG_LOG] Called observeConversationMessages for existing conversation: $conversationId" }
         }
     }
 
@@ -169,16 +243,27 @@ class SpeakScreenViewModel(
     fun initializeConversation() {
         viewModelScope.launch {
             updateState(isLoading = true)
+            logger.d { "Initializing conversation..." }
 
             try {
                 val userId = sessionManager.getUserId()
                 val language = sessionManager.getUserLanguagePreference().name
+                logger.d { "Starting conversation for user: $userId, language: $language" }
 
                 when (val result = startConversationUseCase(userId, language, "General")) {
                     is Result.Success -> {
                         conversationId = result.data
                         logger.d { "Conversation initialized successfully: ${result.data}" }
                         updateState(isLoading = false)
+
+                        // Call observeConversationMessages() before startRecording()
+                        logger.d { "[DEBUG_LOG] Starting to observe messages for new conversation: ${result.data}" }
+                        logger.d { "[DEBUG_LOG] Current conversationId before observeConversationMessages: $conversationId" }
+                        observeConversationMessages()
+
+                        // Check if messages are being observed
+                        logger.d { "[DEBUG_LOG] Current UI state messages size after observeConversationMessages: ${_uiState.value.messages.size}" }
+
                         startRecording()
                     }
                     is Result.Failure -> {
@@ -203,6 +288,24 @@ class SpeakScreenViewModel(
             ConversationState.Stopped -> restartConversation()
             else -> {
                 logger.d { "Button click ignored for state: ${_uiState.value.conversationState}" }
+            }
+        }
+    }
+
+    fun onButtonPressed() {
+        when (_uiState.value.conversationState) {
+            ConversationState.Idle, ConversationState.Stopped -> startRecording()
+            else -> {
+                logger.d { "Button press ignored for state: ${_uiState.value.conversationState}" }
+            }
+        }
+    }
+
+    fun onButtonReleased() {
+        when (_uiState.value.conversationState) {
+            ConversationState.Recording -> stopRecording()
+            else -> {
+                logger.d { "Button release ignored for state: ${_uiState.value.conversationState}" }
             }
         }
     }
@@ -333,8 +436,10 @@ class SpeakScreenViewModel(
                     val aiResponse = result.data
                     logger.d { "AI response generated successfully: $aiResponse" }
 
+                    logger.d { "[DEBUG_LOG] Adding user message to conversation: $convId, text: $userText" }
                     addUserMessageUseCase(convId, userText, userAudioBase64)
                     incrementConversationCount()  // This will now be checked server-side
+                    logger.d { "[DEBUG_LOG] After adding user message, current UI state messages size: ${_uiState.value.messages.size}" }
                     convertTextToSpeech(aiResponse, convId)
                 }
                 is Result.Failure -> {
@@ -367,25 +472,33 @@ class SpeakScreenViewModel(
                     logger.d { "Text-to-speech conversion successful" }
                     val audioBase64 = result.data.audioBase64
                     if (audioBase64 != null) {
+                        logger.d { "[DEBUG_LOG] Adding AI message to conversation: $convId, text: $text" }
                         addAiMessageUseCase(convId, text, audioBase64)
+                        logger.d { "[DEBUG_LOG] After adding AI message, current UI state messages size: ${_uiState.value.messages.size}" }
                         playAISpeech(audioBase64)
                     } else {
                         logger.e { "Text-to-speech conversion returned null audio data" }
+                        logger.d { "[DEBUG_LOG] Adding AI message (without audio) to conversation: $convId, text: $text" }
                         addAiMessageUseCase(convId, text, null)
+                        logger.d { "[DEBUG_LOG] After adding AI message (without audio), current UI state messages size: ${_uiState.value.messages.size}" }
                         updateError("Failed to generate speech: Audio data is missing")
                         updateState(conversationState = ConversationState.Stopped)
                     }
                 }
                 is Result.Failure -> {
                     logger.e { "Text-to-speech conversion failed: ${result.error}" }
+                    logger.d { "[DEBUG_LOG] Adding AI message (after TTS failure) to conversation: $convId, text: $text" }
                     addAiMessageUseCase(convId, text, null)
+                    logger.d { "[DEBUG_LOG] After adding AI message (after TTS failure), current UI state messages size: ${_uiState.value.messages.size}" }
                     updateError("Failed to generate speech: ${result.error.message}")
                     updateState(conversationState = ConversationState.Stopped)
                 }
             }
         } catch (e: Exception) {
             logger.e(e) { "Exception during text-to-speech conversion" }
+            logger.d { "[DEBUG_LOG] Adding AI message (after TTS exception) to conversation: $convId, text: $text" }
             addAiMessageUseCase(convId, text, null)
+            logger.d { "[DEBUG_LOG] After adding AI message (after TTS exception), current UI state messages size: ${_uiState.value.messages.size}" }
             updateError("Speech generation failed: ${e.message}")
             updateState(conversationState = ConversationState.Stopped)
         }

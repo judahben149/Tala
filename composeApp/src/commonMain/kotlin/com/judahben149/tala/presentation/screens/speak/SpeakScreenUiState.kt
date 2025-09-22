@@ -3,6 +3,7 @@ package com.judahben149.tala.presentation.screens.speak
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.judahben149.tala.domain.models.conversation.ConversationMessage
 import com.judahben149.tala.domain.models.conversation.GuidedPracticeScenario
 import com.judahben149.tala.domain.models.conversation.SpeakingMode
 
@@ -15,7 +16,9 @@ data class SpeakScreenUiState(
     val audioLevel: Float = 0f,
     val isSpeaking: Boolean = false,
     val speakingMode: SpeakingMode = SpeakingMode.FREE_SPEAK,
-    val scenario: GuidedPracticeScenario? = null
+    val scenario: GuidedPracticeScenario? = null,
+    val messages: List<ConversationMessage> = emptyList(),
+    val conversationId: String? = null
 ) {
     val buttonLabel: String
         get() = when (conversationState) {
@@ -85,6 +88,8 @@ data class SpeakScreenUiState(
         if (isSpeaking != other.isSpeaking) return false
         if (speakingMode != other.speakingMode) return false
         if (scenario != other.scenario) return false
+        if (messages != other.messages) return false
+        if (conversationId != other.conversationId) return false
 
         return true
     }
@@ -102,7 +107,9 @@ data class SpeakScreenUiState(
         result = 31 * result + audioLevel.hashCode()
         result = 31 * result + isSpeaking.hashCode()
         result = 31 * result + speakingMode.hashCode()
-        result = 31 * result + scenario.hashCode()
+        result = 31 * result + (scenario?.hashCode() ?: 0)
+        result = 31 * result + messages.hashCode()
+        result = 31 * result + (conversationId?.hashCode() ?: 0)
         return result
     }
 }

@@ -12,8 +12,9 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -54,7 +55,9 @@ fun MainActionButton(
     uiState: SpeakScreenUiState,
     onClick: () -> Unit,
     colors: TalaColors,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onPress: () -> Unit = onClick,
+    onRelease: () -> Unit = {}
 ) {
     val iconScale by animateFloatAsState(
         targetValue = when (uiState.conversationState) {
@@ -91,10 +94,17 @@ fun MainActionButton(
                     shape = CircleShape
                 )
                 .clip(CircleShape)
-                .clickable(
-                    enabled = uiState.isButtonEnabled,
-                    onClick = onClick
-                ),
+                .pointerInput(uiState.isButtonEnabled) {
+                    detectTapGestures(
+                        onPress = {
+                            if (uiState.isButtonEnabled) {
+                                onPress()
+                                tryAwaitRelease()
+                                onRelease()
+                            }
+                        }
+                    )
+                },
             contentAlignment = Alignment.Center
         ) {
             // Icon with morphing animation

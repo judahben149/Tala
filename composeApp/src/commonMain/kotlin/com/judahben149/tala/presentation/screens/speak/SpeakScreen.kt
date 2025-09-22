@@ -12,15 +12,25 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.judahben149.tala.domain.models.conversation.ConversationMessage
 import com.judahben149.tala.navigation.components.others.SpeakScreenComponent
 import com.judahben149.tala.presentation.RequestAudioPermission
 import com.judahben149.tala.presentation.screens.speak.components.MainActionButton
@@ -79,7 +90,16 @@ fun SpeakScreen(
     val colors = getTalaColors()
 
     LaunchedEffect(Unit) {
+        println("[DEBUG_LOG] SpeakScreen LaunchedEffect triggered")
         viewModel.updateSpeakingModes(component.speakingMode, component.scenario)
+    }
+
+    // Ensure conversation is initialized if permission is already granted
+    LaunchedEffect(hasPermission) {
+        if (hasPermission) {
+            println("[DEBUG_LOG] Permission already granted, ensuring conversation is initialized")
+            viewModel.onPermissionGranted()
+        }
     }
 
     // Color schemes based on conversation state
@@ -156,82 +176,51 @@ fun SpeakScreen(
             .fillMaxSize()
             .background(backgroundColor)
     ) {
-        // Responsive sizing based on available space
-        val availableWidth = maxWidth
-        val availableHeight = maxHeight
-
-        // Calculate responsive dimensions (use smaller dimension to ensure it fits)
-        val baseSize = min(availableWidth.value, availableHeight.value).dp
-        val squircleWidth = baseSize * 0.8f
-        val squircleHeight = baseSize * 1.2f
-        val cornerRadius = squircleWidth * 0.25f
-
-        val squircleShape = RoundedCornerShape(cornerRadius)
-
-        // Animated size with spring effect on entrance and voice level variations
-        val targetSizeMultiplier = if (!hasAnimatedIn) 0.5f else 1f + (animatedVoiceLevel - 0.3f) * 0.1f
-
-        val animatedWidth by animateDpAsState(
-            targetValue = squircleWidth * targetSizeMultiplier,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            ),
-            label = "squircleWidthAnimation"
-        )
-
-        val animatedHeight by animateDpAsState(
-            targetValue = squircleHeight * targetSizeMultiplier,
-            animationSpec = spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessMediumLow
-            ),
-            label = "squircleHeightAnimation"
-        )
-
-        Box(
-            modifier = Modifier
-                .align(Alignment.Center)
-//                .offset(y = (-50).dp)
-                .dropShadow(shape = squircleShape) {
-                    radius = 60f
-                    color = Red500
-                    brush = Brush.verticalGradient(
-                        colors = listOf(animatedShadowColor1, animatedShadowColor2)
-                    )
-                }
-                .border(
-                    width = 1.dp,
-                    shape = squircleShape,
-                    brush = Brush.verticalGradient(
-                        colors = listOf(animatedBorderColor1, animatedBorderColor2)
-                    ),
-                )
-                .size(width = animatedWidth * 1.1f, height = animatedHeight * 1.1f)
-                .background(
-                    color = backgroundColor,
-                    shape = squircleShape,
-                )
-                .innerShadow(shape = squircleShape) {
-                    radius = 90f
-                    color = Red600
-                    brush = Brush.verticalGradient(
-                        colors = listOf(animatedInnerShadowColor1, animatedInnerShadowColor2)
-                    )
-                    alpha = .4f
-                }
-        )
-
         TopBar(
             onCloseClick = { component.goBack() },
             textColor = textColor,
             modifier = Modifier.align(Alignment.TopCenter)
         )
 
+        // Display conversation messages
+        ConversationMessages(
+            messages = uiState.messages,
+            colors = colors,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 56.dp, bottom = 100.dp)
+        )
+
+        // Debug text to show message count
+        Text(
+            text = "Messages: ${uiState.messages.size}",
+            color = textColor,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 8.dp, end = 16.dp)
+        )
+
+        // Additional debug text to show conversation ID
+        Text(
+            text = "ConvID: ${uiState.conversationId ?: "null"}",
+            color = textColor,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 24.dp, end = 16.dp)
+        )
+
         if (hasPermission) {
             MainActionButton(
                 uiState = uiState,
                 onClick = viewModel::onButtonClicked,
+                onPress = viewModel::onButtonPressed,
+                onRelease = viewModel::onButtonReleased,
                 colors = colors,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
@@ -239,7 +228,7 @@ fun SpeakScreen(
             )
 
             Text(
-                text = uiState.buttonLabel,
+                text = "Hold to record, release to send",
                 color = textColor,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal,
@@ -344,5 +333,95 @@ private fun ErrorDisplay(
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.Normal,
         )
+    }
+}
+
+@Composable
+private fun ConversationMessages(
+    messages: List<ConversationMessage>,
+    colors: TalaColors,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+
+    // Debug: Print message count
+    println("[DEBUG_LOG] ConversationMessages composable received ${messages.size} messages")
+    if (messages.isNotEmpty()) {
+        println("[DEBUG_LOG] First message: ${messages.first().content}")
+        println("[DEBUG_LOG] Message IDs: ${messages.map { it.id }}")
+        println("[DEBUG_LOG] Message conversation IDs: ${messages.map { it.conversationId }}")
+        println("[DEBUG_LOG] Message is user: ${messages.map { it.isUser }}")
+    } else {
+        println("[DEBUG_LOG] No messages received in ConversationMessages composable")
+    }
+
+    LaunchedEffect(messages) {
+        if (messages.isNotEmpty()) {
+            listState.scrollToItem(messages.size - 1)
+            println("[DEBUG_LOG] Scrolling to item ${messages.size - 1}")
+        }
+    }
+
+    // If no messages, show a placeholder
+    if (messages.isEmpty()) {
+        Box(
+            modifier = modifier,
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No messages yet. Start talking!",
+                color = colors.secondaryText.copy(alpha = 0.7f),
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center
+            )
+        }
+    } else {
+        LazyColumn(
+            state = listState,
+            modifier = modifier.background(Color.Transparent), // Ensure background is transparent
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            items(messages, key = { it.id }) { message ->
+                MessageItem(
+                    message = message,
+                    colors = colors
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MessageItem(
+    message: ConversationMessage,
+    colors: TalaColors
+) {
+    val isUser = message.isUser
+    val backgroundColor = if (isUser) colors.primary.copy(alpha = 0.15f) else colors.cardBackground
+    val alignment = if (isUser) Arrangement.End else Arrangement.Start
+    val horizontalArrangement = if (isUser) Arrangement.End else Arrangement.Start
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = alignment
+    ) {
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = backgroundColor,
+            modifier = Modifier.widthIn(max = 280.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(12.dp),
+                horizontalAlignment = if (isUser) Alignment.End else Alignment.Start
+            ) {
+                Text(
+                    text = message.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.primaryText,
+                    fontSize = 14.sp
+                )
+            }
+        }
     }
 }
