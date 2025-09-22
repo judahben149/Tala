@@ -60,8 +60,13 @@ class SessionManager(
                 _appState.value = AppState.LoggedIn
             } else {
                 // User exists but never completed onboarding - they need to finish it
-                persister.saveBoolean(KEY_ONBOARDING_COMPLETED, false)
-                _appState.value = AppState.NeedsOnboarding
+
+                // COME BACK HERE TO UNDO
+//                persister.saveBoolean(KEY_ONBOARDING_COMPLETED, false)
+//                _appState.value = AppState.NeedsOnboarding
+
+                _appState.value = AppState.LoggedIn
+                markOnboardingCompleted()
             }
         } else {
             // New user definitely needs onboarding

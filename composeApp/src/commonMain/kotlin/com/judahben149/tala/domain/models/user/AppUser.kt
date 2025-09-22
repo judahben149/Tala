@@ -1,5 +1,6 @@
 package com.judahben149.tala.domain.models.user
 
+import com.judahben149.tala.domain.managers.RemoteConfigManager
 import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.speech.Gender
 import com.judahben149.tala.util.AvatarUrlGenerator
@@ -158,7 +159,7 @@ data class AppUser(
         return daysSinceActive <= 7 // Active if used within last week
     }
 
-    fun isAllowedToConverse(): Boolean {
+    fun isAllowedToConverse(remoteConfigManager: RemoteConfigManager): Boolean {
         return if (isPremiumUser) {
             true
         } else {

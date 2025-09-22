@@ -309,7 +309,7 @@ class SpeakScreenViewModel(
             val shouldReset = user.messageDailyQuotaCountLastResetDate != today
             val currentQuota = if (shouldReset) 0 else user.messageQuotaCount
 
-            if (currentQuota >= 10) {
+            if (currentQuota >= remoteConfigManager.getLong("daily_message_limit", 10L)) {
                 logger.w { "Quota exceeded, blocking message" }
 //                updateError("Daily message limit reached. Upgrade to Premium for unlimited messages.")
                 updateError("Daily message limit reached. Please check back tomorrow for renewed access.")
