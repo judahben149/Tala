@@ -1,7 +1,8 @@
 # Tala - Language Learning Conversation App
 
-[![Android](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=Android&branch=master&color=green)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
-[![iOS](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=iOS&branch=master&color=blue)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
+[//]: # ([![Android]&#40;https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=Android&branch=master&color=green&#41;]&#40;https://github.com/judahben149/Tala/actions/workflows/build.yml&#41;)
+
+[//]: # ([![iOS]&#40;https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=iOS&branch=master&color=blue&#41;]&#40;https://github.com/judahben149/Tala/actions/workflows/build.yml&#41;)
 
 Tala is a language learning application built with Kotlin Multiplatform that helps users practice conversations in their target language. The app provides an interactive environment where users can engage in voice-based conversations to improve their language skills.
 
