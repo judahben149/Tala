@@ -121,7 +121,10 @@ class ConversationDetailViewModel(
                 it.copy(
                     currentlyPlayingMessageId = messageId,
                     isLoadingAudio = true,
-                    audioError = null
+                    audioError = null,
+                    audioProgress = 0f,
+                    audioDuration = 0f,
+                    isAudioPaused = false
                 )
             }
 
@@ -139,19 +142,88 @@ class ConversationDetailViewModel(
                             speechPlayer.play()
                         }
 
-                        _uiState.update {
-                            it.copy(isLoadingAudio = false)
+                        // Add a small delay to ensure the player has initialized
+                        kotlinx.coroutines.delay(300)
+
+                        // Get the duration after loading
+                        var duration = speechPlayer.getDuration()
+                        logger.d { "Initial audio duration for message $messageId: $duration seconds" }
+
+                        // If duration is 0, try a few more times with increasing delays
+                        if (duration <= 0f) {
+                            for (i in 1..5) {
+                                kotlinx.coroutines.delay(200 * i.toLong())
+                                duration = speechPlayer.getDuration()
+                                logger.d { "Retry $i: Audio duration for message $messageId: $duration seconds" }
+                                if (duration > 0f) break
+                            }
+                        }
+
+                        // Only update with valid duration
+                        if (duration > 0f) {
+                            _uiState.update {
+                                it.copy(
+                                    isLoadingAudio = false,
+                                    audioDuration = duration
+                                )
+                            }
+                            logger.d { "Updated UI state with duration: $duration seconds" }
+                        } else {
+                            // If we still couldn't get a valid duration, update UI state but log a warning
+                            _uiState.update {
+                                it.copy(
+                                    isLoadingAudio = false,
+                                    audioDuration = 30f  // Use a default duration as fallback
+                                )
+                            }
+                            logger.w { "Could not get valid duration for message $messageId, using default" }
+                        }
+
+                        // Start progress tracking
+                        val progressJob = launch {
+                            while (speechPlayer.isPlaying() && _uiState.value.currentlyPlayingMessageId != null) {
+                                val progress = speechPlayer.getCurrentPosition()
+
+                                // Log progress periodically (every second)
+                                if ((progress * 10).toInt() % 10 == 0) {
+                                    logger.d { "Audio progress for message $messageId: $progress / $duration seconds" }
+                                }
+
+                                _uiState.update {
+                                    it.copy(audioProgress = progress)
+                                }
+
+                                // Check if playback has completed
+                                if (progress >= duration - 0.1f) {
+                                    _uiState.update {
+                                        it.copy(
+                                            currentlyPlayingMessageId = null,
+                                            audioProgress = 0f
+                                        )
+                                    }
+                                    break
+                                }
+
+                                kotlinx.coroutines.delay(100) // Update every 100ms
+                            }
                         }
 
                         // Monitor playback completion
-                        // Note: This is simplified - you might need a more sophisticated 
-                        // playback state monitoring system
                         launch {
-                            // Simple delay-based completion check
-                            // In a real implementation, you'd have proper playback state callbacks
-                            kotlinx.coroutines.delay(5000) // Adjust based on typical message length
-                            _uiState.update {
-                                it.copy(currentlyPlayingMessageId = null)
+                            while (speechPlayer.isPlaying() && _uiState.value.currentlyPlayingMessageId != null) {
+                                kotlinx.coroutines.delay(500) // Check every 500ms
+                            }
+
+                            // If we get here and the player is not playing, but we still have a currentlyPlayingMessageId,
+                            // it means playback completed naturally
+                            if (!speechPlayer.isPlaying() && _uiState.value.currentlyPlayingMessageId != null) {
+                                _uiState.update {
+                                    it.copy(
+                                        currentlyPlayingMessageId = null,
+                                        audioProgress = 0f
+                                    )
+                                }
+                                progressJob.cancel()
                             }
                         }
 
@@ -163,7 +235,9 @@ class ConversationDetailViewModel(
                             it.copy(
                                 currentlyPlayingMessageId = null,
                                 isLoadingAudio = false,
-                                audioError = "Failed to play audio: ${e.message}"
+                                audioError = "Failed to play audio: ${e.message}",
+                                audioProgress = 0f,
+                                audioDuration = 0f
                             )
                         }
                     }
@@ -174,10 +248,48 @@ class ConversationDetailViewModel(
                         it.copy(
                             currentlyPlayingMessageId = null,
                             isLoadingAudio = false,
-                            audioError = "Failed to load audio: ${result.error.message}"
+                            audioError = "Failed to load audio: ${result.error.message}",
+                            audioProgress = 0f,
+                            audioDuration = 0f
                         )
                     }
                 }
+            }
+        }
+    }
+
+    fun pauseAudio() {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.Main) {
+                    speechPlayer.pause()
+                }
+                _uiState.update {
+                    it.copy(
+                        isAudioPaused = true
+                    )
+                }
+                logger.d { "Paused audio playback" }
+            } catch (e: Exception) {
+                logger.e(e) { "Failed to pause audio playback" }
+            }
+        }
+    }
+
+    fun resumeAudio() {
+        viewModelScope.launch {
+            try {
+                withContext(Dispatchers.Main) {
+                    speechPlayer.play()
+                }
+                _uiState.update {
+                    it.copy(
+                        isAudioPaused = false
+                    )
+                }
+                logger.d { "Resumed audio playback" }
+            } catch (e: Exception) {
+                logger.e(e) { "Failed to resume audio playback" }
             }
         }
     }
@@ -191,7 +303,10 @@ class ConversationDetailViewModel(
                 _uiState.update {
                     it.copy(
                         currentlyPlayingMessageId = null,
-                        isLoadingAudio = false
+                        isLoadingAudio = false,
+                        audioProgress = 0f,
+                        audioDuration = 0f,
+                        isAudioPaused = false
                     )
                 }
                 logger.d { "Stopped audio playback" }
@@ -237,5 +352,8 @@ data class ConversationDetailState(
     val currentlyPlayingMessageId: String? = null,
     val isLoadingAudio: Boolean = false,
     val error: String? = null,
-    val audioError: String? = null
+    val audioError: String? = null,
+    val audioProgress: Float = 0f, // Current position in seconds
+    val audioDuration: Float = 0f,  // Total duration in seconds
+    val isAudioPaused: Boolean = false // Track if audio is paused
 )

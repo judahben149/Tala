@@ -6,6 +6,8 @@ interface SpeechPlayer {
     fun pause()
     fun stop()
     fun isPlaying(): Boolean
+    fun getCurrentPosition(): Float // Returns current position in seconds
+    fun getDuration(): Float // Returns total duration in seconds
 }
 
 expect class AudioPlayerFactory() {

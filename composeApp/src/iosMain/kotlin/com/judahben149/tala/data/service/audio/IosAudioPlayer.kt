@@ -36,6 +36,16 @@ class IosAudioPlayer(
     override fun pause() { player?.pause() }
     override fun stop() { player?.stop() }
     override fun isPlaying(): Boolean = player?.playing == true
+
+    override fun getCurrentPosition(): Float {
+        val position = player?.currentTime?.toFloat() ?: 0f
+        return if (position < 0f) 0f else position
+    }
+
+    override fun getDuration(): Float {
+        val duration = player?.duration?.toFloat() ?: 0f
+        return if (duration <= 0f) 0f else duration
+    }
 }
 
 actual class AudioPlayerFactory actual constructor() {

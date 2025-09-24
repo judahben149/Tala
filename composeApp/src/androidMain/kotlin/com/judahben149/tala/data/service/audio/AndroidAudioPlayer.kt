@@ -77,6 +77,18 @@ class AndroidAudioPlayer(
     override fun pause() { exo?.pause() }
     override fun stop() { exo?.stop() }
     override fun isPlaying(): Boolean = exo?.isPlaying == true
+
+    @OptIn(UnstableApi::class)
+    override fun getCurrentPosition(): Float {
+        return (exo?.currentPosition ?: 0L) / 1000f // Convert milliseconds to seconds
+    }
+
+    @OptIn(UnstableApi::class)
+    override fun getDuration(): Float {
+        val durationMs = exo?.duration ?: 0L
+        // Handle C.TIME_UNSET (-1) case
+        return if (durationMs <= 0) 0f else durationMs / 1000f // Convert milliseconds to seconds
+    }
 }
 
 actual class AudioPlayerFactory actual constructor() {
