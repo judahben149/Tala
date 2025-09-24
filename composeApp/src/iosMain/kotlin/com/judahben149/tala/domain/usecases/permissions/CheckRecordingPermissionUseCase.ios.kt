@@ -10,12 +10,10 @@ actual class CheckRecordingPermissionUseCase {
     actual operator fun invoke(): Result<Boolean, Exception> {
         return try {
             val audioSession = AVAudioSession.sharedInstance()
-            val permission = audioSession.recordPermission
+            val status = audioSession.recordPermission()
 
-            val hasPermission = when (permission) {
+            val hasPermission = when (status) {
                 AVAudioSessionRecordPermissionGranted -> true
-                AVAudioSessionRecordPermissionDenied -> false
-                AVAudioSessionRecordPermissionUndetermined -> false
                 else -> false
             }
 

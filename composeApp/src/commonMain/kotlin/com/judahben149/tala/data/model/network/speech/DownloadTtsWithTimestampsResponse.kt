@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class DownloadTtsWithTimestampsResponse(
-    @SerialName("audio_base64") val audioBase64: String,
+    @SerialName("audio_base64") val audioBase64: String? = null,
     @SerialName("character_timestamps") val characterTimestamps: List<CharacterTimestamp>? = null,
     @SerialName("normalized_character_timestamps") val normalizedCharacterTimestamps: List<CharacterTimestamp>? = null
 )

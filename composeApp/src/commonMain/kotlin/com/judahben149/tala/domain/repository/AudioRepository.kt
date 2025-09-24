@@ -8,7 +8,9 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface AudioRepository {
     val recordingStatus: StateFlow<RecorderStatus>
-    
+    val audioLevel: StateFlow<Float>
+    val peakLevel: StateFlow<Float>
+
     suspend fun startRecording(config: RecorderConfig = RecorderConfig()): Result<Unit, AudioRecordingException>
     suspend fun stopRecording(): Result<ByteArray, Exception>
     suspend fun cancelRecording(): Result<Unit, Exception>

@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface SpeechRecorder {
     val status: StateFlow<RecorderStatus>
+    val audioLevel: StateFlow<Float>
+    val peakLevel: StateFlow<Float>
 
     suspend fun start(config: RecorderConfig = RecorderConfig())
 

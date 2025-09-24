@@ -6,10 +6,15 @@ import com.arkivanov.decompose.extensions.compose.stack.Children
 import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import com.judahben149.tala.navigation.MainChild
 import com.judahben149.tala.navigation.MainFlowComponent
+import com.judahben149.tala.presentation.screens.history.ConversationListScreen
+import com.judahben149.tala.presentation.screens.history.detail.ConversationDetailScreen
 import com.judahben149.tala.presentation.screens.home.HomeScreen
 import com.judahben149.tala.presentation.screens.settings.SettingsScreen
 import com.judahben149.tala.presentation.screens.speak.SpeakScreen
+import com.judahben149.tala.presentation.screens.speak.guidedPractice.GuidedPracticeScreen
+import com.judahben149.tala.presentation.screens.speak.speakingModeSelection.SpeakingModeSelectionScreen
 import com.judahben149.tala.presentation.screens.voices.VoicesScreen
 
 @Composable
@@ -21,20 +26,32 @@ fun MainFlow(component: MainFlowComponent) {
         animation = stackAnimation(slide())
     ) { child ->
         when (val instance = child.instance) {
-            is MainFlowComponent.MainChild.Home -> 
+            is MainChild.Home ->
                 HomeScreen(instance.component)
             
-            is MainFlowComponent.MainChild.Profile ->
+            is MainChild.Profile ->
                 PlaceholderComposable()
-//                ProfileScreen(instance.component)
-            is MainFlowComponent.MainChild.Speak ->
+
+            is MainChild.Speak ->
                 SpeakScreen(instance.component)
 
-            is MainFlowComponent.MainChild.Voices ->
+            is MainChild.Voices ->
                 VoicesScreen(instance.component)
 
-            is MainFlowComponent.MainChild.Settings ->
+            is MainChild.Settings ->
                 SettingsScreen(instance.component)
+
+            is MainChild.GuidedPractice ->
+                GuidedPracticeScreen(instance.component)
+
+            is MainChild.SpeakingModeSelection ->
+                SpeakingModeSelectionScreen(instance.component)
+
+            is MainChild.ConversationDetail ->
+                ConversationDetailScreen(instance.component)
+
+            is MainChild.ConversationList ->
+                ConversationListScreen(instance.component)
         }
     }
 }

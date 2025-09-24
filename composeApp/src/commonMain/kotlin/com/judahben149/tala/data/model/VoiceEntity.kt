@@ -11,5 +11,6 @@ data class VoiceEntity(
     val isFeatured: Boolean,
     val likedCount: Int,
     val createdAt: Long,
-    val updatedAt: Long
+    val updatedAt: Long,
+    val isSelected: Boolean = false
 )

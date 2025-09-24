@@ -1,16 +1,51 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-    <key>NSMicrophoneUsageDescription</key>
-    <string>This app needs microphone access for audio processing</string>
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>audio</string>
-    </array>
-    <key>AVAudioSessionCategoryAmbient</key>
-    <true/>
-</dict>
+    <dict>
+        <key>CADisableMinimumFrameDurationOnPhone</key>
+        <true/>
+        <key>NSMicrophoneUsageDescription</key>
+        <string>This app needs microphone access for audio processing</string>
+        <key>UIBackgroundModes</key>
+        <array>
+            <string>audio</string>
+        </array>
+        <key>AVAudioSessionCategoryAmbient</key>
+        <true/>
+
+        <!-- PROD -->
+        <!-- Google Sign-In Configuration -->
+<!--        <key>GIDClientID</key>-->
+<!--        <string>437582198460-d6kj27mquqqsgbp80gg1f3qo9k5iu1al.apps.googleusercontent.com</string>-->
+<!--        <key>GIDServerClientID</key>-->
+<!--        <string>437582198460-b3v1i1k23oaq06k70gof10di7kac614m.apps.googleusercontent.com</string>-->
+
+<!--        &lt;!&ndash; URL Schemes &ndash;&gt;-->
+<!--        <key>CFBundleURLTypes</key>-->
+<!--        <array>-->
+<!--            <dict>-->
+<!--                <key>CFBundleURLSchemes</key>-->
+<!--                <array>-->
+<!--                    <string>com.googleusercontent.apps.437582198460-d6kj27mquqqsgbp80gg1f3qo9k5iu1al</string>-->
+<!--                </array>-->
+<!--            </dict>-->
+<!--        </array>-->
+
+
+<!--            Dev project app-->
+            <key>GIDServerClientID</key>
+            <string>94573007074-oqc99s957qci9cnast40om6o6d4ijupq.apps.googleusercontent.com</string>
+            <key>GIDClientID</key>
+            <string>94573007074-qtil229fvcs54jnitgfb4f6pmal4hmo4.apps.googleusercontent.com</string>
+
+            <key>CFBundleURLTypes</key>
+            <array>
+                <dict>
+                    <key>CFBundleURLSchemes</key>
+                    <array>
+                        <string>com.googleusercontent.apps.94573007074-qtil229fvcs54jnitgfb4f6pmal4hmo4</string>
+                    </array>
+                </dict>
+            </array>
+    </dict>
 </plist>

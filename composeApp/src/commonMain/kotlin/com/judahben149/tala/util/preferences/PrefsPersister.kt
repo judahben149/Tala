@@ -37,4 +37,38 @@ class PrefsPersister(
     fun fetchLong(key: String, defaultValue: Long): Long {
         return settings.getLong(key, defaultValue)
     }
+
+    fun saveFloat(key: String, value: Float) {
+        settings.putFloat(key, value)
+    }
+
+    fun fetchFloat(key: String, defaultValue: Float): Float {
+        return settings.getFloat(key, defaultValue)
+    }
+
+    fun saveStringSet(key: String, value: Set<String>) {
+        val serializedSet = value.joinToString(separator = ",")
+        settings.putString(key, serializedSet)
+    }
+
+    fun fetchStringSet(key: String, defaultValue: Set<String>): Set<String> {
+        val serializedSet = settings.getString(key, "")
+        return if (serializedSet.isEmpty()) {
+            defaultValue
+        } else {
+            serializedSet.split(",").filter { it.isNotEmpty() }.toSet()
+        }
+    }
+
+    fun removeKey(key: String) {
+        settings.remove(key)
+    }
+
+    fun clearAll() {
+        settings.clear()
+    }
+
+    fun hasKey(key: String): Boolean {
+        return settings.hasKey(key)
+    }
 }

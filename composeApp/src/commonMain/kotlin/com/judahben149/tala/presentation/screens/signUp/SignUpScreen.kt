@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -53,7 +54,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.judahben149.tala.data.service.SignInStateTracker
+import coil3.compose.AsyncImage
+import com.judahben149.tala.core.purchases.associateUserWithRevenueCat
+import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.common.Result
 import com.judahben149.tala.navigation.components.others.SignUpScreenComponent
@@ -61,8 +65,14 @@ import com.judahben149.tala.presentation.UiState
 import com.judahben149.tala.ui.theme.TalaColors
 import com.judahben149.tala.ui.theme.getTalaColors
 import com.judahben149.tala.util.isIos
+import com.mmk.kmpauth.firebase.apple.AppleButtonUiContainer
+import com.mmk.kmpauth.firebase.google.GoogleButtonUiContainerFirebase
+import com.revenuecat.purchases.kmp.Purchases
+import com.revenuecat.purchases.kmp.models.CustomerInfo
 import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
+import tala.composeapp.generated.resources.Res
+import tala.composeapp.generated.resources.google_logo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,25 +82,23 @@ fun SignUpScreen(
     val viewModel: SignUpViewModel = koinViewModel()
     val uiState by viewModel.uiState.collectAsState()
     val formState by viewModel.formState.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     val colors = getTalaColors()
-    val signInStateTracker: SignInStateTracker = koinInject()
+    val sessionManager: SessionManager = koinInject()
 
-    // Handle sign up success
+
     LaunchedEffect(uiState) {
         when (val currentState = uiState) {
             is UiState.Loaded -> {
                 when (val result = currentState.result) {
                     is Result.Success -> {
                         val user = result.data
+                        // Navigate to email verification screen instead of main app
+                        component.navigateToEmailVerification(user.email)
                         viewModel.clearState()
-                        component.handleSignUpSuccess()
-                        signInStateTracker.markSignedIn(
-                            userId = user.userId,
-                            isNewUser = true
-                        )
                     }
                     is Result.Failure -> {
-                        // Handle error if needed
+                        // Handle error - error is displayed in UI already
                     }
                 }
             }
@@ -133,7 +141,7 @@ fun SignUpScreen(
                     tint = colors.iconTint,
                     modifier = Modifier
                         .size(24.dp)
-                        .clickable { /* Handle close */ }
+                        .clickable { component.navigateToLogin() }
                 )
             }
 
@@ -169,7 +177,7 @@ fun SignUpScreen(
             // Sign Up Button
             Button(
                 onClick = { viewModel.signUp() },
-                enabled = uiState !is UiState.Loading && formState.isValid(),
+                enabled = !isLoading && formState.isValid(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
@@ -181,7 +189,7 @@ fun SignUpScreen(
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                if (uiState is UiState.Loading) {
+                if (isLoading) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         color = colors.primaryButtonText,
@@ -198,12 +206,173 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            GoogleButtonUiContainerFirebase(
+                linkAccount = false,
+                filterByAuthorizedAccounts = true,
+                onResult = { result ->
+                    result.fold(
+                        onSuccess = { firebaseUser ->
+                            firebaseUser?.let { user ->
+                                viewModel.logStuff(user.displayName.toString())
+
+                                associateUserWithRevenueCat(
+                                    userId = user.uid,
+                                    onUserAssociated = { customerInfo, created ->
+                                        viewModel.logStuff(customerInfo.toString())
+
+                                        viewModel.handleFederatedSignUp(
+                                            user = user,
+                                            signInMethod = SignInMethod.GOOGLE,
+                                            signUpCompleted = { userId, isNewUser ->
+                                                sessionManager.markSignedIn(
+                                                    userId = user.uid,
+                                                    isNewUser = isNewUser
+                                                )
+                                                component.handleSignUpSuccess()
+                                            },
+                                            signUpFailed = { errorMessage ->
+                                                viewModel.logStuff("Error yoo$errorMessage")
+                                            }
+                                        )
+                                    },
+                                    onUserAssociationFailed = {
+                                        viewModel.logStuff("User association failed")
+                                    }
+                                )
+                            }
+                        },
+                        onFailure = { error ->
+                            viewModel.logStuff(error.toString())
+                        }
+                    )
+                }
+            ) {
+
+                // Google Sign Up Button
+                OutlinedButton(
+                    onClick = { this@GoogleButtonUiContainerFirebase.onClick() },
+                    enabled = !isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = colors.primaryText,
+                        disabledContentColor = colors.disabledButtonText
+                    ),
+                    border = BorderStroke(
+                        width = 1.dp,
+                        color = colors.textFieldBorder
+                    ),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    AsyncImage(
+                        model = Res.getUri("drawable/google_logo.png"),
+                        contentDescription = "Google logo",
+                        modifier = Modifier
+                            .size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Sign in with Google",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
+
+            if (isIos()) {
+                AppleButtonUiContainer(
+                    linkAccount = false,
+                    onResult = { result ->
+                        result.fold(
+                            onSuccess = { firebaseUser ->
+                                firebaseUser?.let { user ->
+                                    viewModel.logStuff(user.displayName.toString())
+
+                                    associateUserWithRevenueCat(
+                                        userId = user.uid,
+                                        onUserAssociated = { customerInfo, created ->
+                                            viewModel.logStuff(customerInfo.toString())
+
+                                            viewModel.handleFederatedSignUp(
+                                                user = user,
+                                                signInMethod = SignInMethod.APPLE,
+                                                signUpCompleted = { userId, isNewUser ->
+
+                                                    if (isNewUser) {
+                                                        sessionManager.markSignedIn(
+                                                            userId = user.uid,
+                                                            isNewUser = true
+                                                        )
+                                                        component.handleSignUpSuccess()
+                                                    } else {
+                                                        sessionManager.markSignedIn(
+                                                            userId = user.uid,
+                                                            isNewUser = false
+                                                        )
+                                                        component.handleSignUpSuccess()
+                                                    }
+                                                },
+                                                signUpFailed = { errorMessage ->
+                                                    viewModel.logStuff("Error yoo$errorMessage")
+                                                }
+                                            )
+                                        },
+                                        onUserAssociationFailed = {
+                                            viewModel.logStuff("User association failed")
+                                        }
+                                    )
+                                }
+                            },
+                            onFailure = { error ->
+                                viewModel.logStuff(error.toString())
+                            }
+                        )
+                    }
+                ) {
+
+                    // Apple Sign Up Button
+                    OutlinedButton(
+                        onClick = { this@AppleButtonUiContainer.onClick() },
+                        enabled = !isLoading,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = colors.primaryText,
+                            disabledContentColor = colors.disabledButtonText
+                        ),
+                        border = BorderStroke(
+                            width = 1.dp,
+                            color = colors.textFieldBorder
+                        ),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        AsyncImage(
+                            model = Res.getUri("drawable/apple_logo.png"),
+                            contentDescription = "Apple logo",
+                            modifier = Modifier
+                                .size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Sign in with Apple",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
             // Social Sign Up Buttons
-            SocialSignUpButtons(
-                colors = colors,
-                onGoogleClick = { /* Handle Google sign up */ },
-                onAppleClick = { /* Handle Apple sign up */ }
-            )
+//            SocialSignUpButtons(
+//                    Text(
+//                        text = "Continue with Google",
+//                        fontSize = 16.sp,
+//                        fontWeight = FontWeight.Medium
+//                    )
+//                }
+//            }
 
             // Navigate to Sign In
             Row(
@@ -241,6 +410,7 @@ fun SignUpScreen(
         }
     }
 }
+
 
 @Composable
 private fun SignUpForm(

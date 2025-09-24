@@ -22,6 +22,20 @@ class VoicesDatabaseHelper(driverFactory: DatabaseDriverFactory) {
             .map { voices -> voices.map { it.toDomain() } }
     }
 
+    fun getSelectedVoiceFlow(): Flow<SimpleVoice?> {
+        return voicesQueries.getSelectedVoice()
+            .asFlow()
+            .mapToList(Dispatchers.IO)
+            .map { it.firstOrNull()?.toDomain() }
+    }
+
+    suspend fun saveSelectedVoice(voiceId: String) {
+        database.transaction {
+            voicesQueries.deselectAllVoices()
+            voicesQueries.selectVoiceById(voiceId)
+        }
+    }
+
     suspend fun getAllVoices(): List<SimpleVoice> {
         return voicesQueries.getAllVoices().executeAsList().map { it.toDomain() }
     }
@@ -49,7 +63,8 @@ class VoicesDatabaseHelper(driverFactory: DatabaseDriverFactory) {
                     is_featured = if (voice.isFeatured) 1L else 0L,
                     liked_count = voice.likedCount.toLong(),
                     created_at = voice.createdAt,
-                    updated_at = voice.updatedAt
+                    updated_at = voice.updatedAt,
+                    is_selected = if (voice.isSelected) 1L else 0L
                 )
             }
         }
@@ -61,5 +76,9 @@ class VoicesDatabaseHelper(driverFactory: DatabaseDriverFactory) {
 
     suspend fun getCacheTimestamp(): Long? {
         return voicesQueries.getCacheMetadata().executeAsOneOrNull()?.last_fetched
+    }
+
+    suspend fun getVoiceById(voiceId: String): SimpleVoice? {
+        return voicesQueries.getVoiceById(voiceId).executeAsOneOrNull()?.toDomain()
     }
 }

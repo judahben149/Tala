@@ -3,12 +3,22 @@ package com.judahben149.tala.presentation.screens.speak
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.judahben149.tala.domain.models.conversation.ConversationMessage
+import com.judahben149.tala.domain.models.conversation.GuidedPracticeScenario
+import com.judahben149.tala.domain.models.conversation.SpeakingMode
 
 data class SpeakScreenUiState(
     val conversationState: ConversationState = ConversationState.Idle,
     val error: String? = null,
     val isLoading: Boolean = false,
-    val recordedAudio: ByteArray? = null
+    val recordedAudio: ByteArray? = null,
+    val permissionRequired: Boolean = false,
+    val audioLevel: Float = 0f,
+    val isSpeaking: Boolean = false,
+    val speakingMode: SpeakingMode = SpeakingMode.FREE_SPEAK,
+    val scenario: GuidedPracticeScenario? = null,
+    val messages: List<ConversationMessage> = emptyList(),
+    val conversationId: String? = null
 ) {
     val buttonLabel: String
         get() = when (conversationState) {
@@ -18,6 +28,7 @@ data class SpeakScreenUiState(
             ConversationState.Thinking -> "Thinking..."
             ConversationState.Speaking -> "Replying..."
             ConversationState.Stopped -> "Stopped"
+            ConversationState.Disallowed -> "Daily quota exceeded"
         }
 
     val buttonAction: String
@@ -28,6 +39,7 @@ data class SpeakScreenUiState(
             ConversationState.Thinking -> "Please wait"
             ConversationState.Speaking -> "⏹Stop reply"
             ConversationState.Stopped -> "Start over"
+            ConversationState.Disallowed -> "Daily quota exceeded"
         }
 
     val buttonIcon: ImageVector
@@ -38,6 +50,7 @@ data class SpeakScreenUiState(
             ConversationState.Thinking -> Icons.Outlined.Psychology
             ConversationState.Speaking -> Icons.Outlined.Stop
             ConversationState.Stopped -> Icons.Outlined.Refresh
+            ConversationState.Disallowed -> Icons.Outlined.Warning
         }
 
     val isButtonEnabled: Boolean
@@ -48,6 +61,13 @@ data class SpeakScreenUiState(
 
     val canInterrupt: Boolean
         get() = conversationState == ConversationState.Speaking
+
+    val voiceLevelForAnimation: Float
+        get() = if (conversationState == ConversationState.Recording) {
+            0.1f + (audioLevel * 0.65f)
+        } else {
+            0.1f
+        }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -64,6 +84,12 @@ data class SpeakScreenUiState(
         if (buttonLabel != other.buttonLabel) return false
         if (buttonAction != other.buttonAction) return false
         if (buttonIcon != other.buttonIcon) return false
+        if (audioLevel != other.audioLevel) return false
+        if (isSpeaking != other.isSpeaking) return false
+        if (speakingMode != other.speakingMode) return false
+        if (scenario != other.scenario) return false
+        if (messages != other.messages) return false
+        if (conversationId != other.conversationId) return false
 
         return true
     }
@@ -78,6 +104,12 @@ data class SpeakScreenUiState(
         result = 31 * result + buttonLabel.hashCode()
         result = 31 * result + buttonAction.hashCode()
         result = 31 * result + buttonIcon.hashCode()
+        result = 31 * result + audioLevel.hashCode()
+        result = 31 * result + isSpeaking.hashCode()
+        result = 31 * result + speakingMode.hashCode()
+        result = 31 * result + (scenario?.hashCode() ?: 0)
+        result = 31 * result + messages.hashCode()
+        result = 31 * result + (conversationId?.hashCode() ?: 0)
         return result
     }
 }

@@ -2,6 +2,7 @@ package com.judahben149.tala.data.service.audio
 
 import com.judahben149.tala.domain.models.speech.RecorderConfig
 import com.judahben149.tala.domain.models.speech.RecorderStatus
+import com.judahben149.tala.util.AudioLevelCalculator
 import com.judahben149.tala.util.WavEncoder
 import kotlinx.cinterop.*
 import kotlinx.coroutines.CoroutineScope
@@ -28,6 +29,13 @@ class IOSAudioRecorder : SpeechRecorder {
     private val _status = MutableStateFlow(RecorderStatus.Idle)
     override val status: StateFlow<RecorderStatus> = _status.asStateFlow()
 
+    // Audio level monitoring
+    private val _audioLevel = MutableStateFlow(0f)
+    override val audioLevel: StateFlow<Float> = _audioLevel.asStateFlow()
+
+    private val _peakLevel = MutableStateFlow(0f)
+    override val peakLevel: StateFlow<Float> = _peakLevel.asStateFlow()
+
     private var audioEngine: AVAudioEngine? = null
     private var inputNode: AVAudioInputNode? = null
     private var recordingJob: Job? = null
@@ -35,6 +43,9 @@ class IOSAudioRecorder : SpeechRecorder {
     private var recordedData = mutableListOf<ByteArray>()
     private val recordingMutex = Mutex()
     private var currentConfig: RecorderConfig = RecorderConfig()
+
+    private var smoothedLevel = 0f
+    private var currentPeak = 0f
 
     override suspend fun start(config: RecorderConfig) {
         if (_status.value == RecorderStatus.Recording) {
@@ -44,6 +55,13 @@ class IOSAudioRecorder : SpeechRecorder {
 
         try {
             currentConfig = config
+
+            // Reset level monitoring state
+            smoothedLevel = 0f
+            currentPeak = 0f
+            _audioLevel.value = 0f
+            _peakLevel.value = 0f
+            
             setupAudioSession()
             setupAudioEngine()
             _status.value = RecorderStatus.Recording
@@ -182,6 +200,19 @@ class IOSAudioRecorder : SpeechRecorder {
             }
         }
 
+        // Calculate audio level from float samples before downsampling
+        val currentLevel = AudioLevelCalculator.calculateRMS(floatArray)
+
+        // Apply smoothing and update peak
+        smoothedLevel = AudioLevelCalculator.smoothLevel(currentLevel, smoothedLevel)
+        currentPeak = AudioLevelCalculator.updatePeak(smoothedLevel, currentPeak)
+
+        // Update StateFlows on main thread
+        scope.launch {
+            _audioLevel.value = smoothedLevel
+            _peakLevel.value = currentPeak
+        }
+
         // Downsample: 48000 → 16000 (simple decimation: take every 3rd sample)
         val downsampled = floatArray.filterIndexed { i, _ -> i % 3 == 0 }
 
@@ -210,6 +241,12 @@ class IOSAudioRecorder : SpeechRecorder {
             audioEngine = null
             inputNode = null
             recordedData.clear()
+
+            // Reset levels
+            _audioLevel.value = 0f
+            _peakLevel.value = 0f
+            smoothedLevel = 0f
+            currentPeak = 0f
             _status.value = RecorderStatus.Idle
 
             // Deactivate audio session

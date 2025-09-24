@@ -2,21 +2,36 @@ package com.judahben149.tala.presentation.screens.signUp
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.judahben149.tala.data.service.SignInStateTracker
-import com.judahben149.tala.data.service.firebase.AppUser
+import co.touchlab.kermit.Logger
+import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.domain.mappers.toAppUser
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
-import com.judahben149.tala.domain.usecases.authentication.GetCurrentUserUseCase
+import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.user.AppUser
+import com.judahben149.tala.domain.usecases.authentication.CreateDefaultUserDataUseCase
+import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
+import com.judahben149.tala.domain.usecases.authentication.GetUserDataUseCase
+import com.judahben149.tala.domain.usecases.authentication.verification.SendEmailVerificationUseCase
 import com.judahben149.tala.presentation.UiState
+import dev.gitlive.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.judahben149.tala.domain.usecases.authentication.CreateUserUseCase
 
 class SignUpViewModel(
     private val createUserUseCase: CreateUserUseCase,
-    private val getCurrentUserUseCase: GetCurrentUserUseCase,
+    private val getUserDataUseCase: GetUserDataUseCase,
+    private val createDefaultUserDataUseCase: CreateDefaultUserDataUseCase,
+    private val sendEmailVerificationUseCase: SendEmailVerificationUseCase,
+    private val sessionManager: SessionManager,
+    private val logger: Logger
 ) : ViewModel() {
+
+    // Unified loading state
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _uiState = MutableStateFlow<UiState<AppUser, FirebaseAuthException>?>(null)
     val uiState: StateFlow<UiState<AppUser, FirebaseAuthException>?> = _uiState.asStateFlow()
@@ -44,41 +59,119 @@ class SignUpViewModel(
         _formState.value = _formState.value.copy(password = password)
     }
 
-    // Keep this for backward compatibility with existing screen code
-    fun updateDisplayName(displayName: String) {
-        _formState.value = _formState.value.copy(firstName = displayName)
-    }
-
     fun signUp() {
         val currentState = _formState.value
-
-        // Validate form before proceeding
         if (!currentState.isValid()) {
+            logger.w { "Form validation failed" }
             return
         }
-
         viewModelScope.launch {
+            _isLoading.value = true
             _uiState.value = UiState.Loading
 
-            // Combine first and last name for display name
             val fullDisplayName = "${currentState.firstName} ${currentState.lastName}".trim()
-
             val result = createUserUseCase(
                 email = currentState.email,
                 password = currentState.password,
                 displayName = fullDisplayName.ifEmpty { currentState.firstName }
             )
 
-            _uiState.value = UiState.Loaded(result)
+            when (result) {
+                is Result.Success -> {
+                    logger.d { "User created successfully: ${result.data.email}" }
+                    // Send verification email immediately after user creation
+                    when (sendEmailVerificationUseCase()) {
+                        is Result.Success -> {
+                            logger.d { "Verification email sent successfully" }
+                            _uiState.value = UiState.Loaded(result)
+                        }
+                        is Result.Failure -> {
+                            logger.e { "Failed to send verification email, but user was created" }
+                            // Still navigate to verification screen even if email sending failed
+                            // User can resend from there
+                            _uiState.value = UiState.Loaded(result)
+                        }
+                    }
+                }
+                is Result.Failure -> {
+                    logger.e { "User creation failed: ${result.error}" }
+                    _uiState.value = UiState.Loaded(result)
+                }
+            }
+            _isLoading.value = false
         }
+    }
+
+    fun handleFederatedSignUp(
+        user: FirebaseUser,
+        signInMethod: SignInMethod,
+        signUpCompleted: (userId: String, isNewUser: Boolean) -> Unit,
+        signUpFailed: (errorMessage: String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val userData = getUserDataUseCase(user.uid)
+            val appUser = user.toAppUser().copy(signInMethod = signInMethod)
+            logger.d { "AppUser here: $appUser" }
+
+            when (userData) {
+                is Result.Success -> {
+                    if (userData.data.isEmpty()) {
+                        when (val result = createDefaultUserDataUseCase(appUser, true)) {
+                            is Result.Success -> {
+                                logger.d { "User data created successfully: ${result.data}" }
+                                signUpCompleted(user.uid, true)
+                            }
+                            is Result.Failure -> {
+                                logger.e { "User data creation failed: ${result.error}" }
+                                signUpFailed(result.error.message ?: "Unknown error")
+                            }
+                        }
+                    } else {
+                        logger.d { "User data already exists: ${userData.data}" }
+                        signUpCompleted(user.uid, false)
+                    }
+                }
+                is Result.Failure -> {
+                    if (userData.error.message == "User data not found") {
+                        when (val result = createDefaultUserDataUseCase(appUser, true)) {
+                            is Result.Success -> {
+                                logger.d { "User data created successfully: ${result.data}" }
+                                signUpCompleted(user.uid, true)
+                            }
+                            is Result.Failure -> {
+                                logger.e { "User data creation failed: ${result.error}" }
+                                signUpFailed(result.error.message ?: "Unknown error")
+                            }
+                        }
+                    } else {
+                        logger.e { "User data retrieval failed: ${userData.error}" }
+                        signUpFailed(userData.error.message ?: "Unknown error")
+                    }
+                }
+            }
+            _isLoading.value = false
+        }
+    }
+
+    fun triggerLoading() {
+        _isLoading.value = true
     }
 
     fun clearState() {
         _uiState.value = null
         _formState.value = SignUpFormState()
+        _isLoading.value = false
+    }
+
+    fun logStuff(any: Any) {
+        logger.d { "Stuff: $any" }
     }
 }
 
+
+// Keep SignUpFormState unchanged
 data class SignUpFormState(
     val email: String = "",
     val confirmEmail: String = "",
@@ -114,7 +207,6 @@ data class SignUpFormState(
         return password.length >= 6
     }
 
-    // Helper properties for validation states
     val showEmailMismatchError: Boolean
         get() = confirmEmail.isNotBlank() && !emailsMatch()
 

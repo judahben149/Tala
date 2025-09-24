@@ -4,6 +4,7 @@ import com.judahben149.tala.data.model.network.speech.Voice
 import com.judahben149.tala.data.model.network.speech.VoiceSettings
 import kotlinx.serialization.Serializable
 
+
 @Serializable
 data class SimpleVoice(
     val voiceId: String,
@@ -15,7 +16,8 @@ data class SimpleVoice(
     val isOwner: Boolean = false,
     val isFeatured: Boolean = false,
     val likedCount: Int = 0,
-    val settings: VoiceSettings? = null
+    val settings: VoiceSettings? = null,
+    val isSelected: Boolean = false
 )
 
 

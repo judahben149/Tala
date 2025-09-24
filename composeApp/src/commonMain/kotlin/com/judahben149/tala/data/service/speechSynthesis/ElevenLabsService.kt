@@ -26,13 +26,17 @@ interface ElevenLabsService {
     ): HttpResponse
 
     @POST("v1/text-to-speech/{voiceId}/with-timestamps")
-    @Headers("Content-Type: application/json")
+    @Headers(
+        "Content-Type: application/json",
+        "Accept: application/json"
+    )
     suspend fun downloadTextToSpeechWithTimestamps(
         @Path("voiceId") voiceId: String,
         @Query("output_format") outputFormat: String,
         @Header("xi-api-key") apiKey: String,
         @Body request: ElevenLabsTtsRequest
     ): DownloadTtsWithTimestampsResponse
+//    ): HttpResponse
 
     @POST("v1/speech-to-text")
     @Headers("Accept: application/json")

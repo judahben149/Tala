@@ -1,10 +1,11 @@
 package com.judahben149.tala.di
 
-import android.app.Activity
 import com.judahben149.tala.data.local.DatabaseDriverFactory
 import com.judahben149.tala.data.service.audio.AndroidAudioRecorderFactory
 import com.judahben149.tala.data.service.audio.AudioPlayerFactory
 import com.judahben149.tala.data.service.audio.SpeechRecorderFactory
+import com.judahben149.tala.domain.managers.HapticsManager
+import com.judahben149.tala.domain.managers.PlatformHapticsManager
 import com.judahben149.tala.domain.usecases.permissions.CheckRecordingPermissionUseCase
 import com.judahben149.tala.domain.usecases.permissions.RequestRecordingPermissionUseCase
 import com.judahben149.tala.util.AudioFileManager
@@ -19,5 +20,13 @@ actual val platformModule = module {
 
     // Platform UseCases
     single { CheckRecordingPermissionUseCase(androidContext()) }
-    single { RequestRecordingPermissionUseCase(androidContext() as Activity) }
+    single { RequestRecordingPermissionUseCase(androidContext()) }
+
+    single<HapticsManager> {
+        PlatformHapticsManager(
+            context = androidContext(),
+            settings = get(),
+            logger = get()
+        )
+    }
 }

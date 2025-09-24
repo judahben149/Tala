@@ -10,7 +10,7 @@ import com.judahben149.tala.data.service.speechSynthesis.ElevenLabsService
 import com.judahben149.tala.domain.mappers.toNetworkFailure
 import com.judahben149.tala.domain.models.authentication.errors.NetworkException
 import com.judahben149.tala.domain.models.common.Result
-import com.judahben149.tala.domain.models.language.Language
+import com.judahben149.tala.domain.models.user.Language
 import com.judahben149.tala.domain.models.speech.AudioChunk
 import com.judahben149.tala.domain.models.speech.CharacterTimestamp
 import com.judahben149.tala.domain.models.speech.SpeechModel
@@ -101,6 +101,8 @@ class TtsRepositoryImpl(
             return Result.Failure(NetworkException.BadRequest("Voice ID cannot be blank"))
         }
 
+        logger.d { "Creating TTS request with model: ${model.modelId}" }
+
         val request = ElevenLabsTtsRequest(
             text = text,
             modelId = model.modelId,
@@ -115,15 +117,23 @@ class TtsRepositoryImpl(
         )
 
         return runCatching {
-            service.downloadTextToSpeechWithTimestamps(
+            logger.d { "Making text-to-speech request for voice: $voiceId with API key: ${apiKey.take(10)}..." }
+
+            val response = service.downloadTextToSpeechWithTimestamps(
                 voiceId = voiceId,
                 outputFormat = outputFormat,
                 apiKey = apiKey,
                 request = request
             )
+
+            logger.d { "Text-to-speech response received, audio_base64 is ${if (response.audioBase64 != null) "present" else "missing"}" }
+            response
         }.fold(
             onSuccess = { Result.Success(it) },
-            onFailure = { it.toNetworkFailure() }
+            onFailure = { 
+                logger.e { "Text-to-speech request failed: ${it.message}" }
+                it.toNetworkFailure() 
+            }
         )
     }
 

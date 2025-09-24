@@ -18,6 +18,8 @@ class AudioRepositoryImpl(
 ) : AudioRepository {
     
     override val recordingStatus: StateFlow<RecorderStatus> = speechRecorder.status
+    override val audioLevel: StateFlow<Float> = speechRecorder.audioLevel
+    override val peakLevel: StateFlow<Float> = speechRecorder.peakLevel
 
     override suspend fun startRecording(config: RecorderConfig): Result<Unit, AudioRecordingException> {
         return try {

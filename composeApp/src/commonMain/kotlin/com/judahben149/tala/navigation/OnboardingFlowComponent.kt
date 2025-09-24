@@ -1,5 +1,6 @@
 package com.judahben149.tala.navigation
 
+import co.touchlab.kermit.Logger
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
@@ -8,7 +9,8 @@ import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
-import com.judahben149.tala.data.service.SignInStateTracker
+import com.judahben149.tala.domain.managers.SessionManager
+import com.judahben149.tala.navigation.components.others.EmailVerificationComponent
 import com.judahben149.tala.navigation.components.others.LoginScreenComponent
 import com.judahben149.tala.navigation.components.others.SignUpScreenComponent
 import com.judahben149.tala.navigation.components.others.LanguageSelectionComponent
@@ -23,7 +25,8 @@ class OnboardingFlowComponent(
     private val onOnboardingCompleted: () -> Unit
 ) : ComponentContext by componentContext, KoinComponent {
 
-    private val signInStateTracker: SignInStateTracker by inject()
+    private val sessionManager: SessionManager by inject()
+    private val logger: Logger by inject()
     private val navigation = StackNavigation<OnboardingConfiguration>()
 
     val childStack: Value<ChildStack<*, OnboardingChild>> = childStack(
@@ -35,7 +38,7 @@ class OnboardingFlowComponent(
     )
 
     private fun getInitialScreen(): OnboardingConfiguration {
-        return if (signInStateTracker.hasSignedInBefore()) {
+        return if (sessionManager.hasSignedInBefore()) {
             OnboardingConfiguration.Login
         } else {
             OnboardingConfiguration.SignUp
@@ -50,8 +53,9 @@ class OnboardingFlowComponent(
         is OnboardingConfiguration.SignUp -> OnboardingChild.SignUp(
             SignUpScreenComponent(
                 componentContext = componentContext,
+                onSignUpSuccess = ::handleLoginSuccess,
                 onNavigateToLogin = { navigation.bringToFront(OnboardingConfiguration.Login) },
-                onSignUpSuccess = ::handleSignUpSuccess
+                onNavigateToEmailVerification = ::navigateToEmailVerification
             )
         )
 
@@ -64,10 +68,20 @@ class OnboardingFlowComponent(
             )
         )
 
+        is OnboardingConfiguration.EmailVerification -> OnboardingChild.EmailVerification(
+            EmailVerificationComponent(
+                componentContext = componentContext,
+                userEmail = configuration.userEmail,
+                onNavigateToWelcome = ::navigateToOnboarding,
+                onBackPressed = ::handleEmailVerificationBackPressed,
+                sessionManager = sessionManager
+            )
+        )
+
         is OnboardingConfiguration.Welcome -> OnboardingChild.Welcome(
             WelcomeScreenComponent(
                 componentContext = componentContext,
-                onContinue = { navigation.pushNew(OnboardingConfiguration.LanguageSelection) }
+                onContinue = { completeOnboarding() }
             )
         )
 
@@ -86,23 +100,57 @@ class OnboardingFlowComponent(
             InterestsSelectionComponent(
                 componentContext = componentContext,
                 onInterestsSelected = { selectedInterests ->
-                    // Save interests and complete onboarding
-                    completeOnboarding()
+                    navigation.pushNew(OnboardingConfiguration.Welcome)
                 },
                 onBackPressed = { navigation.pop() }
             )
         )
     }
 
-    private fun handleSignUpSuccess() {
-        // For new users, show welcome and additional setup
-        navigation.pushNew(OnboardingConfiguration.Welcome)
+    /**
+     * Navigate to email verification screen with the user's email
+     */
+    private fun navigateToEmailVerification(email: String) {
+        navigation.pushNew(OnboardingConfiguration.EmailVerification(userEmail = email))
+    }
+
+    /**
+     * Handle successful email verification - proceed to Language selection screen for new users
+     */
+    private fun navigateToOnboarding() {
+        navigation.pushNew(OnboardingConfiguration.LanguageSelection)
+    }
+
+    /**
+     * Handle back press from email verification screen
+     */
+    private fun handleEmailVerificationBackPressed() {
+        // Allow user to go back to signup screen to correct email if needed
+        navigation.pop()
     }
 
     private fun handleLoginSuccess() {
-        // For existing users, go straight to main app
-        completeOnboarding()
+        // Check app state instead of assuming login means completion**
+        val sessionManager: SessionManager by inject()
+        val currentState = sessionManager.appState.value
+
+        when (currentState) {
+            SessionManager.AppState.LoggedIn -> {
+                logger.d { "App state - Logged in" }
+                completeOnboarding()
+            }
+
+            SessionManager.AppState.NeedsOnboarding -> {
+                logger.d { "App state - Needs onboarding" }
+                navigation.pushNew(OnboardingConfiguration.LanguageSelection)
+            }
+
+            else -> {
+                completeOnboarding()
+            }
+        }
     }
+
 
     private fun handleBackPressed() {
         navigation.pop { isSuccess ->
@@ -123,6 +171,9 @@ class OnboardingFlowComponent(
         data object Login : OnboardingConfiguration()
 
         @Serializable
+        data class EmailVerification(val userEmail: String) : OnboardingConfiguration()
+
+        @Serializable
         data object Welcome : OnboardingConfiguration()
 
         @Serializable
@@ -135,6 +186,7 @@ class OnboardingFlowComponent(
     sealed class OnboardingChild {
         data class SignUp(val component: SignUpScreenComponent) : OnboardingChild()
         data class Login(val component: LoginScreenComponent) : OnboardingChild()
+        data class EmailVerification(val component: EmailVerificationComponent) : OnboardingChild()
         data class Welcome(val component: WelcomeScreenComponent) : OnboardingChild()
         data class LanguageSelection(val component: LanguageSelectionComponent) : OnboardingChild()
         data class InterestsSelection(val component: InterestsSelectionComponent) : OnboardingChild()

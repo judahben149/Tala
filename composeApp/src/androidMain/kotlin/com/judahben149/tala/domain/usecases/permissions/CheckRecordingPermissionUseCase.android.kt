@@ -10,9 +10,10 @@ actual class CheckRecordingPermissionUseCase(
 ) {
     actual operator fun invoke(): Result<Boolean, Exception> {
         return try {
+            val permission = android.Manifest.permission.RECORD_AUDIO
             val hasPermission = ContextCompat.checkSelfPermission(
                 context,
-                android.Manifest.permission.RECORD_AUDIO
+                permission
             ) == PackageManager.PERMISSION_GRANTED
 
             Result.Success(hasPermission)

@@ -1,11 +1,11 @@
 package com.judahben149.tala.data.repository
 
-import com.judahben149.tala.data.service.firebase.AppUser
 import com.judahben149.tala.data.service.firebase.FirebaseAppInfo
 import com.judahben149.tala.data.service.firebase.FirebaseService
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthException
 import com.judahben149.tala.domain.models.authentication.errors.FirebaseAuthInvalidUserException
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.domain.repository.AuthenticationRepository
 
 class AuthenticationRepositoryImpl(

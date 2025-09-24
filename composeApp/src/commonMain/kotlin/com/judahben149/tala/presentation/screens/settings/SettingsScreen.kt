@@ -1,27 +1,78 @@
 package com.judahben149.tala.presentation.screens.settings
 
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Feedback
+import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Policy
+import androidx.compose.material.icons.filled.RecordVoiceOver
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import com.judahben149.tala.domain.models.authentication.SignInMethod
 import com.judahben149.tala.domain.models.session.PasswordUpdateData
-import com.judahben149.tala.domain.models.session.UserProfile
+import com.judahben149.tala.domain.models.user.AppUser
 import com.judahben149.tala.navigation.components.others.SettingsScreenComponent
-import com.judahben149.tala.ui.theme.*
+import com.judahben149.tala.presentation.screens.settings.modals.DeleteAccountDialog
+import com.judahben149.tala.presentation.screens.settings.modals.UpdateNameModal
+import com.judahben149.tala.presentation.screens.settings.modals.VoiceSelectionModal
+import com.judahben149.tala.ui.theme.TalaColors
+import com.judahben149.tala.ui.theme.getTalaColors
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -62,18 +113,20 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.Person,
                 title = "Update Profile",
-                subtitle = "Change your name and email",
+                subtitle = "Change your name",
                 colors = colors,
-                onClick = { /* TODO: Open profile editor */ }
+                onClick = { viewModel.showUpdateNameModal() }
             )
 
-            SettingsItem(
-                icon = Icons.Default.Lock,
-                title = "Update Password",
-                subtitle = "Keep your account secure",
-                colors = colors,
-                onClick = { viewModel.showPasswordDialog() }
-            )
+            if (uiState.user?.signInMethod == SignInMethod.EMAIL_PASSWORD) {
+                SettingsItem(
+                    icon = Icons.Default.Lock,
+                    title = "Update Password",
+                    subtitle = "Keep your account secure",
+                    colors = colors,
+                    onClick = { viewModel.showPasswordDialog() }
+                )
+            }
 
             SettingsItem(
                 icon = Icons.Default.RecordVoiceOver,
@@ -86,7 +139,7 @@ fun SettingsScreen(
             SettingsItem(
                 icon = Icons.Default.Language,
                 title = "Learning Language",
-                subtitle = uiState.selectedLanguage,
+                subtitle = uiState.user?.learningLanguage ?: "Select your preferred language",
                 colors = colors,
                 onClick = { viewModel.showLanguageSelector() }
             )
@@ -165,7 +218,10 @@ fun SettingsScreen(
                 subtitle = "Sign out of your account",
                 colors = colors,
                 textColor = colors.secondaryText,
-                onClick = { viewModel.signOut() }
+                onClick = {
+                    viewModel.signOut()
+                    component.onSignedOut()
+                }
             )
 
             SettingsItem(
@@ -181,15 +237,37 @@ fun SettingsScreen(
         Spacer(modifier = Modifier.height(24.dp))
     }
 
+    // Loading overlay
+    if (uiState.isLoading || uiState.isDeletingAccount) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = colors.primary)
+        }
+    }
+
+    // Error display
+    uiState.error?.let { error ->
+        LaunchedEffect(error) {
+            // TODO: Show snackbar or toast with error
+        }
+    }
+
     // Dialogs
     if (uiState.showDeleteConfirmation) {
         DeleteAccountDialog(
-            onConfirm = {
+            user = uiState.user,
+            onConfirm = { password ->
                 viewModel.hideDeleteConfirmation()
-                viewModel.deleteAccount()
+                viewModel.deleteAccount(password)
+                component.onAccountDeleted()
             },
             onDismiss = { viewModel.hideDeleteConfirmation() },
-            colors = colors
+            colors = colors,
+            isLoading = uiState.isDeletingAccount
         )
     }
 
@@ -200,6 +278,36 @@ fun SettingsScreen(
                 viewModel.updatePassword(passwordData)
             },
             onDismiss = { viewModel.hidePasswordDialog() },
+            colors = colors
+        )
+    }
+
+    if (uiState.showVoiceSelector) {
+        VoiceSelectionModal(
+            voices = uiState.availableVoices,
+            selectedVoiceId = uiState.selectedVoice?.voiceId,
+            isPlayingSample = uiState.isPlayingSample,
+            playingVoiceId = uiState.playingVoiceId,
+            onVoiceSelected = { voiceId ->
+                viewModel.selectVoice(voiceId)
+                viewModel.hideVoiceSelector()
+            },
+            onPlayVoiceSample = { voiceId ->
+                viewModel.playVoiceSample(voiceId)
+            },
+            onDismissRequest = { viewModel.hideVoiceSelector() },
+            colors = colors
+        )
+    }
+
+    if (uiState.showUpdateNameModal) {
+        UpdateNameModal(
+            currentName = uiState.user?.displayName ?: "",
+            isLoading = uiState.isUpdatingProfile,
+            onConfirm = { newName ->
+                viewModel.updateUserName(newName)
+            },
+            onDismiss = { viewModel.hideUpdateNameModal() },
             colors = colors
         )
     }
@@ -238,7 +346,7 @@ private fun TopBar(
 
 @Composable
 private fun ProfileSection(
-    user: UserProfile,
+    user: AppUser,
     colors: TalaColors,
     onEditProfileClick: () -> Unit
 ) {
@@ -247,7 +355,7 @@ private fun ProfileSection(
             .fillMaxWidth()
             .padding(horizontal = 24.dp, vertical = 8.dp),
         colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Row(
             modifier = Modifier
@@ -260,14 +368,14 @@ private fun ProfileSection(
                 modifier = Modifier
                     .size(60.dp)
                     .clip(CircleShape)
-                    .background(colors.primary),
+                    .background(colors.appBackground),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = user.name.firstOrNull()?.toString()?.uppercase() ?: "?",
-                    color = colors.primaryButtonText,
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold
+                AsyncImage(
+                    model = user.avatarUrl,
+                    contentDescription = "User Avatar",
+                    modifier = Modifier
+                        .size(64.dp)
                 )
             }
 
@@ -276,7 +384,7 @@ private fun ProfileSection(
             // User Info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = user.name,
+                    text = user.displayName,
                     color = colors.primaryText,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold
@@ -332,7 +440,6 @@ private fun SettingsSection(
 
         Card(
             colors = CardDefaults.cardColors(containerColor = colors.cardBackground),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             shape = RoundedCornerShape(12.dp)
         ) {
             Column {
@@ -444,48 +551,6 @@ private fun SettingsToggleItem(
 }
 
 @Composable
-private fun DeleteAccountDialog(
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    colors: TalaColors
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Delete Account?",
-                color = colors.primaryText,
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Text(
-                text = "This action cannot be undone. All your progress, conversations, and data will be permanently deleted.",
-                color = colors.secondaryText
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = onConfirm) {
-                Text(
-                    text = "Delete",
-                    color = colors.errorText,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(
-                    text = "Cancel",
-                    color = colors.secondaryText
-                )
-            }
-        },
-        containerColor = colors.cardBackground
-    )
-}
-
-@Composable
 private fun PasswordUpdateDialog(
     onConfirm: (PasswordUpdateData) -> Unit,
     onDismiss: () -> Unit,
@@ -509,11 +574,21 @@ private fun PasswordUpdateDialog(
                 OutlinedTextField(
                     value = currentPassword,
                     onValueChange = { currentPassword = it },
-                    label = { Text("Current Password") },
+                    label = {
+                        Text(
+                            "Current Password",
+                            color = colors.secondaryText
+                        )
+                    },
+                    visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.textFieldBorder
+                        unfocusedBorderColor = colors.textFieldBorder,
+                        focusedTextColor = colors.primaryText,
+                        unfocusedTextColor = colors.primaryText,
+                        focusedContainerColor = colors.textFieldBackground,
+                        unfocusedContainerColor = colors.textFieldBackground
                     )
                 )
 
@@ -522,11 +597,21 @@ private fun PasswordUpdateDialog(
                 OutlinedTextField(
                     value = newPassword,
                     onValueChange = { newPassword = it },
-                    label = { Text("New Password") },
+                    label = {
+                        Text(
+                            "New Password",
+                            color = colors.secondaryText
+                        )
+                    },
+                    visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.textFieldBorder
+                        unfocusedBorderColor = colors.textFieldBorder,
+                        focusedTextColor = colors.primaryText,
+                        unfocusedTextColor = colors.primaryText,
+                        focusedContainerColor = colors.textFieldBackground,
+                        unfocusedContainerColor = colors.textFieldBackground
                     )
                 )
 
@@ -535,11 +620,21 @@ private fun PasswordUpdateDialog(
                 OutlinedTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    label = { Text("Confirm Password") },
+                    label = {
+                        Text(
+                            "Confirm Password",
+                            color = colors.secondaryText
+                        )
+                    },
+                    visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = colors.primary,
-                        unfocusedBorderColor = colors.textFieldBorder
+                        unfocusedBorderColor = colors.textFieldBorder,
+                        focusedTextColor = colors.primaryText,
+                        unfocusedTextColor = colors.primaryText,
+                        focusedContainerColor = colors.textFieldBackground,
+                        unfocusedContainerColor = colors.textFieldBackground
                     )
                 )
             }
@@ -554,7 +649,10 @@ private fun PasswordUpdateDialog(
                             confirmPassword = confirmPassword
                         )
                     )
-                }
+                },
+                enabled = currentPassword.isNotBlank() &&
+                        newPassword.isNotBlank() &&
+                        confirmPassword.isNotBlank()
             ) {
                 Text(
                     text = "Update",
@@ -567,7 +665,7 @@ private fun PasswordUpdateDialog(
             TextButton(onClick = onDismiss) {
                 Text(
                     text = "Cancel",
-                    color = colors.secondaryText
+                    color = colors.primary
                 )
             }
         },
