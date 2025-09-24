@@ -1,21 +1,62 @@
-This is a Kotlin Multiplatform project targeting Android, iOS.
+# Tala - Language Learning Conversation App
 
 [![Android](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=Android&branch=master&color=green)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
 [![iOS](https://img.shields.io/github/actions/workflow/status/judahben149/Tala/build.yml?label=iOS&branch=master&color=blue)](https://github.com/judahben149/Tala/actions/workflows/build.yml)
 
+Tala is a language learning application built with Kotlin Multiplatform that helps users practice conversations in their target language. The app provides an interactive environment where users can engage in voice-based conversations to improve their language skills.
 
+## Features
 
-* [/composeApp](./composeApp/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./composeApp/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./composeApp/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./composeApp/src/jvmMain/kotlin)
-    folder is the appropriate location.
+- **Voice-based Conversation Practice**: Record your voice and get responses to practice speaking
+- **Guided Practice Mode**: Follow structured scenarios to practice specific conversation topics
+- **Conversation History**: Review past conversations to track your progress
+- **User Profiles**: Track your learning streak and conversation count
+- **Multiple Language Support**: Practice in your chosen target language
 
-* [/iosApp](./iosApp/iosApp) contains iOS applications. Even if you’re sharing your UI with Compose Multiplatform,
-  you need this entry point for your iOS app. This is also where you should add SwiftUI code for your project.
+## Technology Stack
 
+- **Kotlin Multiplatform**: Single codebase for Android and iOS
+- **Jetpack Compose**: Modern UI toolkit for building native UI
+- **Firebase**: Authentication, data storage, analytics, and remote config
+- **SQLite/SQLDelight**: Local database storage
+- **Ktor/Ktorfit**: Networking and API communication
+- **Speech Recognition**: For processing user's spoken language
+- **AI Integration**: Gemini API for natural language processing
+- **Audio Processing**: Eleven Labs for voice synthesis
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+## Libraries
+
+- **Koin**: Dependency injection
+- **Decompose**: Navigation and component-based architecture
+- **Coil**: Image loading and caching
+- **Room**: Database persistence
+- **Firebase (Authentication, Database, Remote Config**: Firebase services
+- **Ktorfit**: Networking
+- **Ktor**: Networking Utils
+- **RevenueCat**: In-app purchase management
+- **Stream Chat**: Chat functionality
+- **Media3/ExoPlayer**: Media playback
+- **Accompanist**: UI utilities and permissions handling
+- **Kotlinx DateTime**: Date and time handling
+- **Kotlinx Serialization**: JSON serialization/deserialization
+- **KMP Auth**: Cross-platform authentication
+
+## Project Structure
+
+- **/composeApp**: Contains shared code for all platforms
+  - **commonMain**: Core application logic and UI components
+  - **androidMain**: Android-specific implementations
+  - **iosMain**: iOS-specific implementations
+- **/iosApp**: iOS application entry point
+
+## Getting Started
+
+1. Clone the repository
+2. Open the project in Android Studio or Xcode
+3. Configure Firebase, ElevenLabs, and Gemini credentials
+4. Build and run the application
+
+## Learn More
+
+- [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)
+- [Jetpack Compose](https://developer.android.com/jetpack/compose)
