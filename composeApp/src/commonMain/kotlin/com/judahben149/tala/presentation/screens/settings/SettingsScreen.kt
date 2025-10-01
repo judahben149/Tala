@@ -2,7 +2,6 @@ package com.judahben149.tala.presentation.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -29,11 +28,9 @@ import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.RecordVoiceOver
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -73,6 +70,8 @@ import com.judahben149.tala.presentation.screens.settings.modals.UpdateNameModal
 import com.judahben149.tala.presentation.screens.settings.modals.VoiceSelectionModal
 import com.judahben149.tala.ui.theme.TalaColors
 import com.judahben149.tala.ui.theme.getTalaColors
+import com.judahben149.tala.util.AppUrls
+import com.judahben149.tala.util.BrowserUtil
 import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,33 +140,34 @@ fun SettingsScreen(
                 title = "Learning Language",
                 subtitle = uiState.user?.learningLanguage ?: "Select your preferred language",
                 colors = colors,
-                onClick = { viewModel.showLanguageSelector() }
+                onClick = { viewModel.showLanguageSelector() },
+                showSideArrow = false
             )
         }
 
         // Preferences
-        SettingsSection(
-            title = "Preferences",
-            colors = colors
-        ) {
-            SettingsToggleItem(
-                icon = Icons.Default.Notifications,
-                title = "Notifications",
-                subtitle = "Get updates about your progress",
-                isChecked = uiState.user?.notificationsEnabled ?: false,
-                colors = colors,
-                onToggle = { viewModel.toggleNotifications(it) }
-            )
-
-            SettingsToggleItem(
-                icon = Icons.Default.Schedule,
-                title = "Practice Reminders",
-                subtitle = "Daily reminders to keep practicing",
-                isChecked = uiState.user?.practiceRemindersEnabled ?: false,
-                colors = colors,
-                onToggle = { viewModel.togglePracticeReminders(it) }
-            )
-        }
+//        SettingsSection(
+//            title = "Preferences",
+//            colors = colors
+//        ) {
+//            SettingsToggleItem(
+//                icon = Icons.Default.Notifications,
+//                title = "Notifications",
+//                subtitle = "Get updates about your progress",
+//                isChecked = uiState.user?.notificationsEnabled ?: false,
+//                colors = colors,
+//                onToggle = { viewModel.toggleNotifications(it) }
+//            )
+//
+//            SettingsToggleItem(
+//                icon = Icons.Default.Schedule,
+//                title = "Practice Reminders",
+//                subtitle = "Daily reminders to keep practicing",
+//                isChecked = uiState.user?.practiceRemindersEnabled ?: false,
+//                colors = colors,
+//                onToggle = { viewModel.togglePracticeReminders(it) }
+//            )
+//        }
 
         // Support & Legal
         SettingsSection(
@@ -179,7 +179,7 @@ fun SettingsScreen(
                 title = "Help & Support",
                 subtitle = "Get help with using Tala",
                 colors = colors,
-                onClick = { component.navigateToSupport() }
+                onClick = { BrowserUtil.openUrl(AppUrls.HELP_AND_SUPPORT) }
             )
 
             SettingsItem(
@@ -187,7 +187,7 @@ fun SettingsScreen(
                 title = "Privacy Policy",
                 subtitle = "How we protect your data",
                 colors = colors,
-                onClick = { component.navigateToPrivacyPolicy() }
+                onClick = { BrowserUtil.openUrl(AppUrls.PRIVACY_POLICY) }
             )
 
             SettingsItem(
@@ -195,7 +195,7 @@ fun SettingsScreen(
                 title = "Terms of Service",
                 subtitle = "Terms and conditions",
                 colors = colors,
-                onClick = { component.navigateToTerms() }
+                onClick = { BrowserUtil.openUrl(AppUrls.TERMS_OF_SERVICE) }
             )
 
             SettingsItem(
@@ -203,7 +203,7 @@ fun SettingsScreen(
                 title = "Send Feedback",
                 subtitle = "Help us improve Tala",
                 colors = colors,
-                onClick = { component.navigateToFeedback() }
+                onClick = { BrowserUtil.openUrl(AppUrls.SEND_FEEDBACK) }
             )
         }
 
@@ -407,14 +407,14 @@ private fun ProfileSection(
             }
 
             // Edit button
-            IconButton(onClick = onEditProfileClick) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit Profile",
-                    tint = colors.secondaryText,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+//            IconButton(onClick = onEditProfileClick) {
+//                Icon(
+//                    imageVector = Icons.Default.Edit,
+//                    contentDescription = "Edit Profile",
+//                    tint = colors.secondaryText,
+//                    modifier = Modifier.size(20.dp)
+//                )
+//            }
         }
     }
 }
@@ -456,7 +456,8 @@ private fun SettingsItem(
     subtitle: String,
     colors: TalaColors,
     textColor: Color = colors.primaryText,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    showSideArrow: Boolean = true
 ) {
     Row(
         modifier = Modifier
@@ -489,12 +490,14 @@ private fun SettingsItem(
             )
         }
 
-        Icon(
-            imageVector = Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = colors.secondaryText,
-            modifier = Modifier.size(20.dp)
-        )
+        if (showSideArrow) {
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = colors.secondaryText,
+                modifier = Modifier.size(20.dp)
+            )
+        }
     }
 }
 

@@ -1,8 +1,8 @@
 package com.judahben149.tala.util
 
 const val GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/"
-const val GEMINI_PRO = "gemini-1.5-flash"
-const val GEMINI_PRO_VISION = "gemini-1.5-flash"
+const val GEMINI_PRO = "gemini-2.5-flash"
+const val GEMINI_PRO_VISION = "gemini-2.5-flash"
 
 const val ELEVEN_LABS_BASE_URL = "https://api.elevenlabs.io/"
 

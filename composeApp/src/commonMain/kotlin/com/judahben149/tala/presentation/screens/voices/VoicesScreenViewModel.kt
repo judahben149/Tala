@@ -3,9 +3,13 @@ package com.judahben149.tala.presentation.screens.voices
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.touchlab.kermit.Logger
+import com.judahben149.tala.data.local.getCurrentTimeMillis
 import com.judahben149.tala.data.service.audio.SpeechPlayer
+import com.judahben149.tala.domain.managers.SessionManager
 import com.judahben149.tala.domain.models.common.Result
+import com.judahben149.tala.domain.usecases.settings.UpdateUserProfileUseCase
 import com.judahben149.tala.domain.usecases.speech.*
+import com.judahben149.tala.domain.usecases.user.ObservePersistedUserDataUseCase
 import com.judahben149.tala.util.decodeBase64Audio
 import com.judahben149.tala.util.mimeTypeForOutputFormat
 import kotlinx.coroutines.Dispatchers
@@ -17,9 +21,12 @@ import kotlinx.coroutines.withContext
 class VoicesScreenViewModel(
     private val getAllVoicesUseCase: GetAllVoicesUseCase,
     private val getFeaturedVoicesUseCase: GetFeaturedVoicesUseCase,
+    private val updateUserProfileUseCase: UpdateUserProfileUseCase,
     private val downloadTextToSpeechUseCase: DownloadTextToSpeechUseCase,
     private val saveSelectedVoiceUseCase: SaveSelectedVoiceUseCase,
     private val setVoiceSelectionCompleteUseCase: SetVoiceSelectionCompleteUseCase,
+    private val observePersistedUserDataUseCase: ObservePersistedUserDataUseCase,
+    private val sessionManager: SessionManager,
     private val player: SpeechPlayer,
     private val logger: Logger
 ) : ViewModel() {
@@ -121,20 +128,33 @@ class VoicesScreenViewModel(
     fun saveSelectedVoice(onComplete: () -> Unit) {
         val voices = _uiState.value.voices
         val selectedIndex = _uiState.value.selectedIndex
-        
+
         if (selectedIndex in voices.indices) {
             val selectedVoice = voices[selectedIndex]
-            
+
             viewModelScope.launch {
-                try {
-                    saveSelectedVoiceUseCase(selectedVoice.voiceId)
-                    logger.d { "Saved selected voice: ${selectedVoice.name}" }
-                    setVoiceSelectionCompleteUseCase()
-                    onComplete()
-                } catch (e: Exception) {
-                    logger.e(e) { "Failed to save selected voice" }
-                    _uiState.update { 
-                        it.copy(error = "Failed to save voice selection: ${e.message}") 
+                // Save selected voice in repository first
+                saveSelectedVoiceUseCase(selectedVoice.voiceId)
+                sessionManager.saveVoiceSelectionCompleted()
+
+                val currentUser = observePersistedUserDataUseCase.getCurrentUser()
+
+                val updatedUser = currentUser.copy(
+                    selectedVoiceId = selectedVoice.voiceId,
+                    updatedAt = getCurrentTimeMillis()
+                )
+
+                when (val result = updateUserProfileUseCase(updatedUser)) {
+                    is Result.Success -> {
+                        logger.d { "Voice updated to: ${selectedVoice.voiceId}" }
+                        onComplete()
+                    }
+
+                    is Result.Failure -> {
+                        _uiState.update {
+                            it.copy(error = "Failed to update voice: ${result.error.message}")
+                        }
+                        logger.e { "Failed to update selected voice: ${result.error}" }
                     }
                 }
             }

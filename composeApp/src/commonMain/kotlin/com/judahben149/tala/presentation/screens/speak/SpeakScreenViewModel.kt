@@ -264,7 +264,7 @@ class SpeakScreenViewModel(
                         // Check if messages are being observed
                         logger.d { "[DEBUG_LOG] Current UI state messages size after observeConversationMessages: ${_uiState.value.messages.size}" }
 
-                        startRecording()
+//                        startRecording()
                     }
                     is Result.Failure -> {
                         logger.e { "Failed to initialize conversation: ${result.error}" }

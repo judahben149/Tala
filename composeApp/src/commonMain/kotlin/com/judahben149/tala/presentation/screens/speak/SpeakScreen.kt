@@ -102,48 +102,6 @@ fun SpeakScreen(
         }
     }
 
-    // Color schemes based on conversation state
-    val (shadowColors, borderColors, innerShadowColors) = getColorsForState(uiState.conversationState)
-
-    // Animated colors with smooth transitions
-    val animatedShadowColor1 by animateColorAsState(
-        targetValue = shadowColors[0],
-        animationSpec = tween(durationMillis = 800),
-        label = "shadowColor1Animation"
-    )
-    val animatedShadowColor2 by animateColorAsState(
-        targetValue = shadowColors[1],
-        animationSpec = tween(durationMillis = 800),
-        label = "shadowColor2Animation"
-    )
-
-    val animatedBorderColor1 by animateColorAsState(
-        targetValue = borderColors[0],
-        animationSpec = tween(durationMillis = 800),
-        label = "borderColor1Animation"
-    )
-    val animatedBorderColor2 by animateColorAsState(
-        targetValue = borderColors[1],
-        animationSpec = tween(durationMillis = 800),
-        label = "borderColor2Animation"
-    )
-
-    val animatedInnerShadowColor1 by animateColorAsState(
-        targetValue = innerShadowColors[0],
-        animationSpec = tween(durationMillis = 800),
-        label = "innerShadowColor1Animation"
-    )
-    val animatedInnerShadowColor2 by animateColorAsState(
-        targetValue = innerShadowColors[1],
-        animationSpec = tween(durationMillis = 800),
-        label = "innerShadowColor2Animation"
-    )
-
-    // Animation for initial spring entrance
-    LaunchedEffect(Unit) {
-        hasAnimatedIn = true
-    }
-
     // Request permission when screen opens
     RequestAudioPermission { granted ->
         hasPermission = granted
@@ -153,23 +111,6 @@ fun SpeakScreen(
             viewModel.onPermissionDenied()
         }
     }
-
-//    LaunchedEffect(uiState.conversationState == ConversationState.Recording) {
-//        if (uiState.conversationState == ConversationState.Recording) {
-//            while (true) {
-//                currentVoiceLevel = Random.nextFloat() * (0.85f - 0.3f) + 0.3f
-//                withFrameNanos { }
-//                kotlinx.coroutines.delay(Random.nextLong(100, 500))
-//            }
-//        } else {
-//            currentVoiceLevel = 0.3f
-//        }
-//    }
-
-    val animatedVoiceLevel by animateFloatAsState(
-        targetValue = currentVoiceLevel,
-        label = "voiceLevelAnimation"
-    )
 
     BoxWithConstraints(
         modifier = Modifier
@@ -189,30 +130,6 @@ fun SpeakScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 56.dp, bottom = 100.dp)
-        )
-
-        // Debug text to show message count
-        Text(
-            text = "Messages: ${uiState.messages.size}",
-            color = textColor,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Normal,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 8.dp, end = 16.dp)
-        )
-
-        // Additional debug text to show conversation ID
-        Text(
-            text = "ConvID: ${uiState.conversationId ?: "null"}",
-            color = textColor,
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Normal,
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 24.dp, end = 16.dp)
         )
 
         if (hasPermission) {
@@ -250,48 +167,6 @@ fun SpeakScreen(
                     .padding(horizontal = 24.dp)
             )
         }
-    }
-}
-
-@Composable
-private fun getColorsForState(state: ConversationState): Triple<List<Color>, List<Color>, List<Color>> {
-    return when (state) {
-        ConversationState.Idle -> Triple(
-            listOf(Green400, Sky500), // Keep original colors for idle
-            listOf(Yellow200, Sky500),
-            listOf(Green400, Sky500)
-        )
-        ConversationState.Recording -> Triple(
-            listOf(Red500, Red600), // Red tones for recording
-            listOf(Red400, Red500),
-            listOf(Red600, Red700)
-        )
-        ConversationState.Converting -> Triple(
-            listOf(Sky500, Sky500), // Blue for processing
-            listOf(Sky400, Sky500),
-            listOf(Sky500, Sky600)
-        )
-        ConversationState.Thinking -> Triple(
-            listOf(Yellow200, Green400), // Yellow-green for thinking
-            listOf(Yellow200, Green400),
-            listOf(Yellow300, Green500)
-        )
-        ConversationState.Speaking -> Triple(
-            listOf(Green400, Green600), // Green for active speaking
-            listOf(Green300, Green500),
-            listOf(Green500, Green700)
-        )
-        ConversationState.Stopped -> Triple(
-            listOf(Red500, Yellow200), // Red-yellow for stopped/paused
-            listOf(Red400, Yellow200),
-            listOf(Red600, Yellow300)
-        )
-
-        ConversationState.Disallowed -> Triple(
-            listOf(Red500, Red600), // Red for quota exceeded
-            listOf(Red400, Red500),
-            listOf(Red600, Red700)
-        )
     }
 }
 
