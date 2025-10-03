@@ -215,10 +215,10 @@ fun SignUpScreen(
                             firebaseUser?.let { user ->
                                 viewModel.logStuff(user.displayName.toString())
 
-                                associateUserWithRevenueCat(
-                                    userId = user.uid,
-                                    onUserAssociated = { customerInfo, created ->
-                                        viewModel.logStuff(customerInfo.toString())
+//                                associateUserWithRevenueCat(
+//                                    userId = user.uid,
+//                                    onUserAssociated = { customerInfo, created ->
+//                                        viewModel.logStuff(customerInfo.toString())
 
                                         viewModel.handleFederatedSignUp(
                                             user = user,
@@ -234,11 +234,11 @@ fun SignUpScreen(
                                                 viewModel.logStuff("Error yoo$errorMessage")
                                             }
                                         )
-                                    },
-                                    onUserAssociationFailed = {
-                                        viewModel.logStuff("User association failed")
-                                    }
-                                )
+//                                    },
+//                                    onUserAssociationFailed = {
+//                                        viewModel.logStuff("User association failed")
+//                                    }
+//                                )
                             }
                         },
                         onFailure = { error ->
@@ -281,6 +281,8 @@ fun SignUpScreen(
             }
 
             if (isIos()) {
+                Spacer(modifier = Modifier.height(24.dp))
+
                 AppleButtonUiContainer(
                     linkAccount = false,
                     onResult = { result ->
@@ -289,37 +291,62 @@ fun SignUpScreen(
                                 firebaseUser?.let { user ->
                                     viewModel.logStuff(user.displayName.toString())
 
-                                    associateUserWithRevenueCat(
-                                        userId = user.uid,
-                                        onUserAssociated = { customerInfo, created ->
-                                            viewModel.logStuff(customerInfo.toString())
+//                                    associateUserWithRevenueCat(
+//                                        userId = user.uid,
+//                                        onUserAssociated = { customerInfo, created ->
+//                                            viewModel.logStuff(customerInfo.toString())
+//
+//                                            viewModel.handleFederatedSignUp(
+//                                                user = user,
+//                                                signInMethod = SignInMethod.APPLE,
+//                                                signUpCompleted = { userId, isNewUser ->
+//
+//                                                    if (isNewUser) {
+//                                                        sessionManager.markSignedIn(
+//                                                            userId = user.uid,
+//                                                            isNewUser = true
+//                                                        )
+//                                                        component.handleSignUpSuccess()
+//                                                    } else {
+//                                                        sessionManager.markSignedIn(
+//                                                            userId = user.uid,
+//                                                            isNewUser = false
+//                                                        )
+//                                                        component.handleSignUpSuccess()
+//                                                    }
+//                                                },
+//                                                signUpFailed = { errorMessage ->
+//                                                    viewModel.logStuff("Error yoo$errorMessage")
+//                                                }
+//                                            )
+//                                        },
+//                                        onUserAssociationFailed = {
+//                                            viewModel.logStuff("User association failed")
+//                                        }
+//                                    )
 
-                                            viewModel.handleFederatedSignUp(
-                                                user = user,
-                                                signInMethod = SignInMethod.APPLE,
-                                                signUpCompleted = { userId, isNewUser ->
 
-                                                    if (isNewUser) {
-                                                        sessionManager.markSignedIn(
-                                                            userId = user.uid,
-                                                            isNewUser = true
-                                                        )
-                                                        component.handleSignUpSuccess()
-                                                    } else {
-                                                        sessionManager.markSignedIn(
-                                                            userId = user.uid,
-                                                            isNewUser = false
-                                                        )
-                                                        component.handleSignUpSuccess()
-                                                    }
-                                                },
-                                                signUpFailed = { errorMessage ->
-                                                    viewModel.logStuff("Error yoo$errorMessage")
-                                                }
-                                            )
+                                    viewModel.handleFederatedSignUp(
+                                        user = user,
+                                        signInMethod = SignInMethod.APPLE,
+                                        signUpCompleted = { userId, isNewUser ->
+
+                                            if (isNewUser) {
+                                                sessionManager.markSignedIn(
+                                                    userId = user.uid,
+                                                    isNewUser = true
+                                                )
+                                                component.handleSignUpSuccess()
+                                            } else {
+                                                sessionManager.markSignedIn(
+                                                    userId = user.uid,
+                                                    isNewUser = false
+                                                )
+                                                component.handleSignUpSuccess()
+                                            }
                                         },
-                                        onUserAssociationFailed = {
-                                            viewModel.logStuff("User association failed")
+                                        signUpFailed = { errorMessage ->
+                                            viewModel.logStuff("Error yoo$errorMessage")
                                         }
                                     )
                                 }

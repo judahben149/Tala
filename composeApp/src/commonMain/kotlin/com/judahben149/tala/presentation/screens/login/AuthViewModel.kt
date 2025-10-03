@@ -16,6 +16,7 @@ import com.judahben149.tala.domain.usecases.authentication.IsUserSignedInUseCase
 import com.judahben149.tala.domain.usecases.authentication.SendPasswordResetEmailUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignInUseCase
 import com.judahben149.tala.domain.usecases.authentication.SignOutUseCase
+import com.judahben149.tala.domain.usecases.preferences.SaveLearningLanguageUseCase
 import com.judahben149.tala.domain.usecases.user.PersistUserDataUseCase
 import com.judahben149.tala.presentation.UiState
 import com.judahben149.tala.util.buildAppUserFromProfileData
@@ -35,6 +36,7 @@ class AuthViewModel(
     private val createDefaultUserDataUseCase: CreateDefaultUserDataUseCase,
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val isUserSignedInUseCase: IsUserSignedInUseCase,
+    private val saveLearningLanguageUseCase: SaveLearningLanguageUseCase,
     private val sendPasswordResetEmailUseCase: SendPasswordResetEmailUseCase
 ) : ViewModel() {
 
@@ -113,6 +115,7 @@ class AuthViewModel(
                         logger.d { "User data already exists: ${userData.data}" }
 
                         val data = buildAppUserFromProfileData(user.uid, userData.data)
+                        logger.d { "User data: $data" }
                         persistUserDataUseCase(data)
                         signUpCompleted(user.uid, false)
                     }
@@ -136,6 +139,64 @@ class AuthViewModel(
                 }
             }
         }
+    }
+
+    fun handleEmailSignup(
+        user: AppUser,
+        signUpCompleted:(userId: String, isNewUser: Boolean) -> Unit,
+        signUpFailed:(errorMessage: String) -> Unit
+    ) {
+
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            val userData = getUserDataUseCase(user.userId)
+
+            when (userData) {
+                is Result.Success -> {
+                    if (userData.data.isEmpty()) {
+                        when(val result = createDefaultUserDataUseCase(user, true)) {
+                            is Result.Success -> {
+                                logger.d { "User data created successfully: ${result.data}" }
+                                signUpCompleted(user.userId, true)
+                            }
+                            is Result.Failure -> {
+                                logger.e { "User data creation failed: ${result.error}" }
+                                signUpFailed(result.error.message ?: "Unknown error")
+                            }
+                        }
+                    } else {
+                        sessionManager.updateOnboardingFlag(true)
+                        logger.d { "User data already exists: ${userData.data}" }
+
+                        val data = buildAppUserFromProfileData(user.userId, userData.data)
+                        logger.d { "User data: $data" }
+                        persistUserDataUseCase(data)
+                        saveLearningLanguageUseCase(data.learningLanguage)
+                        logger.d { "Learning language saved: ${data.learningLanguage}" }
+                        signUpCompleted(user.userId, false)
+                    }
+                }
+                is Result.Failure -> {
+                    if (userData.error.message == "User data not found") {
+                        when(val result = createDefaultUserDataUseCase(user, true)) {
+                            is Result.Success -> {
+                                logger.d { "User data created successfully: ${result.data}" }
+                                signUpCompleted(user.userId, true)
+                            }
+                            is Result.Failure -> {
+                                logger.e { "User data creation failed: ${result.error}" }
+                                signUpFailed(result.error.message ?: "Unknown error")
+                            }
+                        }
+                    } else {
+                        logger.e { "User data retrieval failed: ${userData.error}" }
+                        signUpFailed(userData.error.message ?: "Unknown error")
+                    }
+                }
+            }
+        }
+
+
     }
 
 

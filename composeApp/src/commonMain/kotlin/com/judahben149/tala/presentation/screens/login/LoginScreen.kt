@@ -96,18 +96,41 @@ fun LoginScreen(
                         // Check if user actually completed onboarding
                         val hasCompletedOnboarding = sessionManager.hasCompletedOnboarding()
 
-                        if (hasCompletedOnboarding) {
-                            sessionManager.markSignedIn(
-                                userId = user.userId,
-                                isNewUser = false
-                            )
-                            component.handleLoginSuccess()
-                        } else {
-                            sessionManager.markSignedIn(
-                                userId = user.userId,
-                                isNewUser = false
-                            )
-                        }
+//                        if (hasCompletedOnboarding) {
+//                            sessionManager.markSignedIn(
+//                                userId = user.userId,
+//                                isNewUser = false
+//                            )
+//                            component.handleLoginSuccess()
+//                        } else {
+//                            viewModel.handleEmailSignup(
+//                                user = user,
+//                                signUpCompleted = { userId, isNewUser ->
+//                                    sessionManager.markSignedIn(
+//                                        userId = user.userId,
+//                                        isNewUser = isNewUser
+//                                    )
+//                                    component.handleLoginSuccess()
+//                                },
+//                                signUpFailed = { errorMessage ->
+//                                    viewModel.logStuff("Error yoo$errorMessage")
+//                                }
+//                            )
+//                        }
+
+                        viewModel.handleEmailSignup(
+                            user = user,
+                            signUpCompleted = { userId, isNewUser ->
+                                sessionManager.markSignedIn(
+                                    userId = user.userId,
+                                    isNewUser = isNewUser
+                                )
+                                component.handleLoginSuccess()
+                            },
+                            signUpFailed = { errorMessage ->
+                                viewModel.logStuff("Error yoo$errorMessage")
+                            }
+                        )
                     }
                     is Result.Failure -> {
                         // Handle error if needed
@@ -249,42 +272,42 @@ private fun LoginScreenContent(
                             firebaseUser?.let { user ->
                                 viewModel.logStuff(user.displayName.toString())
 
-                                associateUserWithRevenueCat(
-                                    userId = user.uid,
-                                    onUserAssociated = { customerInfo, created ->
-                                        viewModel.logStuff(customerInfo.toString())
-
-                                        viewModel.handleFederatedSignUp(
-                                            user = user,
-                                            signInMethod = SignInMethod.GOOGLE,
-                                            signUpCompleted = { userId, isNewUser ->
-
-                                                // Check if user actually completed onboarding
-                                                val hasCompletedOnboarding = sessionManager.hasCompletedOnboarding()
-
-                                                if (isNewUser) {
-                                                    sessionManager.markSignedIn(
-                                                        userId = user.uid,
-                                                        isNewUser = true
-                                                    )
-                                                    component.handleLoginSuccess()
-                                                } else {
-                                                    sessionManager.markSignedIn(
-                                                        userId = user.uid,
-                                                        isNewUser = false
-                                                    )
-                                                    component.handleLoginSuccess()
-                                                }
-                                            },
-                                            signUpFailed = { errorMessage ->
-                                                viewModel.logStuff("Error yoo$errorMessage")
-                                            }
-                                        )
-                                    },
-                                    onUserAssociationFailed = {
-                                        viewModel.logStuff("User association failed")
-                                    }
-                                )
+//                                associateUserWithRevenueCat(
+//                                    userId = user.uid,
+//                                    onUserAssociated = { customerInfo, created ->
+//                                        viewModel.logStuff(customerInfo.toString())
+//
+//                                        viewModel.handleFederatedSignUp(
+//                                            user = user,
+//                                            signInMethod = SignInMethod.GOOGLE,
+//                                            signUpCompleted = { userId, isNewUser ->
+//
+//                                                // Check if user actually completed onboarding
+//                                                val hasCompletedOnboarding = sessionManager.hasCompletedOnboarding()
+//
+//                                                if (isNewUser) {
+//                                                    sessionManager.markSignedIn(
+//                                                        userId = user.uid,
+//                                                        isNewUser = true
+//                                                    )
+//                                                    component.handleLoginSuccess()
+//                                                } else {
+//                                                    sessionManager.markSignedIn(
+//                                                        userId = user.uid,
+//                                                        isNewUser = false
+//                                                    )
+//                                                    component.handleLoginSuccess()
+//                                                }
+//                                            },
+//                                            signUpFailed = { errorMessage ->
+//                                                viewModel.logStuff("Error yoo$errorMessage")
+//                                            }
+//                                        )
+//                                    },
+//                                    onUserAssociationFailed = {
+//                                        viewModel.logStuff("User association failed")
+//                                    }
+//                                )
 
                                 viewModel.handleFederatedSignUp(
                                     user = user,
@@ -353,6 +376,8 @@ private fun LoginScreenContent(
 
 
             if (isIos()) {
+                Spacer(modifier = Modifier.height(24.dp))
+
                 AppleButtonUiContainer(
                     linkAccount = false,
                     onResult = { result ->
@@ -360,11 +385,12 @@ private fun LoginScreenContent(
                             onSuccess = { firebaseUser ->
                                 firebaseUser?.let { user ->
                                     viewModel.logStuff(user.displayName.toString())
+                                    println("User name: ${user.displayName}")
 
-                                    associateUserWithRevenueCat(
-                                        userId = user.uid,
-                                        onUserAssociated = { customerInfo, created ->
-                                            viewModel.logStuff(customerInfo.toString())
+//                                    associateUserWithRevenueCat(
+//                                        userId = user.uid,
+//                                        onUserAssociated = { customerInfo, created ->
+//                                            viewModel.logStuff(customerInfo.toString())
 
                                             viewModel.handleFederatedSignUp(
                                                 user = user,
@@ -392,11 +418,11 @@ private fun LoginScreenContent(
                                                     viewModel.logStuff("Error yoo$errorMessage")
                                                 }
                                             )
-                                        },
-                                        onUserAssociationFailed = {
-                                            viewModel.logStuff("User association failed")
-                                        }
-                                    )
+//                                        },
+//                                        onUserAssociationFailed = {
+//                                            viewModel.logStuff("User association failed")
+//                                        }
+//                                    )
                                 }
                             },
                             onFailure = { error ->

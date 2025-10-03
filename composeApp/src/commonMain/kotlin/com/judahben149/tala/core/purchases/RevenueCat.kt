@@ -8,7 +8,8 @@ import com.revenuecat.purchases.kmp.PurchasesConfiguration
 import com.revenuecat.purchases.kmp.models.CustomerInfo
 
 fun initRevenueCat() {
-    Purchases.logLevel = LogLevel.DEBUG
+//    Purchases.logLevel = LogLevel.DEBUG
+    Purchases.logLevel = LogLevel.ERROR
     Purchases.configure(
         PurchasesConfiguration.Builder(
             apiKey = if (isIos()) BuildKonfig.REVENUE_CAT_APP_STORE_API_KEY else BuildKonfig.REVENUE_CAT_PLAY_STORE_API_KEY,

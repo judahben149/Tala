@@ -117,15 +117,15 @@ fun SettingsScreen(
                 onClick = { viewModel.showUpdateNameModal() }
             )
 
-            if (uiState.user?.signInMethod == SignInMethod.EMAIL_PASSWORD) {
-                SettingsItem(
-                    icon = Icons.Default.Lock,
-                    title = "Update Password",
-                    subtitle = "Keep your account secure",
-                    colors = colors,
-                    onClick = { viewModel.showPasswordDialog() }
-                )
-            }
+//            if (uiState.user?.signInMethod == SignInMethod.EMAIL_PASSWORD) {
+//                SettingsItem(
+//                    icon = Icons.Default.Lock,
+//                    title = "Update Password",
+//                    subtitle = "Keep your account secure",
+//                    colors = colors,
+//                    onClick = { viewModel.showPasswordDialog() }
+//                )
+//            }
 
             SettingsItem(
                 icon = Icons.Default.RecordVoiceOver,

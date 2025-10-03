@@ -41,6 +41,10 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+
+            linkerOpts.add("-Xlinker")
+            linkerOpts.add("-bundle_id")
+            linkerOpts.add("com.judahben149.tala")
         }
     }
 
@@ -296,6 +300,18 @@ android {
             }
         }
     }
+
+    applicationVariants.all {
+        outputs.all {
+            val output = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
+            val variant = this.name.uppercase()
+            val variantLetter = if (variant.contains("RELEASE")) "R" else "D"
+            val version = defaultConfig.versionName
+
+            output.outputFileName = "Tala-v${version}-${variantLetter}.apk"
+        }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
