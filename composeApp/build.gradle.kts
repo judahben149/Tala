@@ -42,9 +42,11 @@ kotlin {
             baseName = "ComposeApp"
             isStatic = true
 
-            linkerOpts.add("-Xlinker")
-            linkerOpts.add("-bundle_id")
-            linkerOpts.add("com.judahben149.tala")
+//            linkerOpts.add("-Xlinker")
+//            linkerOpts.add("-bundle_id")
+//            linkerOpts.add("com.judahben149.tala")
+
+            compilerOptions.freeCompilerArgs.add("-Xbinary=bundleId=com.judahben149.tala")
         }
     }
 
