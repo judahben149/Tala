@@ -33,6 +33,7 @@ Tala is a language learning application built with Kotlin Multiplatform that hel
 
 - **Kotlin Multiplatform**: Single codebase for Android and iOS
 - **Jetpack Compose**: Modern UI toolkit for building native UI
+- **Decompose**: Navigation
 - **Firebase**: Authentication, data storage, analytics, and remote config
 - **SQLite/SQLDelight**: Local database storage
 - **Ktor/Ktorfit**: Networking and API communication
